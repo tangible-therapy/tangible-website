@@ -1,0 +1,1254 @@
+{
+ "/adhd-therapy": [
+  {
+   "@context": "https://schema.org",
+   "@type": "FAQPage",
+   "mainEntity": [
+    {
+     "@type": "Question",
+     "name": "Do I need an official diagnosis to start therapy?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "No. Many of our clients are self-diagnosed or exploring ADHD for the first time. If you're feeling stuck, scattered, or exhausted by mental chaos, we're here to help — diagnosis or not."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Will therapy help if I already take ADHD medication?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Yes. Medication helps many people with symptoms, but therapy addresses emotional struggles, shame, and daily challenges that medication alone can't fix. They often work well together."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Is this therapy focused on productivity?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Nope. We're not here to turn you into a machine. We care more about helping you feel confident, calm, and in control of your own life — however that looks for you."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Can ADHD therapy help with emotional ups and downs?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Yes. ADHD impacts emotional regulation as much as focus. If you feel like your emotions hit too hard or change too fast, therapy will help you create more balance and understanding."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Is this ADHD therapy neurodiversity-affirming?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Absolutely. We're not here to force you to act more neurotypical. We celebrate your strengths and help you build support around your challenges."
+     }
+    }
+   ]
+  }
+ ],
+ "/anxiety-therapy": [
+  {
+   "@context": "https://schema.org",
+   "@type": "FAQPage",
+   "mainEntity": [
+    {
+     "@type": "Question",
+     "name": "How do I know if my anxiety is bad enough for therapy?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "If your worry, stress, or overthinking is affecting your sleep, work, relationships, or peace of mind, it's enough. Therapy isn't only for crisis situations — it's for anyone who wants to feel better."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Will I have to talk about my childhood or past trauma?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Not necessarily. Discussing past experiences is optional. We focus on present-based tools that you can use right away, and deeper exploration only happens when it's relevant and you're ready."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What therapy methods do you use for anxiety?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "We use a range of evidence-based approaches, including CBT (Cognitive Behavioral Therapy), mindfulness, somatic tools, and IFS (Internal Family Systems), customized to your individual needs."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Can I do anxiety counseling if I also take medication?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Yes. Therapy and medication work well together. We support whatever combination helps you most and coordinate with your prescriber when needed."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "How soon will I feel better?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "It varies — some clients notice improvement within a few sessions, while others need more time. The focus is always on building sustainable skills that create lasting change."
+     }
+    }
+   ]
+  }
+ ],
+ "/autism-therapy": [
+  {
+   "@context": "https://schema.org",
+   "@type": "FAQPage",
+   "mainEntity": [
+    {
+     "@type": "Question",
+     "name": "Do I need an official autism diagnosis to work with you?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "No. We welcome late-diagnosed, self-diagnosed, and questioning individuals. You don't need a formal label to seek support that feels right."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Is this therapy only for kids or teens?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Not at all. We specialize in working with autistic teens and adults. Many of our clients were diagnosed in adulthood or are exploring neurodivergence for the first time."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Will you try to make me act more neurotypical?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Absolutely not. Our approach is neurodiversity-affirming — we support your strengths and help you work through challenges without asking you to mask or change who you are."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What if I have other diagnoses too?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "That's very common. Many autistic people also experience anxiety, OCD, ADHD, depression, or trauma. We're trained to work with overlapping needs and will tailor therapy accordingly."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Can I bring tools, stims, or sensory items to the session?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Yes. You're encouraged to show up as you are. We welcome fidgets, headphones, scripts, weighted items — whatever helps you feel comfortable and supported."
+     }
+    }
+   ]
+  }
+ ],
+ "/counseling": [
+  {
+   "@context": "https://schema.org",
+   "@type": "FAQPage",
+   "mainEntity": [
+    {
+     "@type": "Question",
+     "name": "What types of issues do you help with in individual counseling?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "We support clients through a wide range of challenges, including anxiety, depression, burnout, trauma, self-esteem issues, grief, OCD, life transitions, LGBTQ+ issues and more. If it's affecting your daily life or emotional well-being, it's worth bringing to the session."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Is counseling right for me if I'm not in crisis?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Absolutely. You don't have to be falling apart to benefit from therapy. Counseling can help you gain insight, build better habits, and feel more grounded — even if things seem mostly fine."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "How do I get started with a therapist?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "You can schedule a free 15-minute consultation to see if one of our therapists is a good match. From there, we'll set up your first full session and begin creating a plan that fits your goals."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What will my first session be like?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Your first session is about getting to know you. We'll talk about what's bringing you in, your personal history, and what you'd like to work on. You won't need to prepare anything or have all the answers — simply show up as you are."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "How often do I need to come in?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Most clients start with weekly sessions to build momentum, then adjust as needed. You and your therapist will decide on a pace that feels sustainable and supportive for you."
+     }
+    }
+   ]
+  }
+ ],
+ "/couples-counseling": [
+  {
+   "@context": "https://schema.org",
+   "@type": "FAQPage",
+   "mainEntity": [
+    {
+     "@type": "Question",
+     "name": "What kinds of issues do you help couples work through?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "We help couples navigate communication breakdowns, frequent conflict, trust issues, infidelity, parenting stress, emotional distance, and major life transitions."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Do both partners need to be fully committed to counseling?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Mutual openness helps, but complete agreement isn't required. If one partner hesitates, therapists address concerns in session and build shared motivation progressively."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What happens during a typical couples session?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Sessions provide a guided space where both partners express thoughts and feelings, identify patterns, and learn communication tools. The focus is progress, not assigning blame."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Will the therapist take sides?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "No. Therapists support both partners equally and create a neutral space where each person feels heard and respected."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Is it too late for us to try therapy?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "It's rarely too late if both people are still willing to engage. Many couples experience major breakthroughs after years of tension."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Can couples counseling work if we're also doing individual therapy?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Yes. Many find both helpful. Individual therapy is kept separate while couples sessions focus specifically on the relationship."
+     }
+    }
+   ]
+  }
+ ],
+ "/depression-therapy": [
+  {
+   "@context": "https://schema.org",
+   "@type": "FAQPage",
+   "mainEntity": [
+    {
+     "@type": "Question",
+     "name": "Do I need a diagnosis to start therapy for depression?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "No. You're welcome here whether you've been formally diagnosed or are simply feeling off. Your therapist will help explore what you're experiencing and determine the right support."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What kind of therapy do you use for depression?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "We use a range of evidence-based approaches like CBT, Internal Family Systems, EMDR, and somatic tools. Treatment depends on your individual needs and preferences."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What if I don't feel like talking much?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "That's okay. Depression can make talking hard. We'll move slowly, with no pressure. You have flexibility in how you process — conversation, reflection, or skill-building."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Can therapy help even if I've felt this way for years?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Yes. Change is possible even if you've been feeling low for a long time. We start where you are and work toward shifting the patterns keeping you stuck."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Do you work with clients who are also taking medication?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Yes. Therapy works well alongside medication, and we support whatever combination gives you the most relief. We coordinate with prescribers when needed."
+     }
+    }
+   ]
+  }
+ ],
+ "/eating-disorder-therapy": [
+  {
+   "@context": "https://schema.org",
+   "@type": "FAQPage",
+   "mainEntity": [
+    {
+     "@type": "Question",
+     "name": "What eating disorders do you treat?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "We treat anorexia nervosa, bulimia nervosa, binge eating disorder, and related concerns like ARFID or orthorexia — anywhere food, weight, or body image dominates daily life and well-being."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "How long until I feel better?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Recovery timelines differ based on severity and consistency. Early intervention often helps, and you may notice meaningful change within weeks. We focus on sustainable progress at your own pace rather than rushed timelines."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Does insurance cover eating disorder therapy?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Many Utah insurance plans cover licensed mental health therapy for eating disorders as an essential benefit. Our team verifies coverage upfront and explains out-of-pocket costs before your first appointment."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Can family members join sessions?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Yes. Family-based treatment is particularly effective for adolescents with eating disorders. Loved ones learn supportive strategies and sessions are customized to fit individual needs."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Do you offer virtual or in-person sessions?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Both options are available — online therapy across Utah or in-person at our Provo and Orem locations. Virtual sessions maintain the same personalized care."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What if change feels impossible right now?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Starting where you are without judgment is standard here. We use gentle approaches to ease exhaustion and build realistic hope without pressure to recover faster than feels manageable."
+     }
+    }
+   ]
+  }
+ ],
+ "/emdr-therapy": [
+  {
+   "@context": "https://schema.org",
+   "@type": "FAQPage",
+   "mainEntity": [
+    {
+     "@type": "Question",
+     "name": "Is EMDR safe for everyone?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "EMDR is generally safe and effective for many people, but it's not always the right fit for every situation. Your therapist will assess readiness before beginning reprocessing to ensure it feels manageable."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Will I have to talk in detail about my trauma?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Not necessarily. One advantage of EMDR is that clients don't need to share every detail aloud. You'll identify key memories internally, and your therapist guides the processing, keeping the focus on how you're feeling in the moment."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "How many EMDR sessions will I need?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Duration varies by complexity. We usually spend a few sessions on preparation before beginning reprocessing, and we check in regularly to make sure you're feeling supported and grounded."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What if I feel overwhelmed during a session?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "You're always in control. You'll learn grounding techniques beforehand, and your therapist guides the process with care. We can pause or shift focus at any time."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Does EMDR only work for trauma?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "No. While known for trauma treatment, EMDR also addresses anxiety, performance blocks, phobias, chronic stress, and low self-worth. It's effective whenever your mind keeps looping on certain thoughts or past events."
+     }
+    }
+   ]
+  }
+ ],
+ "/faith-transition-therapy": [
+  {
+   "@context": "https://schema.org",
+   "@type": "FAQPage",
+   "mainEntity": [
+    {
+     "@type": "Question",
+     "name": "Do I have to be leaving my religion to benefit from this?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Not at all. Faith transition therapy is for anyone questioning, reshaping, or re-engaging with their beliefs. You don't have to know where you're headed — this is a place to explore."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Is this anti-religious therapy?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "No. We don't push any belief system or try to talk you out of faith. Our job is to support your process — whether that means staying, leaving, or creating something new."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What if my therapist doesn't share my background?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Our therapists are trained to work with clients from many different religious and cultural backgrounds. You don't have to teach us everything — we're here to listen, ask with care, and make sure you feel respected."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Can this help with spiritual trauma?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Yes. Many clients come to us carrying shame, fear, or trauma rooted in spiritual or religious systems. Therapy can help you untangle those wounds and rebuild your sense of safety and identity."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Is it okay if I still feel confused about what I believe?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Absolutely. You don't need clarity to start therapy. This is a space where your questions, doubts, and discomfort are welcome. We'll move through it at your pace."
+     }
+    }
+   ]
+  }
+ ],
+ "/family-counseling": [
+  {
+   "@context": "https://schema.org",
+   "@type": "FAQPage",
+   "mainEntity": [
+    {
+     "@type": "Question",
+     "name": "Do all family members have to attend every session?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Not necessarily. Depending on the situation, sessions may include everyone, certain subgroups like parents and teens, or individual members. We'll work with you to decide what structure is most helpful."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What if someone in the family doesn't want to participate?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "That's common, especially at the beginning. We'll never force anyone, but we can start with those who are open and build trust over time. Sometimes change begins with one person."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Is this therapy for families in crisis only?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "No. Many families use therapy to strengthen connections or improve communication — even if nothing major has happened. It's never too early to start."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What ages do you work with in family therapy?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "We typically work with families that include children 10 and up, but depending on the issue, we may also support younger children or recommend additional services."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Will you take sides or tell us who's right?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "No. Our role is to support the whole family system, not assign blame. We help each person feel heard and help the family develop more supportive ways of relating."
+     }
+    }
+   ]
+  }
+ ],
+ "/grief-therapy": [
+  {
+   "@context": "https://schema.org",
+   "@type": "FAQPage",
+   "mainEntity": [
+    {
+     "@type": "Question",
+     "name": "Is grief therapy only for people who have lost someone to death?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Not at all. While we support clients after the death of a loved one, we also work with people grieving divorce, infertility, chronic illness, career or identity changes, and other major life shifts."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What if it's been years since my loss?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Grief doesn't expire. Many people seek therapy long after the event — when a new wave hits, when something gets triggered, or when they finally feel ready to process. It's never too late to get support."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What if I don't feel like crying or talking much?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "That's okay. Grief doesn't always show up in obvious ways. You're not expected to perform grief here. We'll meet you with whatever you're feeling — or not feeling — without judgment."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Can grief therapy help with traumatic loss?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Yes. We support clients who have experienced sudden, traumatic, or complicated loss. Our therapists are trained to work gently through the trauma layer of grief when needed."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Will therapy help me move on?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "We don't focus on moving on — we focus on helping you integrate loss into your life in a more bearable way. Grief transforms over time, but it doesn't simply disappear, and that's okay."
+     }
+    }
+   ]
+  }
+ ],
+ "/group-therapy": [
+  {
+   "@context": "https://schema.org",
+   "@type": "FAQPage",
+   "mainEntity": [
+    {
+     "@type": "Question",
+     "name": "What kinds of groups do you offer?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "We try to keep the groups we offer updated, but group offerings change based on therapist availability and demand. Contact us to ask what's currently open."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Is group therapy as effective as individual therapy?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Research consistently shows group therapy is just as effective as individual therapy for many challenges, and in some cases, more so, because the group dynamic itself becomes part of the healing. Many clients do both at the same time."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Will I have to share personal things in front of strangers?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "You share at your own pace. A good group therapist never forces disclosure. Most people find that after the first session or two, the group stops feeling like strangers pretty quickly."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "How do I know if group therapy is right for me?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "If you're dealing with difficult challenges and feeling like no one understands, group therapy might be worth exploring. We're happy to chat through it — book a free 15-minute consult and we'll help you figure out if a group is a good fit."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What's the cost for group therapy?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Group therapy is typically covered by insurance, which helps keep it extremely affordable. Most groups without insurance usually cost $30 per session. If you'd like a more detailed estimate, give us a call and we'll be happy to help."
+     }
+    }
+   ]
+  }
+ ],
+ "/home-1": [
+  {
+   "@context": "https://schema.org",
+   "@type": "LocalBusiness",
+   "name": "Tangible Therapy",
+   "url": "https://tangiblementalhealth.com",
+   "telephone": "+14352828086",
+   "priceRange": "$",
+   "image": "https://tangiblementalhealth.com/favicon.ico",
+   "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "246 North Orem Boulevard",
+    "addressLocality": "Orem",
+    "addressRegion": "UT",
+    "postalCode": "84057",
+    "addressCountry": "US"
+   },
+   "award": [
+    "Best Counseling Center of Utah Valley 2025",
+    "Best Counseling Center of Utah Valley 2026",
+    "Best of State Utah 2026"
+   ]
+  },
+  {
+   "@context": "https://schema.org",
+   "@type": "FAQPage",
+   "mainEntity": [
+    {
+     "@type": "Question",
+     "name": "What insurance plans does Tangible Therapy accept?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Tangible Therapy accepts most major insurance plans including United Healthcare, Blue Cross Blue Shield, Regence, EMI, DMBA, PEHP, SelectHealth, UMR, and Tricare. Contact us and we'll verify your benefits before your first session."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "How much does therapy cost at Tangible Therapy?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Our average client with insurance pays around $25 per session. For those without insurance, our cash pay rate is $115 per session — one of the lowest in Utah Valley."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What makes Tangible Therapy different from other practices?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Tangible Therapy is the top-rated therapy clinic on Google in Utah. Our therapists receive twice the industry-standard training, with all trainings at certification level. Every therapist is EMDR trained, and many hold additional certifications in Gottman Method, IFS, and Brainspotting. We were named Best Counseling Center of Utah Valley in 2025 and earned Utah's Best of State award in 2026."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "How do I know if a therapist is the right fit for me?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "We offer a free 15-minute consultation call with any therapist so you can get a feel for the fit before committing. Browse our team page to find a therapist whose specializations match what you're working through, then reach out to schedule a consult."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Where is Tangible Therapy located?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "We have two locations in Utah County. Our Orem office is at 246 North Orem Boulevard, Orem, UT 84057, and our Provo office is at 63 N 300 E, Provo, UT. Telehealth appointments are also available."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What types of therapy does Tangible Therapy offer?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "We offer over 20 specializations including anxiety, depression, trauma, EMDR, couples counseling, ADHD, autism therapy, OCD, grief, and LGBTQ+ affirming care, among others. Our therapists are trained in evidence-based modalities including EMDR, Gottman Method, IFS, and Brainspotting."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "How long does therapy take to work?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Many clients see significant progress in eight to twelve weeks. The timeline varies depending on what you're working through and how frequently you attend sessions. Your therapist will work with you to set realistic goals from the start."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Do you coordinate care with ecclesiastical leaders?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Yes. We are happy to coordinate care with bishops or other ecclesiastical leaders when requested. Simply mention this when scheduling your appointment."
+     }
+    }
+   ]
+  }
+ ],
+ "/": [
+  {
+   "@context": "https://schema.org",
+   "@type": "LocalBusiness",
+   "name": "Tangible Therapy",
+   "url": "https://tangiblementalhealth.com",
+   "telephone": "+14352828086",
+   "priceRange": "$",
+   "image": "https://tangiblementalhealth.com/favicon.ico",
+   "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "246 North Orem Boulevard",
+    "addressLocality": "Orem",
+    "addressRegion": "UT",
+    "postalCode": "84057",
+    "addressCountry": "US"
+   },
+   "award": [
+    "Best Counseling Center of Utah Valley 2025",
+    "Best Counseling Center of Utah Valley 2026",
+    "Best of State Utah 2026"
+   ]
+  },
+  {
+   "@context": "https://schema.org",
+   "@type": "FAQPage",
+   "mainEntity": [
+    {
+     "@type": "Question",
+     "name": "What insurance plans does Tangible Therapy accept?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Tangible Therapy accepts most major insurance plans including United Healthcare, Blue Cross Blue Shield, Regence, EMI, DMBA, PEHP, SelectHealth, UMR, and Tricare. Contact us and we'll verify your benefits before your first session."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "How much does therapy cost at Tangible Therapy?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Our average client with insurance pays around $25 per session. For those without insurance, our cash pay rate is $115 per session — one of the lowest in Utah Valley."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What makes Tangible Therapy different from other practices?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Tangible Therapy is the top-rated therapy clinic on Google in Utah. Our therapists receive twice the industry-standard training, with all trainings at certification level. Every therapist is EMDR trained, and many hold additional certifications in Gottman Method, IFS, and Brainspotting. We were named Best Counseling Center of Utah Valley in 2025 and earned Utah's Best of State award in 2026."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "How do I know if a therapist is the right fit for me?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "We offer a free 15-minute consultation call with any therapist so you can get a feel for the fit before committing. Browse our team page to find a therapist whose specializations match what you're working through, then reach out to schedule a consult."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Where is Tangible Therapy located?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "We have two locations in Utah County. Our Orem office is at 246 North Orem Boulevard, Orem, UT 84057, and our Provo office is at 63 N 300 E, Provo, UT. Telehealth appointments are also available."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What types of therapy does Tangible Therapy offer?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "We offer over 20 specializations including anxiety, depression, trauma, EMDR, couples counseling, ADHD, autism therapy, OCD, grief, and LGBTQ+ affirming care, among others. Our therapists are trained in evidence-based modalities including EMDR, Gottman Method, IFS, and Brainspotting."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "How long does therapy take to work?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Many clients see significant progress in eight to twelve weeks. The timeline varies depending on what you're working through and how frequently you attend sessions. Your therapist will work with you to set realistic goals from the start."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Do you coordinate care with ecclesiastical leaders?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Yes. We are happy to coordinate care with bishops or other ecclesiastical leaders when requested. Simply mention this when scheduling your appointment."
+     }
+    }
+   ]
+  }
+ ],
+ "/insurance-we-accept": [
+  {
+   "@context": "https://schema.org",
+   "@type": "FAQPage",
+   "mainEntity": [
+    {
+     "@type": "Question",
+     "name": "Which insurance plans does Tangible Therapy accept?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Tangible Therapy is in-network with SelectHealth, DMBA, EMI, Blue Cross Blue Shield (BCBS), PEHP, Tricare, United Healthcare, and UMR. If you don't see your plan listed, contact us and we'll help figure out your options."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "How much does therapy cost with insurance?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Our average client with insurance pays around $25 per session. Your exact cost depends on your specific plan, copay, and whether your deductible has been met. We can help estimate your out-of-pocket cost before your first session."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What is the cost without insurance?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Our cash pay rate is $115 per session — one of the lowest in Utah Valley. We believe cost should never be a barrier to getting quality mental health care."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What if my insurance only covers part of the cost?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "If your plan requires a deductible or coinsurance, you may owe a portion of the session cost. Our team will estimate your out-of-pocket responsibility ahead of time so there are no surprises."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "How often will insurance cover my therapy sessions?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Most insurance plans allow up to two sessions per week. Some plans also set annual visit limits. We recommend verifying your specific coverage with your insurance provider."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Why did I receive a bill even though I have insurance?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "This is usually due to an unmet deductible or partial coverage on your plan. If you received an unexpected bill, contact our team at 435-260-5406 and we'll walk you through it."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What if my insurance isn't accepted?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "We can provide a superbill — an itemized receipt you can submit directly to your insurance company for potential out-of-network reimbursement. Contact us for more details."
+     }
+    }
+   ]
+  }
+ ],
+ "/internal-family-systems-therapy": [
+  {
+   "@context": "https://schema.org",
+   "@type": "FAQPage",
+   "mainEntity": [
+    {
+     "@type": "Question",
+     "name": "What makes IFS different from other types of therapy?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "IFS doesn't focus on fixing symptoms or changing behavior through force. Instead, it helps you build relationships with the parts of yourself that carry pain, protect you, or react. It's non-pathologizing and views every part as valuable."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Do I need to know anything about my parts before starting?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "No prior knowledge needed. Your therapist will guide you in discovering your internal system at your own pace through curiosity and exploration."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Will I have to relive painful memories?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "IFS doesn't force re-experiencing trauma. It facilitates safe connections with the parts that carry emotional wounds so they can release their burden at a comfortable pace."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Is IFS only for trauma?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "While effective for trauma, IFS also addresses anxiety, depression, relationship struggles, shame, people-pleasing, and inner conflict — it's beneficial even without a specific diagnosis."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "How long does IFS therapy take?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Duration varies based on individual goals. Some notice shifts within sessions; others explore deeper patterns over a longer period. You determine the pace."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Can I combine IFS with other types of therapy?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Yes. IFS integrates well with other therapeutic approaches, and your therapist can combine it with additional tools suited to your needs."
+     }
+    }
+   ]
+  }
+ ],
+ "/lgbtq-therapy": [
+  {
+   "@context": "https://schema.org",
+   "@type": "FAQPage",
+   "mainEntity": [
+    {
+     "@type": "Question",
+     "name": "Do I need to be out to work with you?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "No. We support clients at all stages of identity exploration, including those who are questioning, closeted, or navigating safety concerns about coming out."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Can I talk about sexuality or gender without being pathologized?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Absolutely. We approach all identity-related topics from a non-pathologizing, affirming lens. You won't be labeled, corrected, or minimized here."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What if I've had a negative therapy experience before?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "That's valid — and unfortunately all too common. We'll move slowly, build trust at your pace, and give you space to talk about those experiences if you choose to."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Do you offer support for LGBTQ+ teens or families?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Yes. We work with LGBTQ+ teens, parents of LGBTQ+ children, and families navigating identity-related dynamics. Affirming support is available for all."
+     }
+    }
+   ]
+  }
+ ],
+ "/ocd-treatment": [
+  {
+   "@context": "https://schema.org",
+   "@type": "FAQPage",
+   "mainEntity": [
+    {
+     "@type": "Question",
+     "name": "What is OCD, really?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Obsessive-Compulsive Disorder is more than liking things neat or organized. It involves intrusive, unwanted thoughts (obsessions) and repetitive behaviors or mental rituals (compulsions) done to relieve anxiety. OCD can take many forms, and it's treatable with the right approach."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "How do I know if I have OCD?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "If you feel trapped in thought loops or find yourself repeating actions to feel right, you might be experiencing symptoms of OCD. A trained therapist can help you understand what's going on and provide a clear assessment."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Will therapy force me to face all my fears at once?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "No. ERP is structured and collaborative. We go at your pace, with your input. You'll never be pushed into anything before you're ready. The goal is to build confidence step by step, not overwhelm you."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Is OCD therapy different from regular counseling?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Yes. OCD requires a more targeted, skills-based approach. While emotional support is part of the process, we focus heavily on specific techniques to reduce compulsions and challenge obsessive thought patterns."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What if my OCD symptoms are really personal or disturbing?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "That's completely normal. OCD often targets the things you care about most. We've heard it all, and we never judge. You're not your thoughts — and you don't have to carry them alone."
+     }
+    }
+   ]
+  }
+ ],
+ "/ptsd-therapy": [
+  {
+   "@context": "https://schema.org",
+   "@type": "FAQPage",
+   "mainEntity": [
+    {
+     "@type": "Question",
+     "name": "What if I'm not sure I have PTSD?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "You don't need a formal diagnosis to seek support. If you're experiencing symptoms like anxiety, emotional numbing, nightmares, or constant alertness, therapy can help."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Will I have to talk about what happened?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Only if and when you're ready. We never force you to retell traumatic experiences. There are effective ways to process trauma that don't involve going into every detail."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What if my trauma isn't as bad as someone else's?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "There's no scale. It matters if something hurt you, changed how you move through the world, or left a lasting impact. All trauma is valid here — there's no comparison."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Is trauma therapy re-traumatizing?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "It shouldn't be. Trauma-informed therapy is designed to avoid reactivating overwhelming memories. We focus on creating a sense of safety and grounding before doing any deeper work."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Can PTSD therapy help with dissociation or shutdown?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Yes. Many trauma survivors experience dissociation, fogginess, or emotional shutdown. We use gentle, body-aware tools to help you stay present without feeling unsafe."
+     }
+    }
+   ]
+  }
+ ],
+ "/telehealth": [
+  {
+   "@context": "https://schema.org",
+   "@type": "FAQPage",
+   "mainEntity": [
+    {
+     "@type": "Question",
+     "name": "Is telehealth therapy as effective as in-person therapy?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "For most concerns, yes. Research consistently shows that telehealth therapy produces outcomes comparable to in-person sessions for anxiety, depression, PTSD, OCD, and relationship issues. Our therapists use the same evidence-based approaches — including EMDR, CBT, IFS, and Gottman Method — whether sessions are online or in-person."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What do I need for a telehealth session?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "All you need is a reliable internet connection, a device with a camera and microphone (phone, tablet, or computer), and a private space. No downloads or new accounts are required — we send you a secure link before each appointment."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Can I do EMDR or couples therapy over telehealth?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Yes. Both EMDR and couples therapy are available via telehealth. EMDR uses on-screen visuals or audio tones for bilateral stimulation, and couples therapy works well virtually — especially when coordinating schedules for in-person visits is difficult."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Does insurance cover telehealth sessions?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Yes. We accept most major insurance plans for telehealth, and coverage works the same as in-person visits. Our average client with insurance pays around $25 per session. Without insurance, our cash pay rate is $115 per session."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Can I see a Tangible Therapy therapist if I live outside Utah County?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Yes. Our therapists are licensed statewide and can see clients anywhere in Utah via telehealth — not just in the Utah County area near our Provo and Orem offices."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Can I switch between telehealth and in-person sessions?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Absolutely. Many of our clients do a mix — coming into our Provo, Orem, or Sandy office when it works and switching to video when it doesn't. You can go back and forth with the same therapist based on what fits your schedule."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "How long are telehealth sessions?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Telehealth sessions are 50 minutes — the same length as our in-person appointments."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What conditions can be treated via telehealth?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "We treat a wide range of concerns via telehealth including anxiety, depression, OCD, trauma, PTSD, couples issues, faith transitions, ADHD, grief, and teen therapy for ages 13 and up. Our therapists are trained in EMDR, CBT, IFS, Gottman Method, and somatic approaches."
+     }
+    }
+   ]
+  }
+ ],
+ "/therapy-for-teens": [
+  {
+   "@context": "https://schema.org",
+   "@type": "FAQPage",
+   "mainEntity": [
+    {
+     "@type": "Question",
+     "name": "How old does my teen need to be to start therapy?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "We typically work with teens ages 13 and up. If your teen is younger, reach out — we may be able to recommend someone or offer alternate support options."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Do parents attend the first session?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "That depends on the teen's age and preference. Sometimes a parent joins for the start of the first session to discuss goals or background, then the therapist meets one-on-one with the teen. We'll guide that process based on what's best for everyone."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Is what my teen says in therapy private?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Yes — with a few exceptions. What your teen shares is confidential unless there's a safety concern. We work to earn their trust and keep parents appropriately informed when it's helpful and necessary."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What if my teen doesn't want to go?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "That's common. We don't force it — but we do invite teens into a space where they're treated with respect and allowed to open up at their own pace. Sometimes all it takes is one good conversation to change their mind."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Can you support LGBTQ+ teens or those questioning their identity?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Absolutely. We are fully LGBTQ+ affirming and experienced in helping teens explore gender, sexuality, and identity in a safe, nonjudgmental space."
+     }
+    }
+   ]
+  }
+ ],
+ "/trauma-therapy": [
+  {
+   "@context": "https://schema.org",
+   "@type": "FAQPage",
+   "mainEntity": [
+    {
+     "@type": "Question",
+     "name": "What if I don't remember what happened to me?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "That's common. Many people with trauma have partial or no memory of the event. We can still work with your symptoms, emotions, and body responses in a gentle and effective way."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Is trauma therapy the same as PTSD treatment?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "They overlap. You don't need a PTSD diagnosis to benefit from trauma therapy. We work with both single-incident and complex trauma, including long-term or developmental experiences."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Do I have to talk about everything that happened?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "No. You're always in control of what you share and when. Many trauma-focused therapies don't require detailed retelling to be effective. We follow your lead, not a script."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What if my trauma is still ongoing or recent?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "We offer stabilization-focused support for clients dealing with ongoing stress or recent events. You don't have to wait until things are calm to begin healing. We'll meet you where you are."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Is trauma therapy re-traumatizing?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "It shouldn't be. At Tangible, we always move slowly and center your sense of safety. If anything feels too intense, we pause. You set the pace — always."
+     }
+    }
+   ]
+  }
+ ],
+ "/why-choose-tangible": [
+  {
+   "@context": "https://schema.org",
+   "@type": "FAQPage",
+   "mainEntity": [
+    {
+     "@type": "Question",
+     "name": "What types of issues do you help with in individual counseling?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "We support clients through a wide range of challenges, including anxiety, depression, burnout, trauma, self-esteem issues, grief, OCD, life transitions, LGBTQ+ issues and more. If it's affecting your daily life or emotional well-being, it's worth bringing to the session."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Is counseling right for me if I'm not in crisis?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Absolutely. You don't have to be falling apart to benefit from therapy. Counseling can help you gain insight, build better habits, and feel more grounded — even if things seem mostly fine."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "How do I get started with a therapist?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "You can schedule a free 15-minute consultation to see if one of our therapists is a good match. From there, we'll set up your first full session and begin creating a plan that fits your goals."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What will my first session be like?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Your first session is about getting to know you. We'll talk about what's bringing you in, your personal history, and what you'd like to work on. You won't need to prepare anything or have all the answers — simply show up as you are."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "How often do I need to come in?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Most clients start with weekly sessions to build momentum, then adjust as needed. You and your therapist will decide on a pace that feels sustainable and supportive for you."
+     }
+    }
+   ]
+  }
+ ]
+}

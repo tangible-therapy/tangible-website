@@ -1,0 +1,23 @@
+---
+import { render, type CollectionEntry } from 'astro:content';
+import { STORES } from '../lib/products';
+interface Props { p: CollectionEntry<'products'> }
+const { p } = Astro.props;
+const { Content } = await render(p);
+const store = STORES[p.data.collection];
+const cta = p.data.cta ?? store.cta;
+---
+<div class="product">
+  <div class="gallery">
+    {p.data.images.map((src, i) => <img src={src} alt={i === 0 ? p.data.title : ''} loading={i ? 'lazy' : 'eager'} />)}
+  </div>
+  <div>
+    <p class="crumbs" style="font-size:.85rem"><a href={`/${p.data.collection}`}>{store.title}</a> › {p.data.title}</p>
+    <h1>{p.data.title}</h1>
+    {Object.entries(p.data.options).map(([k, vals]) => (
+      <p><strong>{k}:</strong> {vals.join(', ')}</p>
+    ))}
+    <div class="rte"><Content /></div>
+    <div class="btn-wrap" style="margin-top:2rem"><a class="btn btn-primary btn-medium" href={cta.href}>{cta.label}</a></div>
+  </div>
+</div>

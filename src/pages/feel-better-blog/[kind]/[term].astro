@@ -1,0 +1,26 @@
+---
+// Category and tag archives: /feel-better-blog/category/OCD and /feel-better-blog/tag/OCD
+import Base from '../../../layouts/Base.astro';
+import PostGrid from '../../../components/PostGrid.astro';
+import { getPosts, termSlug } from '../../../lib/blog';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  const paths: { params: { kind: string; term: string }; props: { label: string } }[] = [];
+  for (const kind of ['category', 'tag'] as const) {
+    const terms = new Set(posts.flatMap((p) => (kind === 'category' ? p.data.categories : p.data.tags)));
+    for (const t of terms) paths.push({ params: { kind, term: termSlug(t) }, props: { label: t } });
+  }
+  return paths;
+}
+const { kind } = Astro.params;
+const { label } = Astro.props;
+const posts = (await getPosts()).filter((p) => (kind === 'category' ? p.data.categories : p.data.tags).includes(label));
+---
+<Base title={`${label} — Feel Better Blogs: Articles & Tips | Tangible Therapy`} description={`Articles about ${label.toLowerCase()} from the licensed therapists at Tangible Therapy in Utah.`}>
+  <section class="blog-list">
+    <h1>{label}</h1>
+    <p style="text-align:center;margin:-.5rem 0 2.5rem"><a href="/feel-better-blog">← All articles</a></p>
+    <PostGrid posts={posts} />
+  </section>
+</Base>

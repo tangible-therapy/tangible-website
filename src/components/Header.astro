@@ -1,0 +1,58 @@
+---
+import { site, nav as publicNav } from '../data/site';
+import { staffNav, staffPaths } from '../data/staff';
+const path = Astro.url.pathname.replace(/\.html$/, '').replace(/\/$/, '') || '/';
+const staff = staffPaths.some((p) => path === p || path.startsWith(p + '/'));
+const nav: any[] = staff ? staffNav : publicNav;
+const cta = staff ? { href: '/staff-logout', label: 'Sign Out', ext: false } : { href: site.clientPortal, label: 'Client Portal', ext: true };
+const tgt = (h: string) => (h.startsWith('http') ? { target: '_blank', rel: 'noopener' } : {});
+const home = staff ? '/employeeportal' : '/';
+const isActive = (href: string) => href !== '/' && (path === href || path.startsWith(href + '/'));
+---
+<header class:list={["site-header", { staff }]}>
+  <div class="bar">
+    <a class="logo" href={home} aria-label={staff ? 'Employee Portal home' : `${site.name} home`}>
+      <img src={site.logo} alt={site.name} width="290" height="84" />
+      {staff && <span class="staff-badge">Employee Portal</span>}
+    </a>
+    <nav class="nav" aria-label="Main">
+      {nav.map((item) =>
+        'children' in item ? (
+          <div class:list={['item', { active: item.children.some((c: any) => isActive(c.href)) }]}>
+            <button class="folder" type="button" aria-haspopup="true" aria-expanded="false">{item.label}</button>
+            <div class="dropdown">
+              {item.children.map((c: any) => <a href={c.href} {...tgt(c.href)} aria-current={isActive(c.href) ? 'page' : undefined}>{c.label}</a>)}
+            </div>
+          </div>
+        ) : (
+          <div class:list={['item', { active: isActive(item.href) }]}><a href={item.href}>{item.label}</a></div>
+        )
+      )}
+    </nav>
+    <a class="header-cta" href={cta.href} {...(cta.ext ? tgt(cta.href) : {})}>{cta.label}</a>
+    <button class="menu-toggle" type="button" aria-label="Open menu" aria-controls="mobile-menu" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7h18M3 12h18M3 17h18" /></svg>
+    </button>
+  </div>
+  <div class="mobile-menu" id="mobile-menu" role="dialog" aria-label="Menu">
+    <div class="top">
+      <a class="logo" href={home}><img src={site.logo} alt={site.name} width="180" height="52" /></a>
+      <button class="menu-toggle close" type="button" aria-label="Close menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 6l12 12M18 6L6 18" /></svg>
+      </button>
+    </div>
+    <nav>
+      {nav.map((item) =>
+        'children' in item ? (
+          <details>
+            <summary>{item.label}</summary>
+            {item.children.map((c: any) => <a href={c.href} {...tgt(c.href)}>{c.label}</a>)}
+          </details>
+        ) : (
+          <a href={item.href}>{item.label}</a>
+        )
+      )}
+    </nav>
+    <a class="header-cta" href={cta.href} {...(cta.ext ? tgt(cta.href) : {})}>{cta.label}</a>
+  </div>
+</header>

@@ -1,0 +1,409 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# ---- Redirects carried over from Squarespace ----
+# Old navigation folder URLs
+[[redirects]]
+  from = "/our-team-1"
+  to = "/why-choose-tangible"
+  status = 301
+[[redirects]]
+  from = "/locations"
+  to = "/orem-office"
+  status = 301
+[[redirects]]
+  from = "/new-dropdown"
+  to = "/counseling"
+  status = 301
+[[redirects]]
+  from = "/for-professionals"
+  to = "/ceu"
+  status = 301
+
+# Staff training pages moved to the course portal / public CEU page
+[[redirects]]
+  from = "/training"
+  to = "/ceu"
+  status = 301
+[[redirects]]
+  from = "/supervisor"
+  to = "https://academy.tangiblementalhealth.com"
+  status = 302
+[[redirects]]
+  from = "/supervisor/*"
+  to = "https://academy.tangiblementalhealth.com"
+  status = 302
+
+# The merch store was retired
+[[redirects]]
+  from = "/support-store"
+  to = "/"
+  status = 301
+[[redirects]]
+  from = "/support-store/*"
+  to = "/"
+  status = 301
+
+# Squarespace blog RSS address
+[[redirects]]
+  from = "/feel-better-blog"
+  to = "/feel-better-blog/rss.xml"
+  status = 301
+  query = {format = "rss"}
+
+# Squarespace system URLs
+[[redirects]]
+  from = "/cart"
+  to = "/"
+  status = 301
+[[redirects]]
+  from = "/search"
+  to = "/"
+  status = 301
+[[redirects]]
+  from = "/feel-better-blog/self-compassion-new-years-resolutions-guide/"
+  to = "/feel-better-blog/self-compassion-new-years-resolutions-guide"
+  status = 301
+[[redirects]]
+  from = "/sitemap.xml"
+  to = "/sitemap-index.xml"
+  status = 200
+
+# URL mappings found on the live Squarespace site
+[[redirects]]
+  from = "/therapists"
+  to = "/ourteam"
+  status = 301
+[[redirects]]
+  from = "/our-team"
+  to = "/ourteam"
+  status = 301
+[[redirects]]
+  from = "/family-therapy"
+  to = "/family-counseling"
+  status = 301
+
+
+# Retired Google Ads landing page
+[[redirects]]
+  from = "/google"
+  to = "/ourteam"
+  status = 301
+
+# Unfinished Squarespace course template page
+[[redirects]]
+  from = "/dealing-with-ocd"
+  to = "/ocd-treatment"
+  status = 301
+
+# ---- URL Mappings copied from Squarespace (Settings → Developer Tools → URL Mappings) ----
+[[redirects]]
+  from = "/feel-better-blog-1"
+  to = "/feel-better-blog"
+  status = 301
+[[redirects]]
+  from = "/therapists/ocd"
+  to = "/feel-better-blog"
+  status = 301
+[[redirects]]
+  from = "/therapists/p/basic-package-zxx7j-pddtn-8py9d-4skgy-3mp33"
+  to = "/feel-better-blog"
+  status = 301
+[[redirects]]
+  from = "/therapists/p/deluxe-package-yn5gr"
+  to = "/feel-better-blog"
+  status = 301
+[[redirects]]
+  from = "/therapists/p/lauren"
+  to = "/feel-better-blog"
+  status = 301
+[[redirects]]
+  from = "/home/p/basic-package-zxx7j-pddtn-8py9d-4skgy-3mp33"
+  to = "/feel-better-blog"
+  status = 301
+[[redirects]]
+  from = "/home/p/kelley"
+  to = "/feel-better-blog"
+  status = 301
+[[redirects]]
+  from = "/home/p/lauren"
+  to = "/ourteam"
+  status = 301
+[[redirects]]
+  from = "/therapists/anxiety"
+  to = "/ourteam"
+  status = 301
+[[redirects]]
+  from = "/therapists/current-openings"
+  to = "/ourteam"
+  status = 301
+[[redirects]]
+  from = "/therapists/depression"
+  to = "/ourteam"
+  status = 301
+[[redirects]]
+  from = "/therapists/emdr"
+  to = "/ourteam"
+  status = 301
+[[redirects]]
+  from = "/therapists/ifs"
+  to = "/ourteam"
+  status = 301
+[[redirects]]
+  from = "/therapists/lgbt"
+  to = "/ourteam"
+  status = 301
+[[redirects]]
+  from = "/home-1/p/basic-package-zxx7j-pddtn-8py9d-4skgy"
+  to = "/ourteam"
+  status = 301
+[[redirects]]
+  from = "/home/p/basic-package-zxx7j"
+  to = "/ourteam"
+  status = 301
+[[redirects]]
+  from = "/home/p/basic-package-zxx7j-ggr4c"
+  to = "/ourteam"
+  status = 301
+[[redirects]]
+  from = "/home/p/basic-package-zxx7j-ggr4c-p8gas"
+  to = "/ourteam"
+  status = 301
+[[redirects]]
+  from = "/home/p/basic-package-zxx7j-ggr4c-p8gas-6t3gx"
+  to = "/ourteam"
+  status = 301
+[[redirects]]
+  from = "/home/p/basic-package-zxx7j-ggr4c-p8gas-ala6m"
+  to = "/ourteam"
+  status = 301
+[[redirects]]
+  from = "/home/p/basic-package-zxx7j-pddtn-8py9d-4skgy"
+  to = "/ourteam"
+  status = 301
+[[redirects]]
+  from = "/home/p/basic-package-zxx7j-pddtn-8py9d"
+  to = "/ourteam"
+  status = 301
+[[redirects]]
+  from = "/home/p/basic-package-zxx7j-pddtn"
+  to = "/ourteam"
+  status = 301
+[[redirects]]
+  from = "/home/p/basic-package-zxx7j-ggr4c-p8gas-h59jh"
+  to = "/ourteam"
+  status = 301
+[[redirects]]
+  from = "/home-1/emdr"
+  to = "/feel-better-blog"
+  status = 301
+[[redirects]]
+  from = "/home-1/ifs"
+  to = "/feel-better-blog"
+  status = 301
+[[redirects]]
+  from = "/home-1/p/basic-package-zxx7j"
+  to = "/feel-better-blog"
+  status = 301
+[[redirects]]
+  from = "/home-1/p/basic-package-zxx7j-ggr4c"
+  to = "/feel-better-blog"
+  status = 301
+[[redirects]]
+  from = "/home-1/p/basic-package-zxx7j-pddtn-8py9d"
+  to = "/feel-better-blog"
+  status = 301
+[[redirects]]
+  from = "/home-1/p/basic-package-zxx7j-pddtn"
+  to = "/feel-better-blog"
+  status = 301
+[[redirects]]
+  from = "/home-1/p/basic-package-zxx7j-ggr4c-p8gas-h59jh"
+  to = "/feel-better-blog"
+  status = 301
+[[redirects]]
+  from = "/home-1/p/basic-package-zxx7j-ggr4c-p8gas-ala6m"
+  to = "/feel-better-blog"
+  status = 301
+[[redirects]]
+  from = "/home-1/p/basic-package-zxx7j-ggr4c-p8gas"
+  to = "/feel-better-blog"
+  status = 301
+[[redirects]]
+  from = "/feel-better-blog-1/healing-from-trauma-why-its-so-hard-and-how-healing-happens"
+  to = "/feel-better-blog"
+  status = 301
+[[redirects]]
+  from = "/feel-better-blog-1/making-the-most-out-of-therapy"
+  to = "/feel-better-blog"
+  status = 301
+[[redirects]]
+  from = "/feel-better-blog-1/mzh0p8k23kd0qoed6gyjw9h2ztdprb"
+  to = "/feel-better-blog"
+  status = 301
+[[redirects]]
+  from = "/feel-better-blog-1/narcissism-understanding"
+  to = "/feel-better-blog"
+  status = 301
+[[redirects]]
+  from = "/feel-better-blog-1/say-yes-to-no-setting-boundaries-with-kids"
+  to = "/feel-better-blog"
+  status = 301
+[[redirects]]
+  from = "/feel-better-blog-1/wjykzmxwjubtlf60ma9t4uagcmelfp"
+  to = "/feel-better-blog"
+  status = 301
+[[redirects]]
+  from = "/feel-better-blog-1/what-if-i-jumped-dealing-with-intrusive-thoughts"
+  to = "/feel-better-blog"
+  status = 301
+[[redirects]]
+  from = "/feel-better-blog-1/tag/Therapy"
+  to = "/feel-better-blog"
+  status = 301
+[[redirects]]
+  from = "/feel-better-blog-1/tag/Anxiety"
+  to = "/feel-better-blog"
+  status = 301
+[[redirects]]
+  from = "/feel-better-blog-1/self-compassion-new-years-resolutions-guide"
+  to = "/feel-better-blog"
+  status = 301
+[[redirects]]
+  from = "/feel-better-blog-1/7561uf89s0v6cm93ry0e3kmqaz6hzc"
+  to = "/feel-better-blog"
+  status = 301
+[[redirects]]
+  from = "/feel-better-blog-1/adhd-parenting"
+  to = "/feel-better-blog"
+  status = 301
+[[redirects]]
+  from = "/feel-better-blog-1/anxietytherapy"
+  to = "/feel-better-blog"
+  status = 301
+[[redirects]]
+  from = "/feel-better-blog-1/boundaries-arent-bad-a-therapists-guide-to-better-relationships"
+  to = "/feel-better-blog"
+  status = 301
+[[redirects]]
+  from = "/feel-better-blog-1/fighting-with-myself-the-power-of-self-compassion"
+  to = "/feel-better-blog"
+  status = 301
+[[redirects]]
+  from = "/feel-better-blog-1/dealing-with-panic-attacks"
+  to = "/feel-better-blog"
+  status = 301
+[[redirects]]
+  from = "/feel-better-blog-1/cultivating-self-compassion-a-therapists-guide-to-loving-yourself"
+  to = "/feel-better-blog"
+  status = 301
+[[redirects]]
+  from = "/feel-better-blog-1/category/Trauma"
+  to = "/feel-better-blog"
+  status = 301
+[[redirects]]
+  from = "/feel-better-blog-1/category/Anxiety"
+  to = "/feel-better-blog"
+  status = 301
+[[redirects]]
+  from = "/brady"
+  to = "/ourteam/p/brady-clegg"
+  status = 301
+[[redirects]]
+  from = "/joe"
+  to = "/ourteam/p/joe-johnson"
+  status = 301
+[[redirects]]
+  from = "/hannahhunt"
+  to = "/ourteam/p/hannah-hunt"
+  status = 301
+[[redirects]]
+  from = "/ourteam/p/sophiecaughman-bf6ca"
+  to = "/ourteam"
+  status = 301
+[[redirects]]
+  from = "/ourteam/p/sophiecaughman-a4y2l"
+  to = "/ourteam/p/leah-brown"
+  status = 301
+[[redirects]]
+  from = "/ourteam/p/sophiecaughman-p7rw3"
+  to = "/ourteam"
+  status = 301
+[[redirects]]
+  from = "/ourteam/p/basic-package-zxx7j-ggr4c-p8gas-ala6m"
+  to = "/ourteam/p/nancy-coca"
+  status = 301
+[[redirects]]
+  from = "/ourteam/p/basic-package-zxx7j-pddtn-8py9d-4skgy-3mp33"
+  to = "/ourteam/p/parker-jensen"
+  status = 301
+[[redirects]]
+  from = "/ourteam/p/basic-package-zxx7j-ggr4c"
+  to = "/ourteam/p/skyler-anderson"
+  status = 301
+[[redirects]]
+  from = "/ourteam/p/arianne-buck-lcsw"
+  to = "/ourteam/p/arianne-buck"
+  status = 301
+[[redirects]]
+  from = "/ourteam/p/joe-johnson-lcsw"
+  to = "/ourteam/p/joe-johnson"
+  status = 301
+[[redirects]]
+  from = "/home"
+  to = "/"
+  status = 301
+[[redirects]]
+  from = "/hannahbrown"
+  to = "/ourteam/p/hannah-brown"
+  status = 301
+[[redirects]]
+  from = "/arianne"
+  to = "/ourteam/p/arianne-buck"
+  status = 301
+[[redirects]]
+  from = "/emily"
+  to = "/ourteam/p/emily-mccrary"
+  status = 301
+[[redirects]]
+  from = "/skyler"
+  to = "/ourteam/p/skyler-anderson"
+  status = 301
+[[redirects]]
+  from = "/nancy"
+  to = "/ourteam/p/nancy-coca"
+  status = 301
+[[redirects]]
+  from = "/sarah"
+  to = "/ourteam/p/sarah-mendez"
+  status = 301
+# Staff pages are password-protected by netlify/edge-functions/staff-gate.ts (set STAFF_PASSWORD in Netlify).
+
+# Internal staff pages: keep them out of search engines
+[[headers]]
+  for = "/reception-*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+[[headers]]
+  for = "/scheduling-new-client"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+[[headers]]
+  for = "/crisis-call"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+
+
+[[headers]]
+  for = "/images/*"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"

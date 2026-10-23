@@ -1,0 +1,42 @@
+---
+// "Find Your Therapist" grid with office / specialty filters.
+import { getCollection } from 'astro:content';
+import categories from '../data/team-categories.json';
+
+interface Props { category?: string }
+const { category } = Astro.props;
+type Cat = { slug: string; name: string; children: Cat[] };
+const tree = categories as Cat[];
+
+const all = (await getCollection('team')).filter((t) => !t.data.hidden).sort((a, b) => a.data.order - b.data.order);
+const inCat = (cs: string[], cat: string) => cs.some((c) => c === cat || c.startsWith(cat + '/'));
+const members = category ? all.filter((t) => inCat(t.data.categories, category)) : all;
+
+const top = category ? category.split('/')[0] : '';
+const topCat = tree.find((c) => c.slug === top);
+---
+<section class="sec t-black">
+  <div class="team-head">
+    <h1>Find Your Therapist</h1>
+    <ul class="team-filters">
+      <li><a href="/ourteam" aria-current={!category ? 'page' : undefined}>All</a></li>
+      {tree.map((c) => <li><a href={`/ourteam/${c.slug}`} aria-current={top === c.slug ? 'page' : undefined}>{c.name}</a></li>)}
+    </ul>
+    {topCat && topCat.children.length > 0 && (
+      <ul class="team-filters sub">
+        {topCat.children.map((c) => <li><a href={`/ourteam/${c.slug}`} aria-current={category === c.slug ? 'page' : undefined}>{c.name}</a></li>)}
+      </ul>
+    )}
+  </div>
+  <ul class="team-grid">
+    {members.map((t) => (
+      <li class="team-card">
+        <a href={`/ourteam/p/${t.id}`}>
+          <img src={t.data.photo} alt={t.data.name} loading="lazy" width="600" height="800" />
+          <h2>{t.data.name}</h2>
+        </a>
+      </li>
+    ))}
+  </ul>
+  {members.length === 0 && <p style="text-align:center;color:#fff;padding-bottom:4rem">No therapists match this filter right now. Call us and we'll help you find the right fit.</p>}
+  </section>

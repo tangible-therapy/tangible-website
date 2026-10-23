@@ -1,0 +1,69 @@
+---
+// Shows a row/carousel/grid of therapists or blog posts inside a page.
+//   <Summary kind="team" design="carousel" items={["anna-hunsaker", ...]} />
+//   <Summary kind="team" category="current-openings" limit={6} />   (live filter)
+//   <Summary kind="blog" design="list" items={[...]} excerpt />
+import { getCollection } from 'astro:content';
+import categories from '../data/team-categories.json';
+
+interface Props {
+  rounded?: boolean;
+  kind: 'team' | 'blog';
+  design?: string;
+  items?: string[];
+  category?: string;
+  limit?: number;
+  perRow?: number;
+  title?: string;
+  excerpt?: boolean;
+  cats?: boolean;
+}
+const { kind, design = 'grid', items = [], category, limit, perRow = 3, title, excerpt = false, cats = false, rounded = false } = Astro.props;
+
+type Cat = { slug: string; name: string; children: Cat[] };
+const catNames = new Map<string, string>();
+const walk = (cs: Cat[]) => cs.forEach((c) => { catNames.set(c.slug, c.name); walk(c.children); });
+walk(categories as Cat[]);
+
+let cards: { href: string; img: string; title: string; meta?: string; text?: string }[] = [];
+if (kind === 'team') {
+  const all = (await getCollection('team')).filter((t) => !t.data.hidden).sort((a, b) => a.data.order - b.data.order);
+  const cats = category ? category.split(',').map((c) => c.trim()) : [];
+  let list = category ? all.filter((t) => t.data.categories.some((c) => cats.some((k) => c === k || c.startsWith(k + '/')))) : items.map((s) => all.find((t) => t.id === s)).filter(Boolean);
+  if (limit) list = list.slice(0, limit);
+  cards = list.map((t: any) => ({
+    href: `/ourteam/p/${t.id}`,
+    img: t.data.photo,
+    title: t.data.name,
+    meta: [...new Set(t.data.categories.map((c: string) => catNames.get(c)).filter(Boolean))].join(' · '),
+  }));
+} else {
+  const all = (await getCollection('blog')).filter((p) => !p.data.draft).sort((a, b) => +b.data.date - +a.data.date);
+  let list = items.length ? items.map((s) => all.find((p) => p.id === s)).filter(Boolean) : all;
+  if (limit) list = list.slice(0, limit);
+  cards = list.map((p: any) => ({ href: p.data.urlPath ?? `/feel-better-blog/${p.id}`, img: p.data.image, title: p.data.title, text: p.data.excerpt }));
+}
+const isCarousel = design === 'carousel';
+---
+<div class:list={['summary', design, { rounded }]} style={`--per:${perRow}`}>
+  {(title || isCarousel) && (
+    <div class="summary-head">
+      {title ? <span>{title}</span> : <span />}
+      {isCarousel && <div class="arrows"><button class="prev" aria-label="Previous">‹</button><button class="next" aria-label="Next">›</button></div>}
+    </div>
+  )}
+  <ul class="summary-track">
+    {cards.map((c) => (
+      <li class="s-item">
+        <a href={c.href}>
+          {c.img && <img src={c.img} alt={c.title} loading="lazy" />}
+          <div>
+            <h3 class="s-title">{c.title}</h3>
+            {cats && c.meta && <p class="s-meta">{c.meta}</p>}
+            {excerpt && c.text && <p class="s-meta">{c.text}</p>}
+          </div>
+        </a>
+      </li>
+    ))}
+  </ul>
+</div>

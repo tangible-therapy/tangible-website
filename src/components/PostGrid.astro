@@ -1,0 +1,6 @@
+---
+import PostCard from './PostCard.astro';
+interface Props { posts: any[] }
+const { posts } = Astro.props;
+---
+<div class="bgrid">{posts.map((p) => <PostCard post={p} />)}</div>

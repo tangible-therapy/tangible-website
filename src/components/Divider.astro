@@ -1,0 +1,39 @@
+---
+// Section divider (the curved bottom edge on many sections).
+// `fill` is the background color of the section that follows; it is drawn below the curve.
+// `width` is the width of one repeat of the pattern, in vw (100 = one shape across the page).
+interface Props { type?: string; height?: number; width?: number; fill?: string; flipX?: boolean; flipY?: boolean }
+const { type = 'wavy', height = 6, width = 100, fill = '#fff', flipX = false, flipY = false } = Astro.props;
+
+const W = 100, H = 10;
+const n = Math.max(1, Math.round(100 / width));
+const u = W / n;
+let d = '';
+if (type === 'wavy') {
+  // one gentle wave per repeat: high at the edges, dipping in the middle
+  d = `M0,${H} L0,0 ` + Array.from({ length: n }, (_, i) => {
+    const x = i * u;
+    return `C${x + u * 0.18},0 ${x + u * 0.32},${H} ${x + u * 0.5},${H} C${x + u * 0.68},${H} ${x + u * 0.82},0 ${x + u},0`;
+  }).join(' ') + ` L${W},${H} Z`;
+} else if (type === 'scalloped' && n === 1) {
+  // a single scallop across the page reads as one sweeping curve
+  d = `M0,${H} L0,${H * 0.95} C30,${H * 0.95} 60,0 ${W},0 L${W},${H} Z`;
+} else if (type === 'scalloped') {
+  d = `M0,${H} L0,0 ` + Array.from({ length: n }, (_, i) => `A${u / 2},${H} 0 0 0 ${(i + 1) * u},0`).join(' ') + ` L${W},${H} Z`;
+} else if (type === 'jagged') {
+  d = `M0,${H} L0,0 ` + Array.from({ length: n }, (_, i) => `L${i * u + u / 2},${H} L${(i + 1) * u},0`).join(' ') + ` L${W},${H} Z`;
+} else if (type === 'soft-corners') {
+  d = `M0,${H} L0,0 Q0,${H} 4,${H} L96,${H} Q${W},${H} ${W},0 L${W},${H} Z`;
+} else if (type === 'pointed') {
+  d = `M0,${H} L0,0 L50,${H} L${W},0 L${W},${H} Z`;
+} else if (type === 'slanted') {
+  d = `M0,${H} L${W},0 L${W},${H} Z`;
+} else {
+  d = `M0,${H} L0,0 Q50,${H * 2} ${W},0 L${W},${H} Z`;
+}
+// Mirroring only matters for asymmetric shapes.
+const mirror = (flipX || (type === 'scalloped' && n === 1 && false)) ? `scale(-1,1) translate(-${W},0)` : undefined;
+---
+<svg class="divider" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={`height:${height}vw`} aria-hidden="true">
+  <path d={d} fill={fill} transform={type === 'scalloped' && n === 1 ? undefined : mirror} />
+</svg>

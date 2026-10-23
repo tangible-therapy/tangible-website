@@ -1,0 +1,34 @@
+---
+// Staff-only page (password-protected by netlify/edge-functions/staff-gate.ts)
+import Base from '../layouts/Base.astro';
+import Divider from '../components/Divider.astro';
+import { employeeLinks, newEmployeeLinks, managementLinks, type StaffLink } from '../data/staff';
+const show = (l: StaffLink[]) => l.filter((x) => x.href);
+const ext = (h: string) => h.startsWith('http');
+const cards = [
+  { title: 'Employee Links', links: show(employeeLinks) },
+  { title: 'New Employee Links', links: show(newEmployeeLinks) },
+  { title: 'Management Portal', links: show(managementLinks) },
+];
+---
+<Base title="Employee Portal | Tangible Therapy" description="Tangible Therapy employee portal." noindex>
+  <section class="sec t-black h-medium has-bg has-div" style="--divh:6vw">
+    <div class="sec-bg"><img src="/images/309a7727-712d27.jpg" alt="" loading="eager" /><div class="sec-ov" style="opacity:.15"></div></div>
+    <div class="sec-in"><div class="wrap"><h1 class="ta-center">Welcome to your<br />Employee Portal</h1></div></div>
+    <Divider type="wavy" height={6} width={100} fill="#565d57" />
+  </section>
+  <section class="sec t-light">
+    <div class="sec-in">
+      <div class="wrap staff-cards">
+        {cards.map((c) => (
+          <div class="staff-card">
+            <h2>{c.title}</h2>
+            {c.links.map((l) => (
+              <a class="staff-btn" href={l.href} target={ext(l.href) ? '_blank' : undefined} rel={ext(l.href) ? 'noopener' : undefined}>{l.label}</a>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+</Base>

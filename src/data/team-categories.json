@@ -1,0 +1,371 @@
+[
+  {
+    "slug": "orem-office",
+    "name": "Orem Office",
+    "children": [
+      {
+        "slug": "orem-office/addiction",
+        "name": "Addiction",
+        "children": []
+      },
+      {
+        "slug": "orem-office/adhd",
+        "name": "ADHD",
+        "children": []
+      },
+      {
+        "slug": "orem-office/anxiety",
+        "name": "Anxiety",
+        "children": []
+      },
+      {
+        "slug": "orem-office/autism",
+        "name": "Autism",
+        "children": []
+      },
+      {
+        "slug": "orem-office/couples",
+        "name": "Couples",
+        "children": []
+      },
+      {
+        "slug": "orem-office/depression",
+        "name": "Depression",
+        "children": []
+      },
+      {
+        "slug": "orem-office/eating-disorders",
+        "name": "Eating Disorders",
+        "children": []
+      },
+      {
+        "slug": "orem-office/emdr",
+        "name": "EMDR",
+        "children": []
+      },
+      {
+        "slug": "orem-office/faith-transitions",
+        "name": "Faith Transitions",
+        "children": []
+      },
+      {
+        "slug": "orem-office/grief",
+        "name": "Grief",
+        "children": []
+      },
+      {
+        "slug": "orem-office/ifs",
+        "name": "IFS",
+        "children": []
+      },
+      {
+        "slug": "orem-office/lgbt",
+        "name": "LGBT+",
+        "children": []
+      },
+      {
+        "slug": "orem-office/ocd",
+        "name": "OCD",
+        "children": []
+      },
+      {
+        "slug": "orem-office/ptsd",
+        "name": "PTSD",
+        "children": []
+      },
+      {
+        "slug": "orem-office/teens",
+        "name": "Teens",
+        "children": []
+      },
+      {
+        "slug": "orem-office/trauma",
+        "name": "Trauma",
+        "children": []
+      },
+      {
+        "slug": "orem-office/current-openings",
+        "name": "Current Openings",
+        "children": []
+      }
+    ]
+  },
+  {
+    "slug": "provo-office",
+    "name": "Provo Office",
+    "children": [
+      {
+        "slug": "provo-office/addiction",
+        "name": "Addiction",
+        "children": []
+      },
+      {
+        "slug": "provo-office/adhd",
+        "name": "ADHD",
+        "children": []
+      },
+      {
+        "slug": "provo-office/anxiety",
+        "name": "Anxiety",
+        "children": []
+      },
+      {
+        "slug": "provo-office/autism",
+        "name": "Autism",
+        "children": []
+      },
+      {
+        "slug": "provo-office/couples",
+        "name": "Couples",
+        "children": []
+      },
+      {
+        "slug": "provo-office/depression",
+        "name": "Depression",
+        "children": []
+      },
+      {
+        "slug": "provo-office/eating-disorder",
+        "name": "Eating Disorders",
+        "children": []
+      },
+      {
+        "slug": "provo-office/emdr",
+        "name": "EMDR",
+        "children": []
+      },
+      {
+        "slug": "provo-office/faith-transitions",
+        "name": "Faith Transitions",
+        "children": []
+      },
+      {
+        "slug": "provo-office/grief",
+        "name": "Grief",
+        "children": []
+      },
+      {
+        "slug": "provo-office/ifs",
+        "name": "IFS",
+        "children": []
+      },
+      {
+        "slug": "provo-office/lgbt",
+        "name": "LGBT+",
+        "children": []
+      },
+      {
+        "slug": "provo-office/ocd",
+        "name": "OCD",
+        "children": []
+      },
+      {
+        "slug": "provo-office/ptsd",
+        "name": "PTSD",
+        "children": []
+      },
+      {
+        "slug": "provo-office/teens",
+        "name": "Teens",
+        "children": []
+      },
+      {
+        "slug": "provo-office/trauma",
+        "name": "Trauma",
+        "children": []
+      },
+      {
+        "slug": "provo-office/current-openings",
+        "name": "Current Openings",
+        "children": []
+      }
+    ]
+  },
+  {
+    "slug": "sandy",
+    "name": "Sandy Office",
+    "children": [
+      {
+        "slug": "sandy/addiction",
+        "name": "Addiction",
+        "children": []
+      },
+      {
+        "slug": "sandy/adhd",
+        "name": "ADHD",
+        "children": []
+      },
+      {
+        "slug": "sandy/anxiety",
+        "name": "Anxiety",
+        "children": []
+      },
+      {
+        "slug": "sandy/autism",
+        "name": "Autism",
+        "children": []
+      },
+      {
+        "slug": "sandy/couples",
+        "name": "Couples",
+        "children": []
+      },
+      {
+        "slug": "sandy/depression",
+        "name": "Depression",
+        "children": []
+      },
+      {
+        "slug": "sandy/eating-disorders",
+        "name": "Eating Disorders",
+        "children": []
+      },
+      {
+        "slug": "sandy/emdr",
+        "name": "EMDR",
+        "children": []
+      },
+      {
+        "slug": "sandy/faith-transitions",
+        "name": "Faith Transitions",
+        "children": []
+      },
+      {
+        "slug": "sandy/grief",
+        "name": "Grief",
+        "children": []
+      },
+      {
+        "slug": "sandy/ifs",
+        "name": "IFS",
+        "children": []
+      },
+      {
+        "slug": "sandy/lgbtq",
+        "name": "LGBTQ+",
+        "children": []
+      },
+      {
+        "slug": "sandy/ocd",
+        "name": "OCD",
+        "children": []
+      },
+      {
+        "slug": "sandy/ptsd",
+        "name": "PTSD",
+        "children": []
+      },
+      {
+        "slug": "sandy/teens",
+        "name": "Teens",
+        "children": []
+      },
+      {
+        "slug": "sandy/trauma",
+        "name": "Trauma",
+        "children": []
+      },
+      {
+        "slug": "sandy/current-openings",
+        "name": "Current Openings",
+        "children": []
+      }
+    ]
+  },
+  {
+    "slug": "telehealth",
+    "name": "Telehealth",
+    "children": [
+      {
+        "slug": "telehealth/addiction",
+        "name": "Addiction",
+        "children": []
+      },
+      {
+        "slug": "telehealth/adhd",
+        "name": "ADHD",
+        "children": []
+      },
+      {
+        "slug": "telehealth/anxiety",
+        "name": "Anxiety",
+        "children": []
+      },
+      {
+        "slug": "telehealth/autism",
+        "name": "Autism",
+        "children": []
+      },
+      {
+        "slug": "telehealth/couples",
+        "name": "Couples",
+        "children": []
+      },
+      {
+        "slug": "telehealth/depression",
+        "name": "Depression",
+        "children": []
+      },
+      {
+        "slug": "telehealth/eating-disorders",
+        "name": "Eating Disorders",
+        "children": []
+      },
+      {
+        "slug": "telehealth/emdr",
+        "name": "EMDR",
+        "children": []
+      },
+      {
+        "slug": "telehealth/faith-transitions",
+        "name": "Faith Transitions",
+        "children": []
+      },
+      {
+        "slug": "telehealth/grief",
+        "name": "Grief",
+        "children": []
+      },
+      {
+        "slug": "telehealth/ifs",
+        "name": "IFS",
+        "children": []
+      },
+      {
+        "slug": "telehealth/lgbt",
+        "name": "LGBT+",
+        "children": []
+      },
+      {
+        "slug": "telehealth/ocd",
+        "name": "OCD",
+        "children": []
+      },
+      {
+        "slug": "telehealth/ptsd",
+        "name": "PTSD",
+        "children": []
+      },
+      {
+        "slug": "telehealth/teens",
+        "name": "Teens",
+        "children": []
+      },
+      {
+        "slug": "telehealth/trauma",
+        "name": "Trauma",
+        "children": []
+      },
+      {
+        "slug": "telehealth/current-openings-1",
+        "name": "Current Openings",
+        "children": []
+      }
+    ]
+  },
+  {
+    "slug": "current-openings",
+    "name": "Current Openings",
+    "children": []
+  }
+]

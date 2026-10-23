@@ -1,0 +1,12 @@
+---
+// Job application call-to-action that opens the role's Google Form.
+interface Props { href: string; role: string; eyebrow?: string; text?: string; button?: string; note?: string }
+const { href, role, eyebrow = 'Apply', text = 'Ready to join the Tangible team? Fill out our short application and attach your resume or CV. We review every application and will reach out about next steps.', button = 'Start your application →', note = 'Opens in Google Forms. You’ll be asked to sign in with a Google account so you can upload your resume.' } = Astro.props;
+---
+<div class="apply-card">
+  <p class="apply-eyebrow">{eyebrow}</p>
+  <h2>{role}</h2>
+  <p>{text}</p>
+  <a class="btn btn-medium apply-btn" href={href} target="_blank" rel="noopener">{button}</a>
+  <p class="apply-note">{note}</p>
+</div>

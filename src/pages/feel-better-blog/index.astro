@@ -1,0 +1,124 @@
+---
+import Base from '../../layouts/Base.astro';
+import PostCard from '../../components/PostCard.astro';
+import { getPosts } from '../../lib/blog';
+
+const posts = await getPosts();
+// Featured: any posts marked `featured: true`, topped up with the newest posts (3 total)
+const pinned = posts.filter((p) => p.data.featured);
+const featured = [...pinned, ...posts.filter((p) => !p.data.featured)].slice(0, 3);
+const [lead, ...side] = featured;
+const featuredIds = new Set(featured.map((p) => p.id));
+
+// Topic buttons: categories ordered by how many articles use them
+const counts = new Map<string, number>();
+for (const p of posts) for (const c of p.data.categories.filter(Boolean)) counts.set(c, (counts.get(c) ?? 0) + 1);
+const topics = [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([c]) => c);
+---
+<Base title="Feel Better Blogs: Articles & Tips | Tangible Therapy" description="Explore the Tangible Mental Health blog; practical articles on anxiety, OCD, trauma, relationships, and mental wellness from our licensed, local Utah therapists.">
+  <section class="blog-home">
+    <header class="blog-intro">
+      <p class="blog-eyebrow">Feel Better Library</p>
+      <h1>Articles &amp; tips from our therapists</h1>
+      <p>Practical, research-informed guidance on anxiety, OCD, trauma, relationships and everyday mental health — written by Tangible’s licensed Utah therapists.</p>
+    </header>
+
+    <div class="blog-featured" id="featured">
+      <PostCard post={lead} size="large" />
+      <div class="blog-featured-side">
+        {side.map((p) => <PostCard post={p} size="small" />)}
+      </div>
+    </div>
+
+    <div class="blog-tools" id="articles">
+      <div class="blog-tools-row">
+        <label class="blog-search">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <span class="visually-hidden">Search articles</span>
+          <input type="search" id="blog-q" placeholder="Search articles…" autocomplete="off" />
+        </label>
+        <label class="blog-sort">
+          <span>Sort by</span>
+          <select id="blog-sort">
+            <option value="new">Newest first</option>
+            <option value="old">Oldest first</option>
+            <option value="az">Title A–Z</option>
+          </select>
+        </label>
+      </div>
+      <div class="blog-topics" role="group" aria-label="Filter by topic">
+        <button type="button" class="chip is-on" data-topic="" aria-pressed="true">All topics</button>
+        {topics.map((t) => <button type="button" class="chip" data-topic={t} aria-pressed="false">{t}</button>)}
+      </div>
+    </div>
+
+    <div class="blog-results-head">
+      <h2 id="blog-heading">More articles</h2>
+      <p id="blog-count" aria-live="polite"></p>
+    </div>
+    <div class="bgrid" id="blog-grid">
+      {posts.map((p) => (
+        <div class="bgrid-item" data-featured={featuredIds.has(p.id) ? '1' : undefined}><PostCard post={p} /></div>
+      ))}
+    </div>
+    <div class="blog-empty" id="blog-empty" hidden>
+      <p>No articles match that search yet.</p>
+      <button type="button" class="btn" id="blog-reset">Show all articles</button>
+    </div>
+  </section>
+
+  <script is:inline>
+    (function () {
+      var grid = document.getElementById('blog-grid');
+      var items = Array.prototype.slice.call(grid.children);
+      var q = document.getElementById('blog-q');
+      var sort = document.getElementById('blog-sort');
+      var chips = document.querySelectorAll('.blog-topics .chip');
+      var count = document.getElementById('blog-count');
+      var heading = document.getElementById('blog-heading');
+      var empty = document.getElementById('blog-empty');
+      var featured = document.getElementById('featured');
+      var topic = '';
+
+      function card(el) { return el.firstElementChild; }
+      function apply() {
+        var term = q.value.trim().toLowerCase();
+        var filtering = !!term || !!topic;
+        var words = term.split(/\s+/).filter(Boolean);
+        var shown = 0;
+        items.sort(function (a, b) {
+          var A = card(a), B = card(b);
+          if (sort.value === 'az') return A.dataset.title.localeCompare(B.dataset.title);
+          return sort.value === 'old' ? A.dataset.date - B.dataset.date : B.dataset.date - A.dataset.date;
+        }).forEach(function (el) {
+          var c = card(el);
+          var ok = (!topic || c.dataset.cats.split('|').indexOf(topic) > -1) &&
+                   words.every(function (w) { return c.dataset.search.indexOf(w) > -1; });
+          // Featured articles already appear above, so hide them from the list until someone searches or filters
+          if (!filtering && sort.value === 'new' && el.dataset.featured) ok = false;
+          el.hidden = !ok;
+          if (ok) shown++;
+          grid.appendChild(el);
+        });
+        featured.hidden = filtering;
+        heading.textContent = filtering ? (topic ? topic : 'Search results') : 'More articles';
+        count.textContent = shown + (shown === 1 ? ' article' : ' articles');
+        empty.hidden = shown > 0;
+      }
+      var t;
+      q.addEventListener('input', function () { clearTimeout(t); t = setTimeout(apply, 120); });
+      sort.addEventListener('change', apply);
+      chips.forEach(function (b) {
+        b.addEventListener('click', function () {
+          topic = b.dataset.topic;
+          chips.forEach(function (x) { var on = x === b; x.classList.toggle('is-on', on); x.setAttribute('aria-pressed', on); });
+          apply();
+        });
+      });
+      document.getElementById('blog-reset').addEventListener('click', function () {
+        q.value = ''; sort.value = 'new'; chips[0].click();
+      });
+      apply();
+    })();
+  </script>
+</Base>

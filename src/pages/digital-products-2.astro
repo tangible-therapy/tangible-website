@@ -1,0 +1,24 @@
+---
+// Staff-only "Online Learning" page (password-protected by netlify/edge-functions/staff-gate.ts)
+import Base from '../layouts/Base.astro';
+import { learningSites } from '../data/staff';
+---
+<Base title="Online Learning | Tangible Therapy" description="Online learning resources for Tangible Therapy staff." noindex>
+  <section class="sec t-bright-inverse">
+    <div class="sec-in">
+      <div class="wrap">
+        <h1 class="ta-center" style="color:var(--charcoal)">Online Learning</h1>
+        <p class="ta-center" style="margin-bottom:3rem">Logins for these sites are in the team password manager. Ask the practice manager if you need access.</p>
+        <ul class="learn-grid">
+          {learningSites.map((s) => (
+            <li>
+              <img src={s.image} alt="" loading="lazy" />
+              <h2>{s.title}</h2>
+              <a class="btn btn-primary btn-small" href={s.href} target="_blank" rel="noopener">Go to site</a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </section>
+</Base>

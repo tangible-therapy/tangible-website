@@ -1,0 +1,26 @@
+---
+import Base from '../../layouts/Base.astro';
+import TeamDirectory from '../../components/TeamDirectory.astro';
+import categories from '../../data/team-categories.json';
+import Before from '../../components/sections/ourteam-before.astro';
+import After from '../../components/sections/ourteam-after.astro';
+
+export function getStaticPaths() {
+  type Cat = { slug: string; name: string; children: Cat[] };
+  const out: { params: { category: string }; props: { label: string; parent?: string } }[] = [];
+  const walk = (cs: Cat[], parent?: Cat) =>
+    cs.forEach((c) => {
+      out.push({ params: { category: c.slug }, props: { label: c.name, parent: parent?.name } });
+      walk(c.children, c);
+    });
+  walk(categories as Cat[]);
+  return out;
+}
+const { category } = Astro.params;
+const { label, parent } = Astro.props as { label: string; parent?: string };
+---
+<Base title={`${label} — Find Your Therapist | Tangible Therapy`} description={`Tangible Therapy therapists${parent ? ` at our ${parent}` : ''}: ${label}. Find the right therapist for you in Utah.`}>
+  <Before />
+  <TeamDirectory category={category} />
+  <After />
+</Base>

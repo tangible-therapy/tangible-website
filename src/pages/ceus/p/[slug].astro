@@ -1,0 +1,12 @@
+---
+import Base from '../../../layouts/Base.astro';
+import ProductPage from '../../../components/ProductPage.astro';
+import { getProducts } from '../../../lib/products';
+export async function getStaticPaths() {
+  return (await getProducts('ceus')).map((p) => ({ params: { slug: p.data.slug }, props: { p } }));
+}
+const { p } = Astro.props;
+---
+<Base title={`${p.data.seoTitle || p.data.title} | Tangible Therapy`} description={p.data.seoDescription || undefined} image={p.data.images[0]}>
+  <ProductPage p={p} />
+</Base>

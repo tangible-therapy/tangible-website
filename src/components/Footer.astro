@@ -1,0 +1,67 @@
+---
+// Footer — converted from the Squarespace footer sections.
+// Edit the lists below to change footer links.
+import Divider from './Divider.astro';
+import Icon from './Icon.astro';
+const offices = [
+  { name: 'Orem', href: '/orem-office', address: '246 N Orem Blvd. Orem, UT 84057' },
+  { name: 'Provo', href: '/provo-office', address: '201 E Center St. Provo UT, 84606 (Located on second floor above Altabank)' },
+  { name: 'Sandy', href: '/sandy', address: '11075 S State St Bldg 33, Sandy, UT 84070' },
+];
+const services = [
+  ['Anxiety Therapy', '/anxiety-therapy'], ['Depression Therapy', '/depression-therapy'], ['ADHD Therapy', '/adhd-therapy'],
+  ['Autism Therapy', '/autism-therapy'], ['Counseling', '/counseling'], ['Couples Counseling', '/couples-counseling'],
+  ['EMDR Therapy', '/emdr-therapy'], ['OCD Therapy', '/ocd-treatment'], ['LGBTQ+ Affirming Therapy', '/lgbtq-therapy'],
+  ['Grief Therapy', '/grief-therapy'], ['Trauma Therapy', '/trauma-therapy'],
+];
+const links = [
+  ['Client Portal', 'https://tangible.clientsecure.me/'], ['Contact', '/contact'], ['Insurances We Accept', '/insurance-we-accept'],
+  ['Careers', '/careers'], ['Free CEU’s', '/ceu'], ['Employee Portal', '/employeeportal'], ['Reception Portal', '/reception-portal'],
+  ['Feel Better Library', '/feel-better-blog'],
+];
+---
+<footer class="site-footer">
+<section class="sec t-black h-small has-div" style="--divh:6vw">
+<div class="sec-in">
+<div class="fe" style="--rows:1;--mrows:2">
+
+</div>
+</div>
+<Divider type="scalloped" height={6} width={100} fill="#fff" flipY /></section>
+<section class="sec t-white-bold h-small has-div" style="--divh:6vw">
+<div class="sec-in">
+<div class="wrap foot">
+  <div class="foot-brand">
+    <a href="/" aria-label="Tangible Therapy home"><img src="/images/asset-1-2x-bc076a.png" alt="Tangible Therapy" width="752" height="218" loading="lazy" decoding="async"></a>
+    <p>Therapy, but better. Affordable therapy from Utah’s best therapists so you can start feeling better today.</p>
+    <div class="social"><a href="https://www.instagram.com/tangible_therapy/" aria-label="Instagram" target="_blank" rel="noopener"><Icon name="instagram" /></a><a href="https://www.facebook.com/profile.php?id=100083729585174" aria-label="Facebook" target="_blank" rel="noopener"><Icon name="facebook" /></a><a href="mailto:frontdesk@tangiblementalhealth.com" aria-label="Email" target="_blank" rel="noopener"><Icon name="email" /></a></div>
+  </div>
+  <div class="foot-col">
+    <h3>Contact</h3>
+    <ul class="foot-list">
+      <li><a href="tel:4352605406">435-260-5406</a></li>
+      <li><a href="mailto:frontdesk@tangiblementalhealth.com">frontdesk@<wbr>tangiblementalhealth.com</a></li>
+    </ul>
+    {offices.map((o) => (
+      <div class="foot-office">
+        <h4><a href={o.href}>{o.name} Office</a></h4>
+        <p><a href={o.href}>{o.address}</a></p>
+      </div>
+    ))}
+  </div>
+  <div class="foot-col">
+    <h3>Services</h3>
+    <ul class="foot-list foot-services">
+      {services.map(([label, href]) => <li><a href={href}>{label}</a></li>)}
+    </ul>
+  </div>
+  <div class="foot-col">
+    <h3>Quick Links</h3>
+    <ul class="foot-list">
+      {links.map(([label, href]) => <li><a href={href} {...(href.startsWith('http') ? { target: '_blank', rel: 'noopener' } : {})}>{label}</a></li>)}
+    </ul>
+  </div>
+</div>
+</div>
+<Divider type="soft-corners" height={6} width={100} fill="#fff" /></section>
+</footer>

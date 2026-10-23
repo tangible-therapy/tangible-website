@@ -1,0 +1,73 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+
+const offices = [
+  { name: 'Provo Office', lines: ['201 E Center St. Provo UT, 84606', 'Located on second floor above Altabank'], page: '/provo-office', q: '201 E Center St, Provo, UT 84606' },
+  { name: 'Orem Office A', lines: ['246 N Orem Blvd.', 'Orem, UT 84057'], page: '/orem-office', q: '246 N Orem Blvd, Orem, UT 84057' },
+  { name: 'Orem Office B', lines: ['230 N Orem Blvd', 'Orem UT 84057'], page: '/orem-office', q: '230 N Orem Blvd, Orem, UT 84057' },
+  { name: 'Sandy Office', lines: ['11075 S State Street, Building 33', 'Sandy, UT 84070'], page: '/sandy', q: '11075 S State St Building 33, Sandy, UT 84070' },
+];
+const directions = (q: string) => `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(q)}`;
+---
+<Base title={"Contact Us | Utah | Book Now | Tangible Therapy"} description={"Book your first therapy session at Tangible Therapy — Orem, Provo & Sandy, UT. Insurance accepted, avg $25/session. Free 15-min consult. Call or book online."}>
+<section class="sec t-bright-inverse h-medium contact-page">
+<div class="sec-in">
+<div class="wrap">
+
+  <div class="ct-top">
+    <div class="ct-intro rte">
+      <h1><strong>Contact us</strong></h1>
+      <p>If you have any questions or comments, please contact us via email or phone. If you are interested in scheduling an appointment, please reach out via text or call.</p>
+      <p>Tangible Mental Health provides therapy in Orem and Provo, serving nearby communities Provo, Vineyard, Lindon, Pleasant Grove, American Fork, Springville and Spanish Fork.</p>
+      <div class="ct-actions">
+        <a class="btn btn-medium ct-btn" href="tel:4352605406">Call 435-260-5406</a>
+        <a class="btn btn-medium ct-btn-outline" href="sms:4352828086" data-calltrk-noswap="">Text 435-282-8086</a>
+      </div>
+    </div>
+
+    <div class="ct-card">
+      <div class="ct-item">
+        <h2>Phone</h2>
+        <p><a href="tel:4352605406">435-260-5406</a> <span>(call)</span></p>
+        <p><a href="sms:4352828086" data-calltrk-noswap="">435-282-8086</a> <span>(text)</span></p>
+      </div>
+      <div class="ct-item">
+        <h2>Email</h2>
+        <p><a href="mailto:frontdesk@tangiblementalhealth.com">frontdesk@<wbr>tangiblementalhealth.com</a></p>
+      </div>
+      <div class="ct-item">
+        <h2>For billing questions</h2>
+        <p><a href="mailto:TangibleMentalHealth@MyOfficeManager.net">TangibleMentalHealth@<wbr>MyOfficeManager.net</a></p>
+      </div>
+      <div class="ct-item">
+        <h2>Follow us on our socials</h2>
+        <div class="social ct-social"><a href="https://www.instagram.com/tangible_therapy/" aria-label="Instagram" target="_blank" rel="noopener"><Icon name="instagram" /></a><a href="https://www.facebook.com/profile.php?id=100083729585174" aria-label="Facebook" target="_blank" rel="noopener"><Icon name="facebook" /></a><a href="mailto:frontdesk@tangiblementalhealth.com" aria-label="Email" target="_blank" rel="noopener"><Icon name="email" /></a></div>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="ct-h2">Our offices</h2>
+  <div class="ct-offices">
+    {offices.map((o) => (
+      <div class="ct-office">
+        <h3><a href={o.page}>{o.name}</a></h3>
+        <p>{o.lines.map((l, i) => <>{i > 0 && <br />}{l}</>)}</p>
+        <a class="ct-link" href={directions(o.q)} target="_blank" rel="noopener">Get directions →</a>
+      </div>
+    ))}
+  </div>
+
+  <div class="ct-map">
+    <iframe title="Map of Tangible Therapy, 246 N Orem Blvd, Orem, UT" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2585.4409745479506!2d-111.69947356221591!3d40.301901520460746!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x874d7b22cbf956e1%3A0xe4b0052dd6b625ee!2sTangible%20Therapy!5e0!3m2!1sen!2sus!4v1788466458823!5m2!1sen!2sus" loading="lazy" allowfullscreen="" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+  </div>
+
+  <div class="ct-team">
+    <p>Want to find the right therapist before you reach out?</p>
+    <a class="btn btn-medium ct-btn" href="/ourteam">Learn more about our therapists</a>
+  </div>
+
+</div>
+</div>
+</section>
+</Base>

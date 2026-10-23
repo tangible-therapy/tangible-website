@@ -1,0 +1,12 @@
+---
+import Base from '../../layouts/Base.astro';
+import StoreList from '../../components/StoreList.astro';
+import Before from '../../components/sections/ceus-before.astro';
+import After from '../../components/sections/ceus-after.astro';
+import { STORES } from '../../lib/products';
+---
+<Base title={STORES.ceus.seoTitle} description={STORES.ceus.description}>
+  <Before />
+  <StoreList store="ceus" />
+  <After />
+</Base>

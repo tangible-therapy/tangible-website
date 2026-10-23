@@ -1,0 +1,258 @@
+---
+import Base from '../layouts/Base.astro';
+import Divider from '../components/Divider.astro';
+---
+<Base title={"Meet the Therapists | Tangible Therapy"} description={"Get to know the therapists at Tangible Therapy. Experienced, approachable professionals offering personalized, skills-based care for your unique needs."}>
+<section class="sec t-black h-medium has-bg has-div" style="--divh:6vw">
+<div class="sec-bg"><img src="/images/adobestock-1555959530-69b3bb.jpg" alt="" style="object-position:72% 5%" loading="eager"><div class="sec-ov" style="opacity:0.4"></div></div><div class="sec-in">
+<div class="fe" style="--rows:8;--mrows:10">
+  <div class="b b-html" style="--d:1/5/7/23;--m:1/2/7/10"><div class="rte"><h1 class="ta-center">Meet the Team Behind Tangible Therapy</h1><p class="lg ta-center">Therapists who bring real-world experience, clinical skill, and genuine care to every session</p></div></div>
+  <div class="b b-button jc" style="--d:7/11/9/17;--m:7/2/9/10;--dz:4;--mz:4"><div class="btn-wrap ta-center"><a class="btn btn-primary btn-medium btn-full" href="https://tangible.clientsecure.me/">Book Your First Session Today</a></div></div>
+</div>
+</div>
+<Divider type="wavy" height={6} width={100} fill="#fff" /></section>
+
+<section class="sec t-bright-inverse h-small">
+<div class="sec-in">
+<div class="fe" style="--rows:12;--mrows:22">
+  <div class="b b-image jc" style="--d:2/16/12/26;--m:14/2/22/10;--dz:4;--mz:4"><figure class="img fill" style="--r:40px;--fp:61% 0%"><img src="/images/copy-of-brady-1-8eb4aa.jpg" alt="Two women sitting on a brown couch during a therapy session, with labels pointing to their feelings and physical states: one woman with a tight chest and uncontrollable thoughts, the other with difficult breathing and racing heartbeat." width="1880" height="1576" loading="lazy" decoding="async"></figure></div>
+  <div class="b b-html" style="--d:3/2/6/12;--m:2/2/4/10;--dz:2;--mz:2"><div class="rte"><h3>You deserve a therapist who truly gets you</h3></div></div>
+  <div class="b b-html" style="--d:6/2/11/12;--m:4/2/15/10;--dz:3;--mz:3"><div class="rte"><p>At Tangible Therapy, we believe your connection with your therapist is as important as the tools you use in session. That’s why we’ve built a team of highly trained professionals who are also deeply human.</p><p>Our therapists bring a range of expertise, backgrounds, and lived experience to support you with honesty, warmth, and respect.</p></div></div>
+</div>
+</div>
+</section>
+
+<section class="sec t-black h-custom">
+<div class="sec-in" style="padding-top: calc(0vmax / 10); padding-bottom: calc(0vmax / 10);">
+<div class="fe" style="--rows:14;--mrows:6">
+  <div class="b b-code" style="--d:1/2/15/26;--m:1/2/7/10"><!-- FILTER BUTTONS -->
+<h2 class="" style="text-align:center;">
+        Find Your Therapist
+      </h2>
+<!-- FILTER BUTTONS -->
+<div class="filters">
+<button class="filter-btn active" data-category="all">All</button>
+<button class="filter-btn" data-category="adhd">ADHD</button>
+<button class="filter-btn" data-category="anxiety">Anxiety</button>
+<button class="filter-btn" data-category="autism">Autism</button>
+<button class="filter-btn" data-category="couples">Couples</button>
+<button class="filter-btn" data-category="depression">Depression</button>
+<button class="filter-btn" data-category="emdr">EMDR</button>
+<button class="filter-btn" data-category="faith-transitions">Faith Transitions</button>
+<button class="filter-btn" data-category="grief">Grief</button>
+<button class="filter-btn" data-category="ifs">IFS</button>
+<button class="filter-btn" data-category="lgbt">LGBT+</button>
+<button class="filter-btn" data-category="ocd">OCD</button>
+<button class="filter-btn" data-category="ptsd">PTSD</button>
+<button class="filter-btn" data-category="teens">Teens</button>
+<button class="filter-btn" data-category="trauma">Trauma</button>
+<button class="filter-btn" data-category="current-openings">Current Openings</button>
+</div>
+<!-- STYLES -->
+<style is:inline>
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  
+    justify-content: center;
+
+  gap: 8px;
+  margin: 20px 0;
+}
+.filter-btn {
+  padding: 8px 14px;
+  background: #f0f0f0;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.3s;
+}
+.filter-btn.active {
+  background: #333;
+  color: white;
+}
+.grid-item {
+  transition: all 0.3s ease;
+}
+
+h2.nested-category-title {}
+
+.tweak-products-header-text-alignment-middle .products.collection-content-wrapper .nested-category-title, .tweak-products-header-text-alignment-middle .ProductList.ProductItem-relatedProducts .nested-category-title
+{display:none;}
+
+ul.nested-category-children {
+    display: none !important;
+}
+
+section#therapy {}
+
+section.page-section.product-list-section.full-bleed-section.black {
+    margin-top: -12%;
+}
+</style>
+<!-- SCRIPT -->
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const categoryMap = {
+    "Emily McCrary, CSW": ["/ocd", "/lgbt", "/anxiety", "/emdr", "/depression", "/couples", "/trauma"],
+    "Hannah Hunt, CSW": ["/lgbt", "/anxiety", "/emdr", "/ifs", "/grief", "/faith-transitions", "/ptsd", "/depression", "/teens", "/trauma"],
+    "Brady Clegg, LCSW": ["/ocd", "/lgbt", "/anxiety", "/autism", "/faith-transitions", "/adhd", "/depression", "/trauma"],
+    "Joe Johnson, LCSW": ["/ocd", "/anxiety", "/emdr", "/adhd", "/ptsd", "/depression", "/current-openings", "/trauma"],
+    "Skyler Anderson, AMFT": ["/ocd", "/lgbt", "/anxiety", "/emdr", "/grief", "/faith-transitions", "/depression", "/couples", "/trauma", "/teens"],
+    "Arianne Buck, LCSW": ["/lgbt", "/anxiety", "/emdr", "/adhd", "/faith-transitions", "/ptsd", "/depression", "/trauma"],
+    "Nancy Coca, CSW": ["/lgbt", "/anxiety", "/autism", "/grief", "/depression", "/teens"],
+    "Hannah Brown, LCSW": ["/lgbt", "/anxiety", "/ifs", "/grief", "/faith-transitions", "/adhd", "/ptsd", "/depression", "/couples", "/trauma"],
+    "Sarah Mendez, CSW": ["/ocd", "/lgbt", "/anxiety", "/emdr", "/grief", "/faith-transitions", "/ptsd", "/depression", "/trauma", "/teens"],
+    "Lauren Olinger, ACMHC": ["/ocd", "/lgbt", "/anxiety", "/faith-transitions", "/adhd", "/grief", "/depression", "/current-openings", "/teens", "/trauma"],
+    "Parker Jensen, CSW": ["/lgbt", "/anxiety", "/emdr", "/adhd", "/ptsd", "/autism", "/grief", "/depression", "/couples", "/trauma", "/teens"],
+    "Kelley Graves, MFT-I": ["/ocd", "/lgbt", "/anxiety", "/faith-transitions", "/adhd", "/grief", "/depression", "/current-openings", "/couples", "/teens", "/trauma"]
+  };
+
+  const interval = setInterval(() => {
+    const products = document.querySelectorAll(".grid-item");
+    if (products.length > 0) {
+      clearInterval(interval);
+
+      products.forEach(product => {
+        const nameEl = product.querySelector(".grid-title");
+        if (!nameEl) return;
+        const name = nameEl.textContent.trim();
+        const categories = categoryMap[name] || [];
+        product.dataset.categories = categories.join(", ");
+      });
+
+      const buttons = document.querySelectorAll(".filter-btn");
+      buttons.forEach(button => {
+        button.addEventListener("click", () => {
+          const selected = button.dataset.category.toLowerCase();
+
+          products.forEach(product => {
+            const productCats = (product.dataset.categories || "").toLowerCase();
+            const match =
+              selected === "all" ||
+              productCats.includes(`/${selected}`);
+
+            product.style.display = match ? "block" : "none";
+          });
+
+          buttons.forEach(btn => btn.classList.remove("active"));
+          button.classList.add("active");
+        });
+      });
+    }
+  }, 300);
+});
+</script></div>
+</div>
+</div>
+</section>
+
+<section class="sec t-white h-medium">
+<div class="sec-in">
+<div class="fe" style="--rows:15;--mrows:48">
+  <div class="b b-image jc" style="--d:1/2/12/10;--m:1/2/12/10"><figure class="img fill" style="--r:20px"><img src="/images/aroha-02-3ff2f4.jpg" alt="Landscape with snow-capped mountains in the background and a modern building on green hills in the foreground." width="1500" height="1000" loading="lazy" decoding="async"></figure></div>
+  <div class="b b-image jc" style="--d:1/10/12/18;--m:17/2/28/10;--dz:3;--mz:3"><figure class="img fill" style="--r:20px"><img src="/images/image-asset-2-a47aa7.jpeg" alt="Modern house with wood and white exterior, large front window, set in a mountainous landscape with sparse vegetation." width="1024" height="683" loading="lazy" decoding="async"></figure></div>
+  <div class="b b-image jc" style="--d:1/18/12/26;--m:33/2/44/10;--dz:6;--mz:6"><figure class="img fill" style="--r:20px"><img src="/images/image-asset-7-82dec4.jpeg" alt="Modern wooden house with steps leading up to a patio, situated in a natural landscape with green hills and distant mountains under a clear sky." width="2500" height="1666" loading="lazy" decoding="async"></figure></div>
+  <div class="b b-html jc" style="--d:12/2/13/10;--m:12/2/14/10"><div class="rte"><h4>Basic</h4></div></div>
+  <div class="b b-html jc" style="--d:12/10/13/18;--m:28/2/30/10;--dz:4;--mz:4"><div class="rte"><h4>Intermediate</h4></div></div>
+  <div class="b b-html jc" style="--d:12/18/13/26;--m:44/2/46/10;--dz:7;--mz:7"><div class="rte"><h4>Advanced</h4></div></div>
+  <div class="b b-accordion" style="--d:13/2/16/10;--m:14/2/17/10;--dz:2;--mz:2"><div class="accordion"><details><summary>Duration</summary><div class="rte"><p>What should we know about the services you provide? Better descriptions result in more sales.</p></div></details><details><summary>Pricing</summary><div class="rte"><p>What should we know about the services you provide? Better descriptions result in more sales.</p></div></details></div></div>
+  <div class="b b-accordion" style="--d:13/10/16/18;--m:30/2/33/10;--dz:5;--mz:5"><div class="accordion"><details><summary>Duration</summary><div class="rte"><p>What should we know about the services you provide? Better descriptions result in more sales.</p></div></details><details><summary>Pricing</summary><div class="rte"><p>What should we know about the services you provide? Better descriptions result in more sales.</p></div></details></div></div>
+  <div class="b b-accordion" style="--d:13/18/16/26;--m:46/2/49/10;--dz:8;--mz:8"><div class="accordion"><details><summary>Duration</summary><div class="rte"><p>What should we know about the services you provide? Better descriptions result in more sales.</p></div></details><details><summary>Pricing</summary><div class="rte"><p>What should we know about the services you provide? Better descriptions result in more sales.</p></div></details></div></div>
+</div>
+</div>
+</section>
+
+<section class="sec t-white h-medium">
+<div class="sec-in">
+<div class="fe" style="--rows:35;--mrows:31">
+  <div class="b b-html" style="--d:1/8/4/20;--m:1/3/5/9;--dz:3;--mz:2"><div class="rte"><h1 class="ta-center">Meet the team</h1></div></div>
+  <div class="b b-image jc" style="--d:4/2/18/10;--m:5/2/12/6;--mz:7"><figure class="img fill" style="--fp:100% 0%"><img src="/images/rectangle-16-b341da.jpg" alt="Smiling woman with curly hair, glasses, hoop earrings, layered necklaces, and striped blouse." width="858" height="1144" loading="lazy" decoding="async"></figure></div>
+  <div class="b b-image jc" style="--d:4/10/18/18;--m:5/6/12/10"><figure class="img fill"><img src="/images/rectangle-18-69051e.jpg" alt="A man with dark, curly hair, glasses, and a beard, wearing a black sweater and looking thoughtfully to the side." width="858" height="1144" loading="lazy" decoding="async"></figure></div>
+  <div class="b b-image jc" style="--d:4/18/18/26;--m:14/2/21/6;--dz:2"><figure class="img fill"><img src="/images/rectangle-17-10281e.jpg" alt="A smiling woman with shoulder-length black hair, wearing a blue top, standing outdoors with green plants in the background." width="858" height="1144" loading="lazy" decoding="async"></figure></div>
+  <div class="b b-html" style="--d:18/3/20/9;--m:12/2/14/6;--dz:7;--mz:6"><div class="rte"><p class="ta-center">Monet Goode</p></div></div>
+  <div class="b b-html" style="--d:18/11/20/17;--m:12/6/14/10;--dz:8;--mz:8"><div class="rte"><p class="ta-center">Emmet Marsh</p></div></div>
+  <div class="b b-html" style="--d:18/19/20/25;--m:21/2/23/6;--dz:10;--mz:10"><div class="rte"><p class="ta-center">Eleanor Parks</p></div></div>
+  <div class="b b-image jc" style="--d:20/2/34/10;--m:14/6/21/10;--dz:4;--mz:3"><figure class="img fill"><img src="/images/rectangle-17-173c6d.jpg" alt="Smiling woman with short black hair wearing a blue top, standing outdoors with green plants in the background." width="858" height="1144" loading="lazy" decoding="async"></figure></div>
+  <div class="b b-image jc" style="--d:20/10/34/18;--m:23/2/30/6;--dz:6;--mz:4"><figure class="img fill" style="--r:80px"><img src="/images/rectangle-16-056c9c.jpg" alt="Smiling woman with curly hair, glasses, hoop earrings, layered necklaces, and a striped shirt in an indoor setting." width="858" height="1144" loading="lazy" decoding="async"></figure></div>
+  <div class="b b-image jc" style="--d:20/18/34/26;--m:23/6/30/10;--dz:5;--mz:5"><figure class="img fill"><img src="/images/rectangle-18-1008be.jpg" alt="A man with curly dark hair, glasses, and facial hair, wearing a black sweater, sitting indoors with a neutral background." width="858" height="1144" loading="lazy" decoding="async"></figure></div>
+  <div class="b b-html" style="--d:34/3/36/9;--m:21/6/23/10;--dz:11;--mz:11"><div class="rte"><p class="ta-center">Eleanor Parks</p></div></div>
+  <div class="b b-html" style="--d:34/11/36/17;--m:30/2/32/6;--dz:12;--mz:12"><div class="rte"><p class="ta-center">Monet Goode</p></div></div>
+  <div class="b b-html" style="--d:34/19/36/25;--m:30/6/32/10;--dz:9;--mz:9"><div class="rte"><p class="ta-center">Emmet Marsh</p></div></div>
+</div>
+</div>
+</section>
+
+<section class="sec t-white h-small">
+<div class="sec-in">
+<div class="fe" style="--rows:20;--mrows:60">
+  <div class="b b-image jc" style="--d:1/2/13/10;--m:1/2/13/10;--dz:8;--mz:8"><figure class="img fill" style="--r:40px"><img src="/images/aroha-02-79ee75.jpg" alt="A modern house with wooden and stone exterior walls situated on a grassy hillside, with snow-capped mountains and cloudy sky in the background." width="1500" height="1000" loading="lazy" decoding="async"></figure></div>
+  <div class="b b-image jc" style="--d:1/10/13/18;--m:21/2/33/10;--dz:9;--mz:9"><figure class="img fill" style="--r:500px"><img src="/images/image-asset-2-5446e2.jpeg" alt="Modern house with wooden exterior, large front window, set in mountainous landscape with dry grass and small trees." width="1024" height="683" loading="lazy" decoding="async"></figure></div>
+  <div class="b b-image jc" style="--d:1/18/13/26;--m:41/2/54/10;--dz:10;--mz:10"><figure class="img fill" style="--r:10px;--fp:85% 62%"><img src="/images/image-asset-1de951.jpeg" alt="Modern wooden house on a hillside with stone steps, surrounded by grass and shrubs, mountain range in the background at sunset." width="2500" height="1667" loading="lazy" decoding="async"></figure></div>
+  <div class="b b-html" style="--d:14/2/19/10;--m:13/2/18/10"><div class="rte"><h4>Basic</h4><p>Add your pricing strategy. Be sure to include important details like value, length of service, and why it’s unique.</p></div></div>
+  <div class="b b-html" style="--d:14/10/19/18;--m:33/2/38/10;--dz:5;--mz:5"><div class="rte"><h4>Intermediate</h4><p>Add your pricing strategy. Be sure to include important details like value, length of service, and why it’s unique.</p></div></div>
+  <div class="b b-html" style="--d:14/18/19/26;--m:54/2/59/10;--dz:7;--mz:7"><div class="rte"><h4>Advanced</h4><p>Add your pricing strategy. Be sure to include important details like value, length of service, and why it’s unique.</p></div></div>
+  <div class="b b-button jc" style="--d:19/2/21/10;--m:18/2/20/10;--dz:11;--mz:11"><div class="btn-wrap ta-center"><a class="btn btn-primary btn-medium btn-full" href="#">Book</a></div></div>
+  <div class="b b-button jc" style="--d:19/10/21/18;--m:38/2/40/10;--dz:12;--mz:12"><div class="btn-wrap ta-center"><a class="btn btn-primary btn-medium btn-full" href="#">Book</a></div></div>
+  <div class="b b-button jc" style="--d:19/18/21/26;--m:59/2/61/10;--dz:13;--mz:13"><div class="btn-wrap ta-center"><a class="btn btn-primary btn-medium btn-full" href="#">Book</a></div></div>
+</div>
+</div>
+</section>
+
+<section class="sec t-white h-small">
+<div class="sec-in">
+<div class="fe" style="--rows:30;--mrows:14">
+  <div class="b b-product" style="--d:9/2/22/10;--m:1/2/7/6;--dz:5;--mz:5"><a class="product-card" href="/ourteam/p/jordyn-hoopes"><img src="/images/5-j-2-8bd843.jpg" alt="" loading="lazy"><span>Jordyn Hoopes, ACMHC</span></a></div>
+  <div class="b b-button jc" style="--d:21/12/23/16;--m:13/4/15/8;--dz:4;--mz:4"><div class="btn-wrap ta-center"><a class="btn btn-primary btn-medium btn-full" href="#">Shop Now</a></div></div>
+</div>
+</div>
+</section>
+
+<section class="sec t-bright-inverse h-small">
+<div class="sec-in">
+<div class="fe" style="--rows:14;--mrows:25">
+  <div class="b b-html" style="--d:2/2/4/12;--m:1/2/4/10;--dz:2;--mz:2"><div class="rte"><h3>What sets our therapists apart</h3></div></div>
+  <div class="b b-image jc" style="--d:2/16/14/26;--m:17/2/25/10;--dz:4;--mz:4"><figure class="img fill" style="--r:40px"><img src="/images/therapy-office-blue-shirt-73d010.jpg" alt="A woman receiving tissues from a therapist during a counseling session with two women sitting on a couch." width="8256" height="5504" loading="lazy" decoding="async"></figure></div>
+  <div class="b b-html" style="--d:4/2/13/12;--m:4/2/17/10;--dz:3;--mz:3"><div class="rte"><p>Each member of our team is:</p><ul><li><p>Clinically trained in evidence-based, skills-focused therapy</p></li><li><p>Compassionate and curious, not cold or clinical</p></li><li><p>Committed to building therapy around <em>you</em>, not a one-size-fits-all approach</p></li><li><p>Knowledgeable in specialty areas like anxiety, trauma, OCD, ADHD, autism, depression, and more</p></li><li><p>EMDR trained</p></li></ul><p>Whether you’re looking for practical tools, emotional support, or both, we’ll help you find a therapist who fits your needs and style.</p></div></div>
+</div>
+</div>
+</section>
+
+<section class="sec t-black h-small">
+<div class="sec-in">
+<div class="fe" style="--rows:12;--mrows:21">
+  <div class="b b-image jc" style="--d:1/2/12/11;--m:12/2/19/10;--dz:4;--mz:4"><figure class="img fill"><img src="/images/anxiety-cycle-402281.jpg" alt="Diagram of OCD and anxiety cycle showing triggers, intrusive thoughts, fear, intolerable emotion, safety behaviors, decreased tolerance, and how these lead to OCD and anxiety." width="3456" height="4608" loading="lazy" decoding="async"></figure></div>
+  <div class="b b-html" style="--d:2/15/6/25;--m:1/2/4/10;--dz:2;--mz:2"><div class="rte"><h2>Find the right therapist for you</h2></div></div>
+  <div class="b b-html" style="--d:6/15/10/25;--m:4/2/12/10;--dz:3;--mz:3"><div class="rte"><p>We offer free 15-minute consultations so you can talk with any of our therapists before committing to full sessions. This gives you a chance to ask questions, get a feel for their style, and make sure you feel comfortable and understood.</p></div></div>
+</div>
+</div>
+</section>
+
+<section class="sec t-bright-inverse h-small">
+<div class="sec-in">
+<div class="fe" style="--rows:13;--mrows:24">
+  <div class="b b-html" style="--d:2/2/4/12;--m:1/2/4/10;--dz:2;--mz:2"><div class="rte"><h3>Our promise to you</h3></div></div>
+  <div class="b b-image jc" style="--d:2/16/12/26;--m:17/2/24/10;--dz:4;--mz:4"><figure class="img fill" style="--r:40px"><img src="/images/therapy-office-blue-shirt-73d010.jpg" alt="A woman in a blue shirt holding a tissue box and giving a tissue to a young woman sitting on a black sofa with another woman beside her in a cozy living room." width="8256" height="5504" loading="lazy" decoding="async"></figure></div>
+  <div class="b b-html" style="--d:4/2/10/12;--m:3/2/15/10;--dz:3;--mz:3"><div class="rte"><p>No matter who you work with at Tangible, you’ll be met with professionalism, compassion, and care. Therapy isn’t about being told what to do. It’s about being seen, supported, and given the tools to move forward in your own way.</p><p>Let’s find someone who helps you feel safe, seen, and strong.</p><p><br/></p></div></div>
+  <div class="b b-button jc" style="--d:10/2/11/7;--m:15/2/17/6;--dz:5;--mz:5"><div class="btn-wrap ta-center"><a class="btn btn-primary btn-medium btn-full" href="https://tangible.clientsecure.me/" target="_blank" rel="noopener">Book your session today</a></div></div>
+</div>
+</div>
+</section>
+
+<section class="sec t-bright-inverse h-small has-div" style="--divh:6vw">
+<div class="sec-in" style="padding-top:6.6vmax;padding-bottom:6.6vmax">
+<div class="wrap"><div class="list-title rte"><p>What you’ll get</p></div><ul class="ulist ulist-carousel" style="--per:3;--ar:3/2;--tfs:calc((2.2 - 1) * var(--fs-unit) + 1rem);--bfs:calc((1.2 - 1) * var(--fs-unit) + 1rem);--cw:75%;--gap:20px"><li class="li"><a class="li-link" href="#" aria-label="✺"></a><div class="li-body"><h3 class="li-title">✺</h3><div class="rte li-desc"><p>50 minutes of focused, calming support to help you feel grounded</p></div></div></li><li class="li"><div class="li-body"><h3 class="li-title">✺</h3><div class="rte li-desc"><p>Practical tools to interrupt spiraling thoughts and ease physical tension</p></div></div></li><li class="li"><div class="li-body"><h3 class="li-title">✺</h3><div class="rte li-desc"><p>Personalized strategies to manage daily anxiety and unexpected stress</p></div></div></li><li class="li"><div class="li-body"><h3 class="li-title">✺</h3><div class="rte li-desc"><p>Clear insight into your triggers, patterns, and how to shift them</p></div></div></li><li class="li"><div class="li-body"><h3 class="li-title">✺</h3><div class="rte li-desc"><p>Space to feel safe, seen, and not judged for how your anxiety shows up</p></div></div></li><li class="li"><a class="li-link" href="/" aria-label="✺"></a><div class="li-body"><h3 class="li-title">✺</h3><div class="rte li-desc"><p>Long-term skills to quiet your mind and feel more in control of your life</p></div></div></li></ul><div class="carousel-nav"><button class="prev" aria-label="Previous"><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button class="next" aria-label="Next"><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div></div>
+</div>
+<Divider type="wavy" height={6} width={100} fill="#acb9ac" /></section>
+
+<section class="sec t-black h-medium">
+<div class="sec-in">
+<div class="fe" style="--rows:13;--mrows:20">
+  <div class="b b-html" style="--d:2/2/4/26;--m:1/2/4/10"><div class="rte"><h2 class="ta-center">✺ Frequently asked questions ✺</h2></div></div>
+  <div class="b b-accordion" style="--d:6/2/14/13;--m:5/2/13/10"><div class="accordion"><details><summary>How do I know if my anxiety is “bad enough” for therapy?</summary><div class="rte"><p>If your worry, stress, or overthinking is affecting your sleep, work, relationships, or peace of mind, it’s enough. Therapy isn’t only for people in crisis. It’s for anyone who wants to feel better and function more fully.</p></div></details><details><summary>Will I have to talk about my childhood or past trauma?</summary><div class="rte"><p>Not unless it feels relevant to your healing. Our approach focuses on what’s happening now, with tools you can use immediately. If deeper work is helpful later, we’ll go there together when you’re ready.</p></div></details><details><summary>What therapy methods do you use for anxiety?</summary><div class="rte"><p>We use a range of evidence-based approaches, including CBT (Cognitive Behavioral Therapy), mindfulness, somatic tools, and <a href="/ifs"><u>IFS (Internal Family Systems)</u></a>. We choose what works best for you.</p></div></details></div></div>
+  <div class="b b-accordion" style="--d:6/15/10/26;--m:13/2/21/10;--dz:2;--mz:2"><div class="accordion"><details><summary>Can I do anxiety counseling if I also take medication?</summary><div class="rte"><p>Absolutely. Many of our clients use therapy alongside medication. We support your choices and will work with your prescriber if needed to make sure everything aligns with your goals.</p></div></details><details><summary>How soon will I feel better?</summary><div class="rte"><p>Some clients notice relief within a few sessions. Others take longer to see changes. Our goal is to help you build skills that create steady, lasting shifts.</p></div></details></div></div>
+</div>
+</div>
+</section>
+</Base>

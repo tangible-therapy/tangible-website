@@ -1,0 +1,65 @@
+---
+// One orientation lesson (staff-only)
+import Base from '../../layouts/Base.astro';
+import { lessons, chapters, md, type Lesson } from '../../lib/orientation';
+
+export function getStaticPaths() {
+  return lessons.map((l, i) => ({ params: { slug: l.slug }, props: { lesson: l, prev: lessons[i - 1], next: lessons[i + 1], index: i } }));
+}
+const { lesson, prev, next, index } = Astro.props as { lesson: Lesson; prev?: Lesson; next?: Lesson; index: number };
+const [intro, ...rest] = lesson.sections;
+const introText = intro.filter((i) => i.t === 'text');
+const introImg = intro.find((i) => i.t === 'image') as { src: string; alt: string } | undefined;
+const introOther = intro.filter((i) => i.t !== 'text' && i.t !== 'image');
+---
+<Base title={`${lesson.title} | Orientation | Tangible Therapy`} description="New employee orientation for Tangible Therapy staff." noindex>
+  <div class="orient-lesson wrap">
+    <aside class="orient-nav" aria-label="Course lessons">
+      <a class="orient-nav-home" href="/orientation">← Orientation overview</a>
+      <div class="orient-nav-bar"><span data-orient-bar></span></div>
+      <p class="orient-nav-count" data-orient-progress>Lesson {index + 1} of {lessons.length}</p>
+      <details open>
+        <summary>All lessons</summary>
+        {chapters.map((c) => (
+          <div class="orient-nav-chapter">
+            <p>{c.name}</p>
+            <ul>
+              {c.lessons.map((l) => (
+                <li><a href={`/orientation/${l.slug}`} data-lesson={l.slug} aria-current={l.slug === lesson.slug ? 'page' : undefined}><span class="orient-check" aria-hidden="true"></span>{l.title}</a></li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </details>
+    </aside>
+
+    <article class="orient-body" data-current={lesson.slug}>
+      <p class="orient-eyebrow">{lesson.chapter}</p>
+      <h1>{lesson.title}</h1>
+
+      {(introText.length > 0 || introImg) && (
+        <div class:list={['orient-intro', { 'has-img': introImg }]}>
+          <div class="rte">{introText.map((t) => <Fragment set:html={md((t as any).md)} />)}</div>
+          {introImg && <img src={introImg.src} alt={introImg.alt} loading="eager" />}
+        </div>
+      )}
+
+      {[introOther, ...rest].map((sec) => sec.length > 0 && (
+        <section class="orient-sec">
+          {sec.map((it) => (
+            it.t === 'text' ? <div class="rte" set:html={md(it.md)} /> :
+            it.t === 'image' ? <img class="orient-img" src={it.src} alt={it.alt} loading="lazy" /> :
+            it.t === 'form' ? <div class="orient-form"><iframe src={it.src} title={`${lesson.title} form`} loading="lazy"></iframe><p><a href={it.src.replace('?embedded=true', '')} target="_blank" rel="noopener">Open the quiz in a new tab</a></p></div> :
+            <div class="orient-video"><iframe src={`https://www.youtube-nocookie.com/embed/${it.id}${it.start ? `?start=${it.start}` : ''}`} title="Video" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+          ))}
+        </section>
+      ))}
+
+      <nav class="orient-pager" aria-label="Lesson navigation">
+        {prev ? <a href={`/orientation/${prev.slug}`}><small>Previous</small>{prev.title}</a> : <span />}
+        {next ? <a class="next" href={`/orientation/${next.slug}`}><small>Next</small>{next.title} →</a> : <a class="next" href="/orientation"><small>All done</small>Back to overview →</a>}
+      </nav>
+    </article>
+  </div>
+  <script is:inline src="/scripts/orientation.js" defer></script>
+</Base>

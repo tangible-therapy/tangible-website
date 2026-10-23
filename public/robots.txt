@@ -1,0 +1,11 @@
+User-agent: *
+Disallow: /employeeportal
+Disallow: /onboarding
+Disallow: /digital-products-2
+Disallow: /files/
+Disallow: /reception-portal
+Disallow: /reception-onboarding
+Disallow: /scheduling-new-client
+Disallow: /crisis-call
+
+Sitemap: https://tangiblementalhealth.com/sitemap-index.xml

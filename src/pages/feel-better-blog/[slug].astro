@@ -1,0 +1,47 @@
+---
+import { render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { getPosts, termSlug } from '../../lib/blog';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  return posts.map((p, i) => ({
+    params: { slug: p.data.urlPath!.split('/').pop() },
+    props: { post: p, newer: posts[i - 1], older: posts[i + 1] },
+  }));
+}
+const { post, newer, older } = Astro.props;
+const { Content } = await render(post);
+const d = post.data;
+const date = d.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'America/Denver' });
+const title = `${d.seoTitle || d.title} | Tangible Therapy`;
+// Fall back to the opening of the post when no description was written
+const plain = (post.body ?? '').replace(/<[^>]+>/g, ' ').replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/[#*_>`]/g, '').replace(/\s+/g, ' ').trim();
+const autoDesc = plain.length > 155 ? plain.slice(0, plain.lastIndexOf(' ', 152)) + '…' : plain;
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: d.title,
+  datePublished: d.date.toISOString(),
+  author: d.author ? { '@type': 'Person', name: d.author } : undefined,
+  image: d.image ? new URL(d.image, 'https://tangiblementalhealth.com').href : undefined,
+  publisher: { '@type': 'Organization', name: 'Tangible Therapy' },
+};
+---
+<Base title={title} description={d.seoDescription || d.excerpt || autoDesc} image={d.image || undefined} type="article" schema={schema}>
+  <article class="post">
+    <p class="meta"><time datetime={d.date.toISOString()}>{date}</time>{d.author && <> &nbsp;•&nbsp; Written by {d.author}</>}</p>
+    <h1>{d.title}</h1>
+    <div class="body rte"><Content /></div>
+    {(d.categories.length > 0 || d.tags.length > 0) && (
+      <div class="post-foot">
+        {d.categories.map((c) => <a href={`/feel-better-blog/category/${termSlug(c)}`}>{c}</a>)}
+        {d.tags.map((t) => <a href={`/feel-better-blog/tag/${termSlug(t)}`}>#{t}</a>)}
+      </div>
+    )}
+    <nav class="post-nav" aria-label="More articles">
+      {newer ? <a href={newer.data.urlPath}>← {newer.data.title}</a> : <span />}
+      {older ? <a href={older.data.urlPath} style="text-align:right">{older.data.title} →</a> : <span />}
+    </nav>
+  </article>
+</Base>

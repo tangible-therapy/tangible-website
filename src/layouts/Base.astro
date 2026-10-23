@@ -1,0 +1,104 @@
+---
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { site } from '../data/site';
+import pageSchema from '../data/page-schema.json';
+
+interface Props {
+  title: string;
+  description?: string;
+  image?: string;
+  noindex?: boolean;
+  type?: 'website' | 'article';
+  schema?: Record<string, unknown> | Record<string, unknown>[];
+}
+const { title, description: rawDescription, image = site.socialImage, noindex = false, type = 'website', schema } = Astro.props;
+const description = rawDescription?.trim() || site.defaultDescription;
+const path = Astro.url.pathname.replace(/\.html$/, '').replace(/\/$/, '') || '/';
+const canonical = new URL(path, site.url).href;
+const ogImage = new URL(image, site.url).href;
+const t = site.tracking;
+
+// Extra structured data carried over from Squarespace page code injection (FAQs, business details)
+const extraSchema = (pageSchema as Record<string, unknown[]>)[path] ?? [];
+const websiteSchema = { '@context': 'https://schema.org', '@type': 'WebSite', name: site.name, url: site.url };
+const orgSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'MedicalBusiness',
+  name: site.name,
+  url: site.url,
+  logo: new URL(site.logo, site.url).href,
+  telephone: site.phone,
+  email: site.email,
+  openingHours: 'Mo-Fr 09:00-17:00',
+  sameAs: [site.social.instagram, site.social.facebook],
+  location: site.offices.map((o) => ({
+    '@type': 'Place',
+    name: `${site.name} — ${o.name}`,
+    address: { '@type': 'PostalAddress', streetAddress: o.address, addressLocality: o.city, addressRegion: o.region, postalCode: o.zip, addressCountry: 'US' },
+  })),
+};
+---
+<!doctype html>
+<html lang="en-US">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <link rel="canonical" href={canonical} />
+  {noindex && <meta name="robots" content="noindex" />}
+  <meta property="og:site_name" content={site.name} />
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:url" content={canonical} />
+  <meta property="og:type" content={type} />
+  <meta property="og:image" content={ogImage} />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={title} />
+  <meta name="twitter:description" content={description} />
+  <meta name="twitter:image" content={ogImage} />
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,600&display=swap" rel="stylesheet" />
+  <meta name="google-site-verification" content="1vr_J4CGNBqihQJIHoA9sz0ZAEbS1Wu1b5lhj64S-qQ" />
+  <link rel="alternate" type="application/rss+xml" title="Feel Better Library" href="/feel-better-blog/rss.xml" />
+  <script type="application/ld+json" set:html={JSON.stringify(websiteSchema)} />
+  <script type="application/ld+json" set:html={JSON.stringify(orgSchema)} />
+  {extraSchema.map((x) => <script type="application/ld+json" set:html={JSON.stringify(x)} />)}
+  {schema && <script type="application/ld+json" set:html={JSON.stringify(schema)} />}
+
+  <!-- Google Tag Manager -->
+  <script is:inline define:vars={{ gtm: t.gtm }}>
+    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer',gtm);
+  </script>
+  <!-- Google Analytics 4 -->
+  <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${t.ga4[0]}`}></script>
+  <script is:inline define:vars={{ ids: t.ga4 }}>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    ids.forEach(function (id) { gtag('config', id); });
+  </script>
+  <!-- Meta Pixel -->
+  <script is:inline define:vars={{ pixel: t.metaPixel }}>
+    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', pixel); fbq('track', 'PageView');
+  </script>
+</head>
+<body>
+  <noscript><iframe src={`https://www.googletagmanager.com/ns.html?id=${t.gtm}`} height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <a class="skip" href="#main">Skip to content</a>
+  <Header />
+  <main id="main">
+    <slot />
+  </main>
+  <Footer />
+  <script is:inline src="/scripts/site.js" defer></script>
+  <script is:inline src={t.callrail} defer></script>
+</body>
+</html>

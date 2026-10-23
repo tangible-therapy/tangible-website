@@ -1,0 +1,15 @@
+---
+import Base from '../layouts/Base.astro';
+import { site } from '../data/site';
+---
+<Base title="Page Not Found | Tangible Therapy" noindex>
+  <section class="sec t-bright-inverse not-found">
+    <h1>We couldn't find that page</h1>
+    <p>The page may have moved. Try one of these instead:</p>
+    <div class="btn-wrap ta-center" style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-top:1.5rem">
+      <a class="btn btn-primary btn-medium" href="/">Home</a>
+      <a class="btn btn-primary btn-medium" href="/ourteam">Find Your Therapist</a>
+      <a class="btn btn-primary btn-medium" href={site.phoneHref}>Call {site.phone}</a>
+    </div>
+  </section>
+</Base>

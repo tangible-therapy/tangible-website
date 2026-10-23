@@ -1,0 +1,24 @@
+---
+import ApplyCard from '../components/ApplyCard.astro';
+// Staff-only page (password-protected by netlify/edge-functions/staff-gate.ts)
+import Base from '../layouts/Base.astro';
+const files = [
+  { label: 'Direct Deposit Form', href: '/files/Direct-Deposit-Authorization.pdf' },
+  { label: 'Applying for NPI Instructions', href: '/files/How-to-Apply-for-an-NPI.pdf' },
+  { label: 'Policies and Procedures', href: '/files/Practice-Policies-and-Procedures-1.pdf' },
+  { label: 'W-4', href: '/files/fw4-3.pdf' },
+];
+---
+<Base title="Onboarding | Tangible Therapy" description="New employee onboarding at Tangible Therapy." noindex>
+  <section class="sec t-black h-small has-bg">
+    <div class="sec-bg"><img src="/images/309a7727-c08ffb.jpg" alt="" loading="eager" /><div class="sec-ov" style="opacity:.3"></div></div>
+    <div class="sec-in"><div class="wrap"><h1 class="ta-center">Welcome to the team!</h1><p class="ta-center lg">Please complete the downloadable docs below before filling out the onboarding form.</p></div></div>
+  </section>
+  <section class="sec t-bright-inverse">
+    <div class="sec-in"><div class="wrap onboarding">
+      <h2 class="ta-center">Downloadable Files</h2>
+      <ul class="file-list">{files.map((f) => <li><a href={f.href} target="_blank" rel="noopener">{f.label}</a></li>)}</ul>
+      <ApplyCard href="https://docs.google.com/forms/d/e/1FAIpQLSdugCqDXpMyIpVQ93NXs8OrB3JfxVUmp48qFJXy2SnRa6iP3g/viewform" role={"New Employee Onboarding Form"} eyebrow="Onboarding" text="Fill out your onboarding details and upload your license, W-4 and direct deposit form. Download the W-4 and direct deposit forms above first." button="Open the onboarding form →" note="Opens in Google Forms. Sign in with your Tangible Google account so you can upload your documents." />
+    </div></div>
+  </section>
+</Base>

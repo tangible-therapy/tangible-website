@@ -1,0 +1,28 @@
+---
+import { getProducts, STORES } from '../lib/products';
+interface Props { store: keyof typeof STORES; category?: string }
+const { store, category } = Astro.props;
+let items = await getProducts(store);
+if (category) items = items.filter((p) => p.data.categories.includes(category));
+const cats: { slug: string; name: string }[] = [];
+const money = (n: number) => `$${n.toFixed(2)}`;
+---
+<section class:list={['store', `store-${store}`]}>
+  <h1 class="visually-hidden">{STORES[store].title}</h1>
+  {cats.length > 0 && (
+    <ul class="store-cats">
+      {cats.map((c) => <li><a href={`/${store}/${c.slug}`} aria-current={category === c.slug ? 'page' : undefined}>{c.name}</a></li>)}
+    </ul>
+  )}
+  <ul class="product-grid">
+    {items.map((p) => (
+      <li>
+        <a href={`/${store}/p/${p.data.slug}`}>
+          {p.data.images[0] && <img src={p.data.images[0]} alt={p.data.title} loading="lazy" />}
+          <span class="p-title">{p.data.title}</span>
+          {p.data.price > 0 && <span class="p-price">{money(p.data.price)}</span>}
+        </a>
+      </li>
+    ))}
+  </ul>
+</section>

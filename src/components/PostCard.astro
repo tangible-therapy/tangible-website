@@ -1,0 +1,30 @@
+---
+// One blog article card (used on the blog page and category/tag pages)
+import { summary, readMinutes, fmtDate, termSlug } from '../lib/blog';
+interface Props { post: any; size?: 'normal' | 'large' | 'small' }
+const { post: p, size = 'normal' } = Astro.props;
+const d = p.data;
+const cats: string[] = d.categories.filter(Boolean);
+const text = summary(p);
+const Tag = size === 'large' ? 'h2' : 'h3';
+---
+<article
+  class:list={['bcard', `bcard-${size}`]}
+  data-title={d.title.toLowerCase()}
+  data-search={`${d.title} ${cats.join(' ')} ${d.tags.join(' ')} ${text}`.toLowerCase()}
+  data-cats={cats.join('|')}
+  data-date={+d.date}
+>
+  <a class="bcard-img" href={d.urlPath} tabindex="-1" aria-hidden="true">
+    {d.image ? <img src={d.image} alt="" loading={size === 'large' ? 'eager' : 'lazy'} decoding="async" /> : <span class="bcard-ph" />}
+    {size === 'large' && <span class="bcard-flag">Featured</span>}
+  </a>
+  <div class="bcard-body">
+    {cats.length > 0 && (
+      <p class="bcard-cats">{cats.slice(0, size === 'small' ? 1 : 3).map((c) => <a href={`/feel-better-blog/category/${termSlug(c)}`}>{c}</a>)}</p>
+    )}
+    <Tag class="bcard-title"><a href={d.urlPath}>{d.title}</a></Tag>
+    {size !== 'small' && text && <p class="bcard-text">{text}</p>}
+    <p class="bcard-meta"><time datetime={d.date.toISOString()}>{fmtDate(d.date)}</time> · {readMinutes(p)} min read</p>
+  </div>
+</article>

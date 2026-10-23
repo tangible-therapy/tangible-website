@@ -1,0 +1,10 @@
+---
+// Embedded Google Form. Heights are set per form because embedded forms can't resize themselves.
+interface Props { id: string; title: string; height: number }
+const { id, title, height } = Astro.props;
+const src = `https://docs.google.com/forms/d/e/${id}/viewform?embedded=true`;
+---
+<div class="gform" style={`--h:${height}px`}>
+  <iframe src={src} title={title} loading="lazy">Loading…</iframe>
+  <p class="gform-alt">Form not loading? <a href={src.replace('?embedded=true', '')} target="_blank" rel="noopener">Open it in a new tab</a>.</p>
+</div>

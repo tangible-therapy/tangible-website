@@ -1,0 +1,50 @@
+---
+// Staff-only new-employee orientation course (password-protected by netlify/edge-functions/staff-gate.ts)
+import Base from '../../layouts/Base.astro';
+import { chapters, lessons, summary } from '../../lib/orientation';
+const isQuiz = (t: string) => /quiz/i.test(t);
+---
+<Base title="Orientation | Tangible Therapy" description="New employee orientation for Tangible Therapy staff." noindex>
+  <section class="orient-home">
+    <div class="wrap">
+      <header class="orient-hero">
+        <p class="orient-eyebrow">New Employee Orientation</p>
+        <h1>Welcome to Tangible</h1>
+        <p>Please take the time to read and complete each section. Each topic is integral to your success in working at Tangible.</p>
+        <div class="orient-hero-actions">
+          <a class="btn btn-medium orient-btn" href={`/orientation/${lessons[0].slug}`}>Start the course →</a>
+          <span class="orient-progress" data-orient-progress>{lessons.length} lessons</span>
+        </div>
+      </header>
+
+      <ol class="orient-chapters">
+        {chapters.map((c, ci) => (
+          <li class="orient-chapter">
+            <div class="orient-chapter-head">
+              <span class="orient-chapter-num">{String(ci + 1).padStart(2, '0')}</span>
+              <div>
+                <h2>{c.name}</h2>
+                <p>{c.lessons.length} {c.lessons.length === 1 ? 'lesson' : 'lessons'}</p>
+              </div>
+            </div>
+            <ul class="orient-lessons">
+              {c.lessons.map((l) => (
+                <li>
+                  <a href={`/orientation/${l.slug}`} data-lesson={l.slug}>
+                    <span class="orient-check" aria-hidden="true"></span>
+                    <span class="orient-lesson-text">
+                      <span class="orient-lesson-title">{l.title}{isQuiz(l.title) && <span class="orient-tag">Quiz</span>}</span>
+                      {summary(l) && <span class="orient-lesson-sum">{summary(l)}</span>}
+                    </span>
+                    <span aria-hidden="true">→</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+  <script is:inline src="/scripts/orientation.js" defer></script>
+</Base>
