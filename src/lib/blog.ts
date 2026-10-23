@@ -8,7 +8,7 @@ export async function getPosts() {
 }
 
 // Squarespace category/tag URLs use "+" for spaces, e.g. /feel-better-blog/category/Overall+Mental+Health
-export const termSlug = (t: string) => t.replace(/ /g, '+');
+export const termSlug = (t: string) => t.replace(/ /g, '+').toLowerCase();
 
 const plain = (md = '') =>
   md.replace(/<[^>]+>/g, ' ').replace(/!\[[^\]]*\]\([^)]*\)/g, ' ').replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/[#*_>`|]/g, '').replace(/\s+/g, ' ').trim();
