@@ -1,0 +1,141 @@
+# Tangible Therapy website — read this first
+
+This is the context for editing the live website for Tangible Therapy (tangiblementalhealth.com), a therapy practice in Utah with offices in Orem, Provo and Sandy. The site is a static Astro 5 site in the private GitHub repo tangible-therapy/tangible-website, hosted on Netlify. It was rebuilt from Squarespace in October 2026. The same docs live in the repo as CLAUDE.md (short pointer) and docs/context/website-context.md (this file). The owner keeps a copy as the project file "Website context - read first"; when this file changes, tell the owner to refresh it.
+
+## Non-negotiable rules
+
+1. Preview first, always. Work on a new branch, open a pull request, and give the user the Netlify Deploy Preview link. Only merge to main after the user approves. Merging to main publishes to the live site automatically.
+2. Never deploy to Netlify directly (no `netlify deploy`, no drag-and-drop, no editing in the Netlify UI). GitHub main is the only source of truth; Netlify builds from it.
+3. Never put passwords, logins, API keys or personal data in the repo. The staff password lives only in Netlify's STAFF_PASSWORD environment variable. Point people to the team password manager instead.
+4. Don't break URLs. If a page is renamed or removed, add a 301 redirect in netlify.toml. Keep the existing ~90 redirects (they protect SEO from the Squarespace move).
+5. Check desktop and mobile before handing over a preview (1440px and 390px wide at minimum, also ~1280 and ~1024). Blocks are placed on a grid and can overlap.
+6. Run `npm run build` before pushing; it must finish with no errors.
+7. Claude must not type passwords/credentials, create accounts, or approve Google/OAuth permissions for the user — ask the user to do those steps.
+
+# 1. How the site works
+
+## Stack
+- Astro 5 static site (astro.config.mjs): build.format 'file' and trailingSlash 'never', so pages are /anxiety-therapy (no trailing slash), matching the old Squarespace URLs exactly.
+- @astrojs/sitemap builds /sitemap-index.xml; staff pages are filtered out in astro.config.mjs. micromark renders orientation lesson text. Node 22. `npm run build` outputs dist/.
+- Hosting: Netlify project quiet-unicorn-d26839 (site ID a5ef92ba-715d-4ef6-a0af-ec415ad15ce5), owned by brady@tangiblementalhealth.com, linked to GitHub tangible-therapy/tangible-website branch main. Pull requests get Deploy Previews automatically (https://deploy-preview-<PR#>--quiet-unicorn-d26839.netlify.app).
+- Netlify edge function netlify/edge-functions/staff-gate.ts password-protects staff pages.
+
+## Folder map
+- Header menu, phone, email, offices, tracking IDs: src/data/site.ts
+- Staff menu, Employee Portal links, staff page list: src/data/staff.ts
+- Page shell (head, SEO meta, schema, tracking scripts): src/layouts/Base.astro
+- Extra structured data (FAQ / LocalBusiness) per URL: src/data/page-schema.json
+- Therapist profiles: src/content/team/<slug>.md -> /ourteam/p/<slug>; filter categories: src/data/team-categories.json
+- Blog (Feel Better Library): src/content/blog/<slug>.md -> /feel-better-blog/<slug>
+- CEU trainings: src/content/products/ceus--*.md -> /ceus/p/<slug>
+- Orientation course: src/data/orientation.json -> /orientation/<slug>
+- Regular pages: src/pages/<url>.astro
+- Reusable pieces: src/components/ (Header, Footer, Summary, PostCard, BookCTA, ApplyCard, GoogleForm, Divider, Icon...)
+- All styles: src/styles/global.css. Images: public/images/ (orientation in public/images/orientation/). Staff PDFs: public/files/ (password-protected).
+- Redirects + headers: netlify.toml. Browser scripts: public/scripts/site.js, public/scripts/orientation.js.
+
+## How pages are built (important)
+Most pages were converted from Squarespace's Fluid Engine layout and keep its grid: a section `<section class="sec t-light ...">` contains `<div class="fe" style="--rows:16;--mrows:24">` and blocks like `<div class="b b-html" style="--d:3/2/14/10;--m:2/2/7/10;--dz:2;--mz:2">`.
+- sec t-* = colour theme (t-white, t-white-bold, t-light, t-bright, t-bright-inverse, t-dark, t-black...), defined as CSS variables in global.css.
+- .fe = grid: desktop 26 tracks (gutter + 24 columns + gutter), mobile 10 (gutter + 8 + gutter).
+- Each block has --d (desktop) and --m (mobile) grid-area as rowStart/colStart/rowEnd/colEnd, plus --dz/--mz z-index. .b.jc / .b.je centre or bottom-align; inset-m adds mobile padding over shapes.
+- OVERLAP GOTCHA: if a block starts on a row another text block still occupies, text overlaps at some widths. Fix by starting the lower block on the row after the upper block ends (for the breakpoint that overlaps), or by putting heading + paragraph in one block. Check 1440, ~1280, ~1024 and 390px.
+- Newer sections are plain HTML/CSS (no grid): blog landing, contact page, careers job list, footer, Ready to book (BookCTA.astro), orientation, the /ceu "Our Next Live Training" section (.ceu-live). Prefer this simpler style for new sections.
+
+## Useful components
+- `<Summary kind="team" design="carousel" category="telehealth/anxiety" limit={9} perRow={3} rounded />` live therapist carousel; category accepts a comma list.
+- `<BookCTA />` shared "Ready to book?" block (home, Our Team, Sandy).
+- `<ApplyCard href=... role=... />` job/onboarding card linking to a Google Form.
+- `<GoogleForm id="<published id>" title=... height={1700} />` embedded Google Form.
+- `<Divider type="wavy|scalloped|soft-corners" />` curved section edges.
+- Design: Poppins font; palette tokens in :root (--slate muted green, --sage, --charcoal). Rounded corners on photos/cards. Booking is SimplePractice (client portal https://tangible.clientsecure.me/).
+
+# 2. Editing workflow (preview first)
+1. git checkout main && git pull; create a branch (e.g. update-sarah-bio).
+2. Make the change; npm install (first time) and npm run build must succeed.
+3. Check desktop (1440px) and mobile (390px).
+4. Commit, push the branch, open a pull request into main. Netlify builds a Deploy Preview and posts the link on the PR. Give the user that link plus a plain-English summary.
+5. Only after the user approves: merge to main. Netlify publishes main automatically (~30 seconds).
+6. If something goes wrong after publishing: revert the PR on GitHub, or use Netlify > Deploys > publish an earlier deploy.
+Do not: run netlify deploy, upload to Netlify by hand, commit directly to main (unless the user explicitly says to skip the preview), edit dist/, or reintroduce Netlify Forms (data-netlify).
+Notes: staff pages need the staff password on previews (Claude won't have it) - check them locally with npm run build. Team members get access by being added as collaborators on the GitHub repo and starting chats with the repo attached. No CMS is installed; the owner prefers changes go through Claude.
+
+# 3. Security and passwords
+Staff-only paths behind the "Staff Only" password screen (staff-gate.ts): /orientation, /orientation/*, /employeeportal, /employeeportal/*, /digital-products-2, /onboarding, /files/*, /reception-portal, /reception-onboarding, /reception-onboarding-1 (Payroll), /scheduling-new-client, /scheduling-new-client-1 (Start of Day Check-in), /crisis-call, plus /staff-logout (signs out).
+- The password is the Netlify environment variable STAFF_PASSWORD (Netlify > Project configuration > Environment variables), set by the owner. Never write it in the repo, docs or chat, and never ask for it.
+- A correct password sets an httpOnly cookie tt_staff for 30 days. Changing STAFF_PASSWORD signs everyone out (needs a new deploy).
+- Staff pages are noindex and excluded from the sitemap.
+- Adding a staff page: add its path to config.path in staff-gate.ts, to staffPaths in src/data/staff.ts (gives it the staff header), use noindex on <Base>, and exclude it in the sitemap filter in astro.config.mjs.
+- Staff header (on staff paths): "Employee Portal" tag, menus Employees (Orientation + employee links), Directors (management links; the Directors orientation is a DIFFERENT course on academy.tangiblementalhealth.com), Reception, and Sign Out.
+- Never store logins/passwords for third-party systems (SimplePractice, Gmail, insurance portals, payroll...) on any page. The old Squarespace reception portal showed plaintext logins; they were removed on purpose. Pages say "(see the team password manager)".
+- Before launch the Netlify project also has site-wide visitor protection; it must be turned off at launch, but the staff gate stays.
+- Onboarding uploads (W-4, direct deposit, license) go to Google Forms / the owner's Google Drive, not the website.
+
+# 4. Forms and email alerts (Google Forms)
+All website forms are Google Forms owned by brady@tangiblementalhealth.com; there are no Netlify Forms.
+- Forms WITHOUT file uploads are embedded with <GoogleForm id=... />.
+- Forms WITH file uploads (resume, W-4, license) cannot be embedded (Google only shows a button and requires respondents to sign in to Google). Those use <ApplyCard href=... /> which opens the form in a new tab. The owner chose to keep resume uploads.
+- Responder links: https://docs.google.com/forms/d/e/<PUBLISHED_ID>/viewform (add ?embedded=true for iframes). The edit ID (/forms/d/<EDIT_ID>/edit) is different.
+- New forms must be Published with responders = "Anyone with the link". Copied forms may show "Missing File Upload folders" - click Restore.
+
+Drive folders: Application Forms (jobs) https://drive.google.com/drive/folders/1-M8b06J2KnHqLTTBlgJWoanWC7lHb3kI ; Website Forms (CEU + onboarding) https://drive.google.com/drive/folders/1uJND3Uer3_S_PHoarjkk3MLwDE6_Sh4P
+
+Job applications (ApplyCard) - page | form | published ID | edit ID | alert to:
+- /careers-1-1 (Therapist/Clinical Supervisor, Orem) and /careers-1 | Orem - Full Time | 1FAIpQLSfyEteq0nzvcTVURV24fkYQSsHKkpRQho_25aYq76BuzA7zuw | 1wOwBXkyb4hBR4knjXecABP2ljiqlbRPCsJQk3YpLkR4 | brady@
+- /careers-part-time | Orem - Part Time | 1FAIpQLScoVaLpUFeeFDfy-WJgwnxSXNz0J8RRSoNv_Dopa8ZmCgZi7g | 16fuc9srb949k_sc-zlt3iYLNws72Q-UuKI-TtB_nBbY | brady@
+- /sandycouples-1-1 (Evening Couples, Orem) | Orem - Part-Time Evenings | 1FAIpQLScYw7khp3aYAUIC6WTw6qoe_TmiilS_TiqO0X4Xrk7Ih4i75A | 1XZUy0ovM3UZIbINs7JXXs2A74fPxIncxIeEjy8QNEgs | brady@
+- /careers-1-2 (Full-Time, Sandy) | Sandy - Full Time | 1FAIpQLSduORGF5axutAAMjumQnHhdivaU8jJvqfErz-16_5YRrcH-gA | 1nyhE52p0QlsD0jBwEj5ydhS0w7uvsMiBQUMBD-i-VW8 | arianne@
+- /sandycouples (Evening Couples, Sandy) | Sandy - Part-Time Evenings | 1FAIpQLSfJJeSXRyGgfHNGZEGlchAQNxz-lpUsqNCUB1Ji8vk0PPaTWQ | 1y3gmQpv1BZ2v65EbCEVxGa8TjWT7eL_noRtu5AxRErM | arianne@
+- /provo-career (Full-Time, Provo) | Provo - Full Time | 1FAIpQLScIr3LJ4o1xA6cNQxcArZF5JGiJztAIUsPujXjizDz4Zd3dew | 15pVtBdTgGzdoiPMdaHkC5LtQ4yofnWJbwQL4Vvy75y8 | hannah@
+- /sandycouples-1 (Evening Couples, Provo) | Provo - Part Time | 1FAIpQLScg5T-0roR9nME8OLmt1Nn6m4ft7h08m1soIq5KNrIp2XYxyQ | 1E4B_c9YA8J2TUts3l5wX7HTFj2V17BLXiS8PFpzMmvk | hannah@
+The careers page job list (jobGroups array in src/pages/careers.astro) controls which openings show, their Full time / Part time label and links. Fully Remote currently has no openings.
+
+Website Forms - where | form | published ID | edit ID | shown | alert to:
+- /ceus ("Have Questions?") | CEU Questions | 1FAIpQLScPQnpKOe9-Nd8Z_o_CyHZGEWaxhMeayfOgOOBNKYUqhaLhsQ | 1hgKtXnYxv8aarhXfluEZ8VVpPX4ItNiN24nHB7giSVw | embedded | skyler@
+- /presenter-application | CEU Presenter Application | 1FAIpQLSdOeumNnpM8WPYmUt6pacHJGGQN5sLpid5n14XKwMnUtrDGbg | 1mpyWEcTCbdhicvPjCeFJGgKVCqn3JMAVJ06ksgGrAms | embedded | skyler@
+- /onboarding (staff) | New Employee Onboarding | 1FAIpQLSdugCqDXpMyIpVQ93NXs8OrB3JfxVUmp48qFJXy2SnRa6iP3g | 1kLzKJSbZHlz5cee4f7oRGPO9lwodyPYpkhidu8P5Pto | ApplyCard (uploads) | frontdesk@
+- RETIRED (Oct 2026): Live CEU Registration (published 1FAIpQLSe3lrzMD4FiSRh8IDOyNx-LOvIk0jgT9ReMwHhAAua99zyU-g, edit 1ZCYp4bHpOm5tbab3eDIoq9pBwG6FOwhApJFz9mEXLUg) is no longer on the site. Live CEU registration moved to Teachable (see "Live CEUs" in section 5). The form still exists in Google Drive and may still be in the alerts script FORMS map; it is harmless there and can be removed.
+Other forms: orientation quizzes embedded in lessons (Policy Quiz 1FAIpQLSehlGF09ycgTaCl6T61N2I0zkHo8eTXTlaooj_Lt6D2EvQkvQ, Keys to Success Quiz 1FAIpQLSdJ6Y9YnqBvbfa0teiFk2lIdEOxbsqEEYhuhB38GYqTn3mMCA, Tangible Tenets Quiz 1FAIpQLSdTshIIIt8UgiZPjSAuADaXvAm3TlOH7Df7-pq8ykSdnraogQ); Employee Portal "Submit Hours" form (src/data/staff.ts).
+
+Email alerts: a Google Apps Script project named "Untitled project" in brady@tangiblementalhealth.com's account (https://script.google.com/home/projects/1jhb9F0rCiiHpkOLacaU74P9J0uoBCrjK3z48WGTvHFSqCd0BbBgNr5yO/edit). It MUST NOT be deleted - it sends all form alerts (owner may rename it "Website Form Alerts"). Code: a FORMS map of edit IDs -> recipient (CEU_TO skyler@, SANDY_TO arianne@, PROVO_TO hannah@, ONBOARD_TO frontdesk@, OTHER_TO brady@; all @tangiblementalhealth.com), setupAlerts() (one onFormSubmit trigger per form; replaces old ones) and sendAlert(e) (emails "New response: <form>" with all answers and file links, sent from brady@). To add a form or change a recipient: edit the FORMS map, save, select setupAlerts, Run. If Google asks for permissions, the owner must click Allow.
+
+# 5. Common tasks
+
+Therapists: one Markdown file per therapist in src/content/team/<slug>.md (profile /ourteam/p/<slug>). Copy an existing file. Fields: name, order, photo, seoTitle, seoDescription, phone, booking, categories, hidden.
+- categories controls where they appear: <office>/<specialty> slugs from src/data/team-categories.json, e.g. orem-office/anxiety, provo-office/ptsd, sandy/couples, telehealth/trauma, telehealth/current-openings-1 (home page Current Openings). Sandy uses lgbtq and Provo uses eating-disorder (singular); others use lgbt / eating-disorders.
+- Hide: hidden: true. Remove: delete the file and add a 301 from /ourteam/p/<slug> to /ourteam in netlify.toml.
+- Service pages show therapists via <Summary category="telehealth/<specialty>">. PTSD page = telehealth/trauma,telehealth/ptsd; Family Counseling = telehealth/couples,telehealth/teens; Depression has its own section; Somatic and Group Therapy have none yet (no therapist tags).
+
+Blog: src/content/blog/<slug>.md with title, date, author, image, excerpt, seoTitle, seoDescription, categories [...], tags, urlPath "/feel-better-blog/<slug>". Optional featured: true pins it to the big Featured spot (else the 3 newest). Landing page src/pages/feel-better-blog/index.astro has search, topic chips and sort; topic pages src/pages/feel-better-blog/[kind]/[term].astro; RSS /feel-better-blog/rss.xml. 6 posts have no category.
+
+Jobs: openings list = jobGroups in src/pages/careers.astro. Job pages: careers-*.astro, provo-career.astro, sandycouples*.astro, each with an ApplyCard to its Google Form. New job: duplicate the closest page, update text + ApplyCard link, add to jobGroups, duplicate and publish a Google Form, add it to the alerts script.
+
+CEUs: virtual/recorded listings src/content/products/ceus--*.md (shown at /ceus, details /ceus/p/<slug>).
+
+Live CEUs (registration on Teachable): each live CEU is a course on the Tangible Academy Teachable school (academy.tangiblementalhealth.com) with Teachable's Zoom block inside it, so registrants get the Zoom link inside the course - the website sends no emails for this. On /ceu (src/pages/ceu.astro) the "Our Next Live Training" section (id="register", plain HTML, styles .ceu-live* in the <style> block at the bottom of ceu.astro) shows the training flyer, date/presenter/location/cost and a Register button. Both the flyer and the button link to `registerUrl` at the top of ceu.astro (currently https://academy.tangiblementalhealth.com/l/pdp/what-we-re-getting-wrong-with-pornography-treatment). For the next live CEU: get the new Teachable page link and flyer from the owner, compress the flyer into public/images/, then update registerUrl, the image, the title/subtitle and the facts list. Enrollment notifications come from Teachable, not the Google Apps Script. In-person attendance is at Orem office B, 230 N Orem Blvd (people register the same way).
+
+Orientation (staff): 28 lessons in src/data/orientation.json as [{slug, title, chapter, sections: [[items]]}], item types text (markdown), image, youtube (id, start), form (embedded quiz). Chapters: Introduction to Tangible, Workplace Policies, Keys to Success, Tangible Tenets. Pages src/pages/orientation/index.astro and [slug].astro. Progress checkmarks are per-browser. Keep slugs (they match old Squarespace URLs).
+
+Page text/layout: src/pages/<url>.astro, text inside <div class="rte">. Header menu = nav in src/data/site.ts. Footer lists = arrays at top of src/components/Footer.astro. Staff menu and portal links = src/data/staff.ts (a blank href hides a link; Paystub Portal is blank until the URL is provided).
+
+Images: public/images/, referenced as /images/<file>. Compress first (aim under ~300 KB, WebP for photos/screenshots, max ~2000px). Google Maps embeds fill their block automatically.
+
+# 6. SEO, tracking and redirects
+- Every page sets title + description on <Base> (copied from Squarespace page by page - keep unless asked). Canonical, Open Graph and Twitter tags come from src/layouts/Base.astro.
+- Primary domain https://tangiblementalhealth.com (no www).
+- Structured data: WebSite + MedicalBusiness on every page; FAQPage/LocalBusiness per URL in src/data/page-schema.json; BlogPosting on posts.
+- Google Search Console verification meta tag is in Base.astro. robots.txt in public/. Sitemap /sitemap-index.xml (/sitemap.xml rewrites to it). Staff pages excluded.
+- Tracking (IDs in src/data/site.ts, loaded in Base.astro): Google Tag Manager GTM-PBGX88VJ; GA4 G-9NKMQE917G and G-BPLH89FCRP; Meta Pixel 1706769979926705; CallRail swap.js (links that must NOT be swapped, like the text-only number 435-282-8086, carry data-calltrk-noswap); Elfsight reviews widget (home, Sandy); SimplePractice booking widget.
+- Redirects in netlify.toml: all 267 Squarespace sitemap URLs exist at the same path. ~90 redirects cover old folder URLs, the Squarespace URL Mappings (short links like /brady, /sarah to profiles; old /feel-better-blog-1/*, /home/p/*, /therapists/* URLs), the retired merch store (/support-store/* to /), the retired Google Ads page (/google to /ourteam), /dealing-with-ocd to /ocd-treatment, /training to /ceu. Netlify redirects without force=true do not override an existing page. Add a 301 whenever a page is renamed or removed.
+
+# 7. Status and open items (as of 23 Oct 2026)
+Done: full rebuild (all pages, 60 blog posts, therapist directory, CEUs, staff pages, 28-lesson Orientation, 90 redirects, SEO, schema, tracking); merch store removed; Google Ads page retired; redesigned blog landing, contact page, careers listings, footer, Ready to book, staff header; mobile/overlap fixes site-wide; all forms on Google Forms with email alerts; code in GitHub with Netlify Deploy Previews; live CEU registration moved from the Google Form to Teachable (Zoom link delivered inside the course).
+
+Launch (not done yet - the domain still points to Squarespace):
+1. Owner test run: staff password, Employee Portal, Orientation, Sign Out; submit a CEU question to confirm Skyler's alert; try Schedule Online Now; click Register on /ceu.
+2. Turn off Netlify's site-wide visitor protection (keep the staff gate).
+3. Add tangiblementalhealth.com in Netlify domain settings and update DNS at the registrar. Change ONLY the website records - keep the email (MX) records untouched. www should redirect to the apex.
+4. Keep Squarespace active 2-4 weeks as a fallback.
+5. After launch: verify every old URL/redirect; submit the sitemap in Google Search Console and request indexing; update Google Business Profile, Psychology Today and ad links; watch Search Console for 404s for 2-4 weeks.
+
+Open items (don't block launch): Paystub Portal URL; Contact page 2nd paragraph mentions only Orem and Provo (maybe add Sandy / Salt Lake Valley); 6 blog posts lack a category; Somatic and Group Therapy pages need therapist tags/sections; Google Forms could be restyled to match the site; skim orientation lessons for reading order; optionally remove the retired Live CEU Registration form from the alerts script FORMS map.
