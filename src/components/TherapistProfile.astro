@@ -51,7 +51,7 @@ const suggested = everyone
   .filter((o) => o.slug !== t.slug && o.status === 'open' && sameClinic(o))
   .map((o) => ({ o, score: overlap(o) }))
   .sort((a, b) => b.score - a.score || a.o.order - b.o.order)
-  .slice(0, 4)
+  .slice(0, 12)
   .map(({ o }) => o);
 const clinicName = myOffices.length === 1 ? myOffices[0] : myOffices.length ? 'our' : 'telehealth';
 const officeOf = (o: Therapist) => {
@@ -139,7 +139,11 @@ const SP = {
     <div class="tp-wrap">
       <h2 id="tp-more-h">{myOffices.length === 1 ? `Other ${clinicName} therapists with openings` : myOffices.length ? 'Other therapists at these offices with openings' : 'Other telehealth therapists with openings'}</h2>
       {suggested.length > 0 ? (
-        <ul class="tp-more-grid">
+        <div class="tp-rail" data-rail>
+          <button type="button" class="tp-arrow tp-prev" data-dir="-1" aria-label="Previous therapists" disabled>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+          </button>
+        <ul class="tp-more-grid" data-track>
           {suggested.map((o) => (
             <li class="tp-card">
               <a href={profileHref(o.slug)}>
@@ -158,6 +162,10 @@ const SP = {
             </li>
           ))}
         </ul>
+          <button type="button" class="tp-arrow tp-next" data-dir="1" aria-label="More therapists">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+          </button>
+        </div>
       ) : (
         <p class="tp-more-empty">No other {clinicName === 'our' ? '' : clinicName + ' '}therapists have openings right now. Call <a href={site.phoneHref}>{site.phone}</a> and we'll help you find the right fit.</p>
       )}
@@ -178,6 +186,27 @@ const SP = {
   if (bar && ctas && 'IntersectionObserver' in window) {
     new IntersectionObserver(([e]) => { bar.hidden = e.isIntersecting || e.boundingClientRect.top > 0; }).observe(ctas);
   }
+
+  // Suggested therapists: one row, arrows scroll by a page of cards; arrows hide when everything fits.
+  document.querySelectorAll<HTMLElement>('[data-rail]').forEach((rail) => {
+    const track = rail.querySelector<HTMLElement>('[data-track]')!;
+    const prev = rail.querySelector<HTMLButtonElement>('.tp-prev')!;
+    const next = rail.querySelector<HTMLButtonElement>('.tp-next')!;
+    const update = () => {
+      const max = track.scrollWidth - track.clientWidth;
+      rail.classList.toggle('is-static', max <= 2);
+      prev.disabled = track.scrollLeft <= 2;
+      next.disabled = track.scrollLeft >= max - 2;
+      const photo = track.querySelector<HTMLElement>('.tp-card-photo');
+      if (photo) rail.style.setProperty('--photo-mid', `${photo.offsetHeight / 2}px`);
+    };
+    [prev, next].forEach((b) =>
+      b.addEventListener('click', () => track.scrollBy({ left: Number(b.dataset.dir) * track.clientWidth, behavior: 'smooth' })),
+    );
+    track.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    update();
+  });
 </script>
 
 <style>
@@ -235,8 +264,18 @@ const SP = {
   /* Suggested therapists */
   .tp-more { background: var(--sage); padding: 4rem 0 4.5rem; }
   .tp-more h2 { margin: 0 0 2rem; color: #fff; font-size: clamp(1.5rem, 2.4vw, 2rem); font-weight: 500; text-align: center; }
-  .tp-more-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 32px 28px; }
-  .tp-card { position: relative; }
+  .tp-rail { --per: 4; --gap: 28px; position: relative; }
+  .tp-more-grid { list-style: none; margin: 0; padding: 4px 0 8px; display: flex; gap: var(--gap); overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; overscroll-behavior-x: contain; scrollbar-width: none; }
+  .tp-more-grid::-webkit-scrollbar { display: none; }
+  .tp-card { position: relative; flex: 0 0 calc((100% - (var(--per) - 1) * var(--gap)) / var(--per)); scroll-snap-align: start; }
+  .tp-arrow { position: absolute; top: calc(4px + var(--photo-mid, 40%)); z-index: 2; width: 44px; height: 44px; margin-top: -22px; border: 0; border-radius: 50%; background: #fff; color: var(--charcoal); display: grid; place-items: center; cursor: pointer; box-shadow: 0 6px 18px rgba(47, 58, 48, .2); transition: opacity .15s, transform .15s; }
+  .tp-arrow svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .tp-arrow:hover:not(:disabled) { transform: scale(1.06); }
+  .tp-arrow:focus-visible { outline: 3px solid var(--charcoal); outline-offset: 2px; }
+  .tp-arrow:disabled { opacity: 0; pointer-events: none; }
+  .tp-prev { left: -22px; }
+  .tp-next { right: -22px; }
+  .tp-rail.is-static .tp-arrow { display: none; }
   .tp-card > a { display: flex; flex-direction: column; align-items: center; text-align: center; text-decoration: none; }
   .tp-card-photo { display: block; width: 100%; aspect-ratio: 4 / 5; border-radius: 12px; overflow: hidden; background: #9dab9d; box-shadow: 0 6px 18px rgba(47, 58, 48, .12); margin-bottom: 12px; }
   .tp-card-photo img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .5s ease; }
@@ -254,7 +293,7 @@ const SP = {
   .tp-sticky { display: none; }
 
   @media (max-width: 1024px) {
-    .tp-more-grid { gap: 28px 18px; }
+    .tp-rail { --per: 3; --gap: 20px; }
     .tp-facts { grid-template-columns: 1fr 1fr; }
     .tp-body-grid { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
     .tp-ins { grid-template-columns: 1fr; }
@@ -267,7 +306,10 @@ const SP = {
     .tp-photo img { object-position: 50% 22%; }
     .tp-body { padding: 3rem 0 3.5rem; }
     .tp-more { padding: 3rem 0 6.5rem; }
-    .tp-more-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px 14px; }
+    .tp-rail { --per: 2; --gap: 14px; }
+    .tp-arrow { width: 38px; height: 38px; margin-top: -19px; }
+    .tp-prev { left: -8px; }
+    .tp-next { right: -8px; }
     .tp-card-name { font-size: 15px; }
     .tp-card-meta { font-size: 12px; }
     .tp-card-tag { top: 7px; left: 7px; height: 22px; padding: 1px 7px 0; font-size: 9.5px; }
