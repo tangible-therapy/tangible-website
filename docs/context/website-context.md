@@ -33,6 +33,7 @@ This is the context for editing the live website for Tangible Therapy (tangiblem
 - Reusable pieces: src/components/ (Header, Footer, Summary, PostCard, BookCTA, ApplyCard, GoogleForm, Divider, Icon...)
 - All styles: src/styles/global.css. Images: public/images/ (orientation in public/images/orientation/). Staff PDFs: public/files/ (password-protected).
 - Redirects + headers: netlify.toml. Browser scripts: public/scripts/site.js, public/scripts/orientation.js.
+- Therapist finder PREVIEW (not live yet): /ourteam-preview (src/pages/ourteam-preview.astro, noindex, not linked, excluded from the sitemap) uses src/components/TherapistFinder.astro + src/lib/therapist-sheet.ts, which merge the team profiles with the "tangible sheets" Google Sheet (openings B:C, modalities A:G, Insurances A:L only). Until the owner connects the live feed (Netlify env var THERAPIST_SHEET_FEED, steps in docs/sheet-sync/README.md) it uses the saved copy src/data/therapist-sheet-snapshot.json. The live /ourteam page is unchanged.
 
 ## How pages are built (important)
 Most pages were converted from Squarespace's Fluid Engine layout and keep its grid: a section `<section class="sec t-light ...">` contains `<div class="fe" style="--rows:16;--mrows:24">` and blocks like `<div class="b b-html" style="--d:3/2/14/10;--m:2/2/7/10;--dz:2;--mz:2">`.
@@ -138,4 +139,4 @@ Launch (not done yet - the domain still points to Squarespace):
 4. Keep Squarespace active 2-4 weeks as a fallback.
 5. After launch: verify every old URL/redirect; submit the sitemap in Google Search Console and request indexing; update Google Business Profile, Psychology Today and ad links; watch Search Console for 404s for 2-4 weeks.
 
-Open items (don't block launch): Paystub Portal URL; Contact page 2nd paragraph mentions only Orem and Provo (maybe add Sandy / Salt Lake Valley); 6 blog posts lack a category; Somatic and Group Therapy pages need therapist tags/sections; Google Forms could be restyled to match the site; skim orientation lessons for reading order; optionally remove the retired Live CEU Registration form from the alerts script FORMS map.
+Open items (don't block launch): Paystub Portal URL; Contact page 2nd paragraph mentions only Orem and Provo (maybe add Sandy / Salt Lake Valley); 6 blog posts lack a category; Somatic and Group Therapy pages need therapist tags/sections; Google Forms could be restyled to match the site; skim orientation lessons for reading order; optionally remove the retired Live CEU Registration form from the alerts script FORMS map. Therapist finder: owner reviews /ourteam-preview, then connects the sheet feed (docs/sheet-sync/README.md), then a later PR swaps /ourteam and the office/specialty pages to the finder.

@@ -1,0 +1,32 @@
+---
+// PREVIEW of the new therapist finder (search-bar filters fed by the "tangible sheets" Google Sheet).
+// Not linked anywhere, noindex, and excluded from the sitemap. The live /ourteam page is unchanged.
+import Base from '../layouts/Base.astro';
+import TherapistFinder from '../components/TherapistFinder.astro';
+import Before from '../components/sections/ourteam-before.astro';
+import After from '../components/sections/ourteam-after.astro';
+import { getFinderData } from '../lib/therapist-sheet';
+
+const { source, sheetUpdated, warnings, therapists } = await getFinderData();
+const when = sheetUpdated ? new Date(sheetUpdated).toLocaleString('en-US', { timeZone: 'America/Denver', dateStyle: 'medium', timeStyle: 'short' }) : 'unknown';
+---
+<Base title="Find Your Therapist (preview) | Tangible Therapy" noindex>
+  <div class="preview-note" role="note">
+    <strong>Preview only.</strong>
+    {source === 'live' ? 'Live data from the "tangible sheets" Google Sheet' : 'Saved copy of the "tangible sheets" Google Sheet (live feed not connected yet)'}
+    · sheet as of {when} · {therapists.filter((t) => t.status === 'open').length} accepting, {therapists.filter((t) => t.status === 'wait').length} waitlist
+    {warnings.length > 0 && (
+      <details><summary>{warnings.length} sheet note{warnings.length === 1 ? '' : 's'}</summary><ul>{warnings.map((w) => <li>{w}</li>)}</ul></details>
+    )}
+  </div>
+  <Before />
+  <TherapistFinder />
+  <After />
+</Base>
+
+<style>
+  .preview-note { background: #fff7d6; color: #3b3f3c; font-size: 13px; padding: 8px var(--gutter); text-align: center; }
+  .preview-note details { display: inline-block; margin-left: .5rem; text-align: left; }
+  .preview-note summary { cursor: pointer; text-decoration: underline; }
+  .preview-note ul { margin: .4rem 0 0; padding-left: 1.2rem; }
+</style>
