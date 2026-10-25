@@ -30,6 +30,7 @@ export interface Therapist {
   insurance: string[];
   gender: string; // Female | Male | ''
   languages: string[];
+  booking: boolean; // false = profile has online booking turned off
 }
 
 export interface FinderData {
@@ -328,7 +329,7 @@ async function build(): Promise<FinderData> {
       ages: AGES.filter((a) => ageSet.has(a)), sees: SEES.filter((s) => sees.has(s)),
       specialties: SPECIALTIES.filter((s) => spec.has(s)), approaches: APPROACHES.filter((a) => appr.has(a)),
       insurance: INSURER_NAMES.map(([n]) => n).filter((n) => insurance.get(t.id)?.has(n)),
-      gender, languages,
+      gender, languages, booking: t.data.booking !== false,
     };
   });
 
