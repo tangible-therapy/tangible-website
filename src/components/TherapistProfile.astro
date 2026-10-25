@@ -5,10 +5,16 @@
 import type { CollectionEntry } from 'astro:content';
 import { render } from 'astro:content';
 import { site } from '../data/site';
-import type { Therapist } from '../lib/therapist-sheet';
+import { getFinderData, type Therapist } from '../lib/therapist-sheet';
 
-interface Props { entry: CollectionEntry<'team'>; t: Therapist; backHref?: string; backLabel?: string }
-const { entry, t, backHref = '/ourteam', backLabel = 'Find Your Therapist' } = Astro.props;
+interface Props {
+  entry: CollectionEntry<'team'>;
+  t: Therapist;
+  backHref?: string;
+  backLabel?: string;
+  profileHref?: (slug: string) => string;
+}
+const { entry, t, backHref = '/ourteam', backLabel = 'Find Your Therapist', profileHref = (slug: string) => `/ourteam/p/${slug}` } = Astro.props;
 const { Content } = await render(entry);
 const first = t.name.split(' ')[0];
 
@@ -29,6 +35,29 @@ const facts = [
   t.status === 'open' && t.times.length ? { label: 'Openings', value: t.times.join(', ') } : null,
   languagesOther.length ? { label: 'Languages', value: t.languages.join(', ') } : null,
 ].filter((f): f is { label: string; value: string } => !!f && !!f.value);
+
+// Suggested therapists: same office (telehealth-only therapists -> other telehealth therapists),
+// accepting new clients right now (from the sheet, so this refreshes on every sheet-triggered rebuild),
+// best overlap first (shared specialties, then ages / who they see), then the usual team order.
+const { therapists: everyone } = await getFinderData();
+const myOffices = t.locations.filter((l) => l !== 'Telehealth');
+const sameClinic = (o: Therapist) =>
+  myOffices.length ? o.locations.some((l) => myOffices.includes(l)) : o.locations.includes('Telehealth');
+const overlap = (o: Therapist) =>
+  o.specialties.filter((x) => t.specialties.includes(x)).length * 2 +
+  o.ages.filter((x) => t.ages.includes(x)).length +
+  o.sees.filter((x) => t.sees.includes(x)).length;
+const suggested = everyone
+  .filter((o) => o.slug !== t.slug && o.status === 'open' && sameClinic(o))
+  .map((o) => ({ o, score: overlap(o) }))
+  .sort((a, b) => b.score - a.score || a.o.order - b.o.order)
+  .slice(0, 4)
+  .map(({ o }) => o);
+const clinicName = myOffices.length === 1 ? myOffices[0] : myOffices.length ? 'our' : 'telehealth';
+const officeOf = (o: Therapist) => {
+  const offs = o.locations.filter((l) => l !== 'Telehealth');
+  return offs.length ? offs.join(', ') : 'Telehealth';
+};
 
 const SP = {
   'data-spwidget-application-id': '7c72cb9f9a9b913654bb89d6c7b4e71a77911b30192051da35384b4d0c6d505b',
@@ -105,6 +134,36 @@ const SP = {
     </div>
   </section>
 
+  <!-- Suggested therapists from the same clinic with openings -->
+  <section class="tp-more" aria-labelledby="tp-more-h">
+    <div class="tp-wrap">
+      <h2 id="tp-more-h">{myOffices.length === 1 ? `Other ${clinicName} therapists with openings` : myOffices.length ? 'Other therapists at these offices with openings' : 'Other telehealth therapists with openings'}</h2>
+      {suggested.length > 0 ? (
+        <ul class="tp-more-grid">
+          {suggested.map((o) => (
+            <li class="tp-card">
+              <a href={profileHref(o.slug)}>
+                <span class="tp-card-photo"><img src={o.photo} alt={`${o.name}, ${o.credential}`} width="600" height="750" loading="lazy" decoding="async" /></span>
+                <span class="tp-card-name">{o.name}</span>
+                <span class="tp-card-meta">{[o.credential, officeOf(o)].filter(Boolean).join(' · ')}</span>
+              </a>
+              <div class="tp-card-over">
+                <span class="tp-card-tag"><span class="tp-dot is-open" />Accepting new clients</span>
+                {o.booking ? (
+                  <a class="tp-card-act spwidget-button" href={site.clientPortal} {...SP} aria-label={`Book now with ${o.name}`}>Book now</a>
+                ) : (
+                  <a class="tp-card-act" href={site.phoneHref} aria-label={`Call ${site.phone} about ${o.name}`}>Call now</a>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p class="tp-more-empty">No other {clinicName === 'our' ? '' : clinicName + ' '}therapists have openings right now. Call <a href={site.phoneHref}>{site.phone}</a> and we'll help you find the right fit.</p>
+      )}
+    </div>
+  </section>
+
   <!-- Phones: slim bar with both actions once the hero buttons scroll away -->
   <div class="tp-sticky" data-sticky hidden>
     {t.booking && <a class="tp-btn tp-btn-primary spwidget-button" href={site.clientPortal} {...SP}>Book online</a>}
@@ -173,9 +232,29 @@ const SP = {
   .tp-ins svg { width: 15px; height: 15px; flex: 0 0 15px; margin-top: 2px; fill: none; stroke: #3d8b5a; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
   .tp-small { margin: .9rem 0 0; font-size: 12.5px; line-height: 1.5; color: var(--tp-muted); }
 
+  /* Suggested therapists */
+  .tp-more { background: var(--sage); padding: 4rem 0 4.5rem; }
+  .tp-more h2 { margin: 0 0 2rem; color: #fff; font-size: clamp(1.5rem, 2.4vw, 2rem); font-weight: 500; text-align: center; }
+  .tp-more-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 32px 28px; }
+  .tp-card { position: relative; }
+  .tp-card > a { display: flex; flex-direction: column; align-items: center; text-align: center; text-decoration: none; }
+  .tp-card-photo { display: block; width: 100%; aspect-ratio: 4 / 5; border-radius: 12px; overflow: hidden; background: #9dab9d; box-shadow: 0 6px 18px rgba(47, 58, 48, .12); margin-bottom: 12px; }
+  .tp-card-photo img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .5s ease; }
+  .tp-card > a:hover img { transform: scale(1.03); }
+  .tp-card-name { font-size: 17px; font-weight: 500; line-height: 1.3; color: #fff; }
+  .tp-card-meta { margin-top: 2px; font-size: 13px; color: var(--tp-ink); }
+  .tp-card-over { position: absolute; top: 0; left: 0; right: 0; aspect-ratio: 4 / 5; pointer-events: none; }
+  .tp-card-tag { position: absolute; top: 9px; left: 9px; display: inline-flex; align-items: center; gap: 6px; box-sizing: border-box; height: 24px; padding: 1px 9px 0; border-radius: 300px; background: rgba(255, 255, 255, .9); color: var(--tp-ink); font-size: 10.5px; font-weight: 500; line-height: 1; white-space: nowrap; }
+  .tp-card-act { position: absolute; bottom: 11px; left: 50%; transform: translateX(-50%); pointer-events: auto; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; height: 32px; min-width: 104px; padding: 1px 18px 0; border-radius: 300px; background: rgba(47, 51, 48, .82); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); color: #fff !important; font-size: 12.5px; font-weight: 500; line-height: 1; text-decoration: none; white-space: nowrap; box-shadow: 0 4px 14px rgba(0, 0, 0, .18); transition: background .15s, transform .15s; }
+  .tp-card-act:hover { background: rgba(20, 22, 21, .92); transform: translateX(-50%) translateY(-1px); }
+  .tp-card-act:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+  .tp-more-empty { margin: 0 auto; max-width: 46ch; text-align: center; color: var(--tp-ink); font-size: 1rem; }
+  .tp-more-empty a { color: var(--tp-ink); font-weight: 500; }
+
   .tp-sticky { display: none; }
 
   @media (max-width: 1024px) {
+    .tp-more-grid { gap: 28px 18px; }
     .tp-facts { grid-template-columns: 1fr 1fr; }
     .tp-body-grid { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
     .tp-ins { grid-template-columns: 1fr; }
@@ -186,7 +265,13 @@ const SP = {
     .tp-crumbs { margin-bottom: 1.1rem; }
     .tp-photo { aspect-ratio: 1 / 1; max-height: 70vh; }
     .tp-photo img { object-position: 50% 22%; }
-    .tp-body { padding: 3rem 0 6.5rem; }
+    .tp-body { padding: 3rem 0 3.5rem; }
+    .tp-more { padding: 3rem 0 6.5rem; }
+    .tp-more-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px 14px; }
+    .tp-card-name { font-size: 15px; }
+    .tp-card-meta { font-size: 12px; }
+    .tp-card-tag { top: 7px; left: 7px; height: 22px; padding: 1px 7px 0; font-size: 9.5px; }
+    .tp-card-act { bottom: 8px; height: 28px; min-width: 88px; padding: 1px 12px 0; font-size: 11.5px; }
     .tp-body-grid { grid-template-columns: 1fr; }
     .tp-side { position: static; }
     .tp-ins { grid-template-columns: 1fr 1fr; }
