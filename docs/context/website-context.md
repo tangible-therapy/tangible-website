@@ -50,6 +50,7 @@ Most pages were converted from Squarespace's Fluid Engine layout and keep its gr
 - `<ApplyCard href=... role=... />` job/onboarding card linking to a Google Form.
 - `<GoogleForm id="<published id>" title=... height={1700} />` embedded Google Form.
 - `<Divider type="wavy|scalloped|soft-corners" />` curved section edges.
+- Per-therapist booking (finder + new profile layout): `bookingAttrs(slug)` from src/lib/booking.ts gives a Book link the SimplePractice attributes for that therapist (data-spwidget-clinician-id from src/data/simplepractice.json; falls back to the practice-wide widget if a therapist has no ID). Include `<BookingScript />` once on the page: it loads SimplePractice's script and binds a button only on first click, so pages don't preload a hidden booking iframe per button. New therapist: find their clinician ID in SimplePractice > Settings > Widgets (Appointment request; the ID is the clinicianId in that row's preview) and add it to simplepractice.json under their profile slug. A therapist's booking page only offers times if SimplePractice has availability/services for new clients set up for them. The older pages (BookCTA, Booking.astro, /book-appt) still use the practice-wide widget.
 - Design: Poppins font; palette tokens in :root (--slate muted green, --sage, --charcoal). Rounded corners on photos/cards. Booking is SimplePractice (client portal https://tangible.clientsecure.me/).
 
 # 2. Editing workflow (preview first)

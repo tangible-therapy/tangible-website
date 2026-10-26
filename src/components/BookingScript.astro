@@ -1,0 +1,50 @@
+---
+// Include once on any page that uses bookingAttrs() buttons (src/lib/booking.ts).
+// First click on a [data-sp-book] link: load SimplePractice's widget script if needed, turn the link
+// into a normal SimplePractice button (data-spwidget-autobind), bind it, and open it. Later clicks go
+// straight to SimplePractice's own click handler. If the script can't load, the link's href
+// (the client portal) still works.
+---
+<script>
+  const SRC = 'https://widget-cdn.simplepractice.com/assets/integration-1.0.js';
+  type SPWin = Window & { spWidgetAutoBind?: () => void };
+  const w = window as SPWin;
+  let loading: Promise<void> | null = null;
+
+  function loadScript(): Promise<void> {
+    if (w.spWidgetAutoBind) return Promise.resolve();
+    loading ??= new Promise((resolve, reject) => {
+      const existing = document.querySelector<HTMLScriptElement>(`script[src="${SRC}"]`);
+      const s = existing ?? document.createElement('script');
+      const done = () => (w.spWidgetAutoBind ? resolve() : reject(new Error('SimplePractice widget unavailable')));
+      s.addEventListener('load', done, { once: true });
+      s.addEventListener('error', () => reject(new Error('SimplePractice widget failed to load')), { once: true });
+      if (!existing) { s.src = SRC; s.async = true; document.head.appendChild(s); }
+      else setTimeout(done, 1500); // already on the page (e.g. the "Ready to book?" block) and maybe loaded
+    });
+    return loading;
+  }
+
+  document.addEventListener('click', async (e) => {
+    const a = (e.target as HTMLElement | null)?.closest<HTMLAnchorElement>('a[data-sp-book]');
+    if (!a || a.hasAttribute('data-spwidget-autobind')) return; // already bound: SimplePractice handles it
+    if (e.metaKey || e.ctrlKey || e.shiftKey) return; // let "open in new tab" work
+    e.preventDefault();
+    a.setAttribute('aria-busy', 'true');
+    try {
+      await loadScript();
+      a.setAttribute('data-spwidget-autobind', '');
+      w.spWidgetAutoBind!();
+      a.click(); // now handled by SimplePractice's own onclick
+    } catch {
+      window.location.href = a.href;
+    } finally {
+      a.removeAttribute('aria-busy');
+    }
+  });
+
+  // Warm up the script after the page settles so the first click opens quickly.
+  const warm = () => document.querySelector('a[data-sp-book]') && loadScript().catch(() => {});
+  if ('requestIdleCallback' in window) (window as any).requestIdleCallback(warm, { timeout: 4000 });
+  else setTimeout(warm, 2500);
+</script>

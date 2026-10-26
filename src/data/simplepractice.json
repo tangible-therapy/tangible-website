@@ -1,0 +1,146 @@
+{
+  "_note": "SimplePractice booking IDs. 'practice' is the practice-wide widget (the client picks a therapist). 'clinicians' maps each website profile (src/content/team/<slug>.md) to that therapist's SimplePractice clinician ID, used as data-spwidget-clinician-id so Book buttons open that therapist's own booking page. Source: SimplePractice > Settings > Widgets > Appointment request (Oct 2026). A therapist's booking page only offers times when SimplePractice has them set to accept new clients with availability; otherwise it shows 'Unavailable'. Not secret: these IDs are public in every booking widget.",
+  "practice": {
+    "scopeId": "db007d38-e4cc-4a0a-9e0c-5704b4664f65",
+    "scopeUri": "tangible",
+    "applicationId": "7c72cb9f9a9b913654bb89d6c7b4e71a77911b30192051da35384b4d0c6d505b"
+  },
+  "clinicians": {
+    "allora-walters": {
+      "name": "Allora Walters",
+      "clinicianId": "2113884"
+    },
+    "aneeqa-janjua": {
+      "name": "Aneeqa Janjua",
+      "clinicianId": "2002790"
+    },
+    "angela-puertas": {
+      "name": "Angela Puertas",
+      "clinicianId": "2045367"
+    },
+    "anna-hunsaker-lcsw-gyl6w": {
+      "name": "Anna Hunsaker",
+      "clinicianId": "2104158"
+    },
+    "arianne-buck": {
+      "name": "Arianne Buck",
+      "clinicianId": "1571013"
+    },
+    "brady-clegg": {
+      "name": "Brady Clegg",
+      "clinicianId": "932410"
+    },
+    "corinne-carmona": {
+      "name": "Corinne Carmona",
+      "clinicianId": "2064317"
+    },
+    "danielle-gandola": {
+      "name": "Danielle Gandola",
+      "clinicianId": "2162159"
+    },
+    "emily-mccrary": {
+      "name": "Emily McCrary",
+      "clinicianId": "1400806"
+    },
+    "faith-ochoa": {
+      "name": "Faith Ochoa",
+      "clinicianId": "2146075"
+    },
+    "grace-samuels": {
+      "name": "Grace Samuels",
+      "clinicianId": "1918106"
+    },
+    "hannah-brown": {
+      "name": "Hannah Brown",
+      "clinicianId": "1395086"
+    },
+    "hannah-hunt": {
+      "name": "Hannah Hunt",
+      "clinicianId": "1539126"
+    },
+    "isabella-marrott": {
+      "name": "Isabella Marrott",
+      "clinicianId": "2104171"
+    },
+    "jocelyn-backus": {
+      "name": "Jocelyn Backus",
+      "clinicianId": "2137134"
+    },
+    "joe-johnson": {
+      "name": "Joe Johnson",
+      "clinicianId": "1480052"
+    },
+    "jordyn-hoopes": {
+      "name": "Jordyn Hoopes",
+      "clinicianId": "1859568"
+    },
+    "kade-cope": {
+      "name": "Kade Cope",
+      "clinicianId": "1949038"
+    },
+    "kelley-graves": {
+      "name": "Kelley Graves",
+      "clinicianId": "1832926"
+    },
+    "lauren-olinger": {
+      "name": "Lauren Olinger",
+      "clinicianId": "1760356"
+    },
+    "leah-brown": {
+      "name": "Leah Brown",
+      "clinicianId": "1924225"
+    },
+    "mhari-mills": {
+      "name": "Mhari Mills",
+      "clinicianId": "1979807"
+    },
+    "micheala-zarbock": {
+      "name": "Micheala Zarbock",
+      "clinicianId": "1863942"
+    },
+    "morgan-hafen": {
+      "name": "Morgan Hafen",
+      "clinicianId": "1874385"
+    },
+    "nancy-coca": {
+      "name": "Nancy Coca",
+      "clinicianId": "1394117"
+    },
+    "natasha-taylor": {
+      "name": "Natasha Taylor",
+      "clinicianId": "1887182"
+    },
+    "noelle-berry": {
+      "name": "Noelle Berry",
+      "clinicianId": "2009219"
+    },
+    "parker-jensen": {
+      "name": "Parker Jensen",
+      "clinicianId": "1777732"
+    },
+    "phil-childs": {
+      "name": "Phil Childs",
+      "clinicianId": "2024988"
+    },
+    "sarah-mendez": {
+      "name": "Sarah Mendez",
+      "clinicianId": "1702726"
+    },
+    "skyler-anderson": {
+      "name": "Skyler Anderson",
+      "clinicianId": "1672687"
+    },
+    "sophie-caughman": {
+      "name": "Sophie Caughman",
+      "clinicianId": "1896031"
+    },
+    "sydney-matis": {
+      "name": "Sydney Matis",
+      "clinicianId": "1862413"
+    },
+    "tanya-rummler-lcsw": {
+      "name": "Tanya Rummler",
+      "clinicianId": "2070767"
+    }
+  }
+}

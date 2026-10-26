@@ -3,6 +3,8 @@
 // Every therapist is rendered into the HTML at build time (good for SEO);
 // the filters only show/hide cards in the browser. Data: src/lib/therapist-sheet.ts
 import { site } from '../data/site';
+import { bookingAttrs } from '../lib/booking';
+import BookingScript from './BookingScript.astro';
 import { getFinderData, LOCATIONS, TIMES, AGES, SEES, SPECIALTIES, APPROACHES, INSURERS } from '../lib/therapist-sheet';
 
 interface Props { heading?: string }
@@ -122,7 +124,7 @@ const officeText = (locs: string[]) => locs.filter((l) => l !== 'Telehealth').jo
             {(t.status === 'closed' || t.status === 'unknown') && <span class="tf-badge"><span class="tf-dot is-closed" />Not accepting new clients</span>}
           </div>
           {t.status === 'open' && t.booking && (
-            <a class="tf-act spwidget-button" href={site.clientPortal} data-spwidget-application-id="7c72cb9f9a9b913654bb89d6c7b4e71a77911b30192051da35384b4d0c6d505b" data-spwidget-autobind="" data-spwidget-scope-global="" data-spwidget-scope-id="db007d38-e4cc-4a0a-9e0c-5704b4664f65" data-spwidget-scope-uri="tangible" aria-label={`Book now with ${t.name}`}>Book now</a>
+            <a class="tf-act" href={site.clientPortal} {...bookingAttrs(t.slug)} aria-label={`Book now with ${t.name}`}>Book now</a>
           )}
           {(t.status === 'wait' || (t.status === 'open' && !t.booking)) && (
             <a class="tf-act" href={site.phoneHref} aria-label={`Call ${site.phone} about ${t.name}`}>Call now</a>
@@ -138,6 +140,7 @@ const officeText = (locs: string[]) => locs.filter((l) => l !== 'Telehealth').jo
     <button type="button" class="tf-done" data-clear>Clear all filters</button>
   </div>
 </section>
+<BookingScript />
 
 <style>
   .tf { padding-bottom: 5vw; }
@@ -237,12 +240,6 @@ const officeText = (locs: string[]) => locs.filter((l) => l !== 'Telehealth').jo
 </style>
 
 <script>
-  // SimplePractice booking widget: load it once unless another block on the page (e.g. "Ready to book?") already does.
-  const SP = 'https://widget-cdn.simplepractice.com/assets/integration-1.0.js';
-  if (document.querySelector('.tf-act.spwidget-button') && !document.querySelector(`script[src="${SP}"]`)) {
-    const s = document.createElement('script'); s.src = SP; s.async = true; document.body.appendChild(s);
-  }
-
   const root = document.querySelector<HTMLElement>('[data-finder]');
   if (root) {
     const cards = [...root.querySelectorAll<HTMLElement>('.tf-card')];
