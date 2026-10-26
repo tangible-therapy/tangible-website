@@ -9,7 +9,6 @@ booking: true
 categories:
   - "provo-office/adhd"
   - "provo-office/anxiety"
-  - "provo-office/couples"
   - "provo-office/depression"
   - "provo-office/faith-transitions"
   - "provo-office/grief"
