@@ -5,6 +5,10 @@
 //   <Summary kind="blog" design="list" items={[...]} excerpt />
 import { getCollection } from 'astro:content';
 import categories from '../data/team-categories.json';
+import { site } from '../data/site';
+import { getFinderData, type Status } from '../lib/therapist-sheet';
+import { bookingAttrs } from '../lib/booking';
+import BookingScript from './BookingScript.astro';
 
 interface Props {
   rounded?: boolean;
@@ -25,16 +29,37 @@ const catNames = new Map<string, string>();
 const walk = (cs: Cat[]) => cs.forEach((c) => { catNames.set(c.slug, c.name); walk(c.children); });
 walk(categories as Cat[]);
 
-let cards: { href: string; img: string; title: string; meta?: string; text?: string }[] = [];
+// Team cards also carry the therapist's status from the sheet data, so photos get the same
+// Accepting / Waitlist / Not accepting tag and Book now / Call now button as the finder.
+type Card = { href: string; img: string; title: string; meta?: string; text?: string; slug?: string; name?: string; status?: Status; booking?: boolean };
+let cards: Card[] = [];
+const statusOf = new Map((kind === 'team' ? (await getFinderData()).therapists : []).map((t) => [t.slug, t]));
 if (kind === 'team') {
   const all = (await getCollection('team')).filter((t) => !t.data.hidden).sort((a, b) => a.data.order - b.data.order);
   const cats = category ? category.split(',').map((c) => c.trim()) : [];
-  let list = category ? all.filter((t) => t.data.categories.some((c) => cats.some((k) => c === k || c.startsWith(k + '/')))) : items.map((s) => all.find((t) => t.id === s)).filter(Boolean);
+  // "Current openings" carousels (category containing current-openings, e.g. the home page's
+  // telehealth/current-openings-1) follow the therapist sheet: everyone accepting new clients right
+  // now, in any office, not the old current-openings tags. They update whenever the sheet does.
+  // Other category carousels (specialty pages) list accepting therapists first, then waitlist, then
+  // not accepting, so a limit={9} keeps the bookable ones.
+  const rank: Record<string, number> = { open: 0, wait: 1, unknown: 2, closed: 3 };
+  const byStatus = (a: any, b: any) =>
+    (rank[statusOf.get(a.id)?.status ?? 'unknown'] - rank[statusOf.get(b.id)?.status ?? 'unknown']) || a.data.order - b.data.order;
+  const isOpeningsList = cats.some((k) => /current-openings/.test(k));
+  let list = isOpeningsList
+    ? all.filter((t) => statusOf.get(t.id)?.status === 'open')
+    : category
+      ? all.filter((t) => t.data.categories.some((c) => cats.some((k) => c === k || c.startsWith(k + '/')))).sort(byStatus)
+      : items.map((s) => all.find((t) => t.id === s)).filter(Boolean);
   if (limit) list = list.slice(0, limit);
   cards = list.map((t: any) => ({
     href: `/ourteam/p/${t.id}`,
     img: t.data.photo,
     title: t.data.name,
+    slug: t.id,
+    name: statusOf.get(t.id)?.name ?? t.data.name,
+    status: statusOf.get(t.id)?.status,
+    booking: statusOf.get(t.id)?.booking,
     meta: [...new Set(t.data.categories.map((c: string) => catNames.get(c)).filter(Boolean))].join(' · '),
   }));
 } else {
@@ -44,6 +69,8 @@ if (kind === 'team') {
   cards = list.map((p: any) => ({ href: p.data.urlPath ?? `/feel-better-blog/${p.id}`, img: p.data.image, title: p.data.title, text: p.data.excerpt }));
 }
 const isCarousel = design === 'carousel';
+const showTags = kind === 'team' && design !== 'list';
+const anyBook = showTags && cards.some((c) => c.status === 'open' && c.booking);
 ---
 <div class:list={['summary', design, { rounded }]} style={`--per:${perRow}`}>
   {(title || isCarousel) && (
@@ -63,7 +90,42 @@ const isCarousel = design === 'carousel';
             {excerpt && c.text && <p class="s-meta">{c.text}</p>}
           </div>
         </a>
+        {showTags && c.status && (
+          <div class="s-over">
+            <span class="s-badge">
+              <span class:list={['s-dot', c.status === 'open' ? 'is-open' : c.status === 'wait' ? 'is-wait' : 'is-closed']} />
+              {c.status === 'open' ? 'Accepting new clients' : c.status === 'wait' ? 'Waitlist' : 'Not accepting new clients'}
+            </span>
+            {c.status === 'open' && c.booking && (
+              <a class="s-act" href={site.clientPortal} {...bookingAttrs(c.slug)} aria-label={`Book now with ${c.name}`}>Book now</a>
+            )}
+            {(c.status === 'wait' || (c.status === 'open' && !c.booking)) && (
+              <a class="s-act" href={site.phoneHref} aria-label={`Call ${site.phone} about ${c.name}`}>Call now</a>
+            )}
+          </div>
+        )}
       </li>
     ))}
   </ul>
 </div>
+{anyBook && <BookingScript />}
+
+<style>
+  /* Status tag (top-left) and Book now / Call now (bottom centre) over team photos.
+     .s-over matches the photo's box (full width, 1:1.2), so it sits on the image, not the name. */
+  .s-item { position: relative; }
+  .s-over { position: absolute; top: 0; left: 0; right: 0; aspect-ratio: 1 / 1.2; pointer-events: none; }
+  .s-badge { position: absolute; top: 12px; left: 12px; max-width: calc(100% - 24px); display: inline-flex; align-items: center; gap: 6px; box-sizing: border-box; height: 26px; padding: 1px 10px 0; border-radius: 300px; background: rgba(255, 255, 255, .92); backdrop-filter: blur(6px); color: #1f2a20; font-size: 11px; font-weight: 500; line-height: 1; white-space: nowrap; }
+  .rounded .s-badge { top: 14px; left: 14px; }
+  .s-dot { flex: 0 0 6px; width: 6px; height: 6px; border-radius: 50%; }
+  .s-dot.is-open { background: #3d8b5a; }
+  .s-dot.is-wait { background: #e0b000; }
+  .s-dot.is-closed { background: #d64545; }
+  .s-act { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); pointer-events: auto; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; height: 34px; min-width: 112px; padding: 1px 20px 0; border-radius: 300px; background: rgba(47, 51, 48, .82); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); color: #fff !important; font-size: 13px; font-weight: 500; letter-spacing: .02em; line-height: 1; text-decoration: none; white-space: nowrap; box-shadow: 0 4px 14px rgba(0, 0, 0, .18); transition: background .15s, transform .15s; }
+  .s-act:hover { background: rgba(20, 22, 21, .92); transform: translateX(-50%) translateY(-1px); }
+  .s-act:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+  @media (max-width: 767px) {
+    .s-badge, .rounded .s-badge { top: 9px; left: 9px; height: 24px; padding: 1px 8px 0; font-size: 10px; }
+    .s-act { bottom: 10px; height: 30px; min-width: 96px; padding: 1px 16px 0; font-size: 12px; }
+  }
+</style>

@@ -45,7 +45,7 @@ Most pages were converted from Squarespace's Fluid Engine layout and keep its gr
 - Newer sections are plain HTML/CSS (no grid): blog landing, contact page, careers job list, footer, Ready to book (BookCTA.astro), orientation, the /ceu "Our Next Live Training" section (.ceu-live). Prefer this simpler style for new sections.
 
 ## Useful components
-- `<Summary kind="team" design="carousel" category="telehealth/anxiety" limit={9} perRow={3} rounded />` live therapist carousel; category accepts a comma list.
+- `<Summary kind="team" design="carousel" category="telehealth/anxiety" limit={9} perRow={3} rounded />` live therapist carousel; category accepts a comma list. Team photos show the same status tag (Accepting / Waitlist / Not accepting, from the therapist sheet) and Book now / Call now button as the finder. Specialty carousels list accepting therapists first. Carousels whose category contains current-openings (home, /counseling, /book-appt, /why-choose-tangible, /home-1 use telehealth/current-openings-1) show everyone accepting new clients per the sheet, in any office, instead of the old current-openings tags.
 - `<BookCTA />` shared "Ready to book?" block (home, Our Team, Sandy).
 - `<ApplyCard href=... role=... />` job/onboarding card linking to a Google Form.
 - `<GoogleForm id="<published id>" title=... height={1700} />` embedded Google Form.
