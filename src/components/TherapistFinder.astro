@@ -5,14 +5,28 @@
 import { site } from '../data/site';
 import { bookingAttrs } from '../lib/booking';
 import BookingScript from './BookingScript.astro';
-import { getFinderData, LOCATIONS, TIMES, AGES, SEES, SPECIALTIES, APPROACHES, INSURERS } from '../lib/therapist-sheet';
+import { getFinderData, type FinderPreset, LOCATIONS, TIMES, AGES, SEES, SPECIALTIES, APPROACHES, INSURERS } from '../lib/therapist-sheet';
 
-interface Props { heading?: string }
-const { heading = 'Find Your Therapist' } = Astro.props;
+// preset: filters already switched on when the page loads (used by the /ourteam/<office>/<specialty>
+// pages). Visitors can change or clear them. Cards that don't match start hidden in the HTML.
+interface Props { heading?: string; preset?: FinderPreset }
+const { heading = 'Find Your Therapist', preset = {} } = Astro.props;
 const { therapists } = await getFinderData();
 
-const usedApproaches = APPROACHES.filter((a) => therapists.some((t) => t.approaches.includes(a)));
-const usedSpecialties = SPECIALTIES.filter((s) => therapists.some((t) => t.specialties.includes(s)));
+// Options shown in each filter: the ones at least one therapist has, plus anything preset on this page.
+const used = (all: string[], key: 'approaches' | 'specialties', extra: string[] = []) =>
+  all.filter((a) => therapists.some((t) => t[key].includes(a)) || extra.includes(a));
+const usedApproaches = used(APPROACHES, 'approaches', preset.appr);
+const usedSpecialties = used(SPECIALTIES, 'specialties', preset.spec);
+
+const presetGroups = (['loc', 'spec', 'appr', 'age', 'sees'] as const).filter((g) => preset[g]?.length);
+const field = { loc: 'locations', spec: 'specialties', appr: 'approaches', age: 'ages', sees: 'sees' } as const;
+const matches = (t: (typeof therapists)[number]) =>
+  (!preset.openOnly || t.status === 'open') &&
+  presetGroups.every((g) => preset[g]!.some((v) => (t[field[g]] as string[]).includes(v)));
+const shownCount = therapists.filter(matches).length;
+const anyPreset = presetGroups.length > 0 || !!preset.openOnly;
+const isChecked = (key: string, o: string) => ((preset as Record<string, unknown>)[key] as string[] | undefined)?.includes(o) ?? false;
 
 type Group = { key: string; title?: string; options: string[]; single?: boolean };
 type Pill = { key: string; label: string; empty: string; hint: string; groups: Group[] };
@@ -50,7 +64,7 @@ const officeText = (locs: string[]) => locs.filter((l) => l !== 'Telehealth').jo
         </>
       ))}
       <span class="tf-div" aria-hidden="true" />
-      <button type="button" class="tf-seg tf-toggle" role="switch" aria-checked="false" data-open-toggle>
+      <button type="button" class="tf-seg tf-toggle" role="switch" aria-checked={preset.openOnly ? 'true' : 'false'} data-open-toggle>
         <span class="tf-toggle-text">
           <span class="tf-seg-label">Openings</span>
           <span class="tf-seg-value">Accepting only</span>
@@ -77,7 +91,7 @@ const officeText = (locs: string[]) => locs.filter((l) => l !== 'Telehealth').jo
               )}
               {g.options.map((o) => (
                 <label class="tf-opt">
-                  <input type={g.single ? 'radio' : 'checkbox'} name={g.key} value={o} />
+                  <input type={g.single ? 'radio' : 'checkbox'} name={g.key} value={o} checked={isChecked(g.key, o)} />
                   <span>{o}</span>
                 </label>
               ))}
@@ -88,8 +102,8 @@ const officeText = (locs: string[]) => locs.filter((l) => l !== 'Telehealth').jo
     ))}
 
     <div class="tf-status">
-      <span aria-live="polite" data-count>Showing all {therapists.length} therapists</span>
-      <button type="button" class="tf-clear" data-clear hidden>Clear all filters</button>
+      <span aria-live="polite" data-count>{anyPreset ? `${shownCount} therapist${shownCount === 1 ? '' : 's'} match` : `Showing all ${therapists.length} therapists`}</span>
+      <button type="button" class="tf-clear" data-clear hidden={!anyPreset}>Clear all filters</button>
     </div>
   </div>
 
@@ -97,6 +111,7 @@ const officeText = (locs: string[]) => locs.filter((l) => l !== 'Telehealth').jo
     {therapists.map((t, i) => (
       <li
         class="tf-card"
+        hidden={!matches(t)}
         data-status={t.status}
         data-loc={j(t.locations)}
         data-ins={j(t.insurance)}
@@ -134,7 +149,7 @@ const officeText = (locs: string[]) => locs.filter((l) => l !== 'Telehealth').jo
     ))}
   </ul>
 
-  <div class="tf-empty" data-empty hidden>
+  <div class="tf-empty" data-empty hidden={shownCount > 0}>
     <h2>No therapists match all of those</h2>
     <p>Try removing a filter, or give us a call and we'll help you find the right fit.</p>
     <button type="button" class="tf-done" data-clear>Clear all filters</button>

@@ -1,15 +1,23 @@
 ---
+// Therapist profile: /ourteam/p/<slug>. New layout (TherapistProfile) with the bio from
+// src/content/team/<slug>.md plus status, populations, approaches, insurance and suggestions from the
+// therapist sheet data. Falls back to the old simple layout for anyone the finder data doesn't include
+// (e.g. hidden: true profiles that still have a page).
 import { getCollection, render } from 'astro:content';
 import Base from '../../../layouts/Base.astro';
 import Booking from '../../../components/Booking.astro';
+import TherapistProfile from '../../../components/TherapistProfile.astro';
+import { getFinderData } from '../../../lib/therapist-sheet';
 
 export async function getStaticPaths() {
   const team = await getCollection('team');
-  return team.map((t) => ({ params: { slug: t.id }, props: { t } }));
+  return team.map((t) => ({ params: { slug: t.id }, props: { t: t } }));
 }
-const { t } = Astro.props;
-const { Content } = await render(t);
-const d = t.data;
+const { t: entry } = Astro.props;
+const d = entry.data;
+const { therapists } = await getFinderData();
+const finder = therapists.find((x) => x.slug === entry.id);
+const { Content } = finder ? { Content: null } : await render(entry);
 const title = `${d.seoTitle || d.name} | Tangible Therapy`;
 const schema = {
   '@context': 'https://schema.org',
@@ -21,15 +29,19 @@ const schema = {
 };
 ---
 <Base title={title} description={d.seoDescription} image={d.photo} schema={schema}>
-  <section class="sec t-black">
-    <div class="therapist">
-      <div class="photo"><img src={d.photo} alt={d.name} width="900" height="1020" /></div>
-      <div class="info">
-        <p class="crumbs"><a href="/ourteam">Find Your Therapist</a> › {d.name}</p>
-        <h1>{d.name}</h1>
-        <div class="bio rte"><Content /></div>
+  {finder ? (
+    <TherapistProfile entry={entry} t={finder} />
+  ) : (
+    <section class="sec t-black">
+      <div class="therapist">
+        <div class="photo"><img src={d.photo} alt={d.name} width="900" height="1020" /></div>
+        <div class="info">
+          <p class="crumbs"><a href="/ourteam">Find Your Therapist</a> › {d.name}</p>
+          <h1>{d.name}</h1>
+          <div class="bio rte">{Content && <Content />}</div>
+        </div>
       </div>
-    </div>
-    {d.booking && <Booking phone={d.phone} />}
-      </section>
+      {d.booking && <Booking phone={d.phone} />}
+    </section>
+  )}
 </Base>

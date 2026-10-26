@@ -40,6 +40,9 @@ export interface FinderData {
   warnings: string[];
 }
 
+// Filters switched on when a finder page loads (see TherapistFinder.astro / finderPreset()).
+export type FinderPreset = { loc?: string[]; spec?: string[]; appr?: string[]; age?: string[]; sees?: string[]; openOnly?: boolean };
+
 type Feed = { generatedAt?: string; openings: string[][]; modalities: string[][]; insurances: string[][] };
 
 // ---------- helpers ----------
@@ -354,3 +357,18 @@ async function build(): Promise<FinderData> {
 }
 
 export const INSURERS = INSURER_NAMES.map(([n]) => n);
+
+// /ourteam/<category> pages (slugs from src/data/team-categories.json) -> finder filters switched on.
+// e.g. "orem-office/anxiety" -> Location Orem + Specialty Anxiety; "telehealth/current-openings-1" -> Telehealth + Accepting only.
+const OFFICE_LOCATION: Record<string, string> = { 'orem-office': 'Orem', 'provo-office': 'Provo', sandy: 'Sandy', telehealth: 'Telehealth' };
+const CATEGORY_APPROACH: Record<string, string> = { emdr: 'EMDR', ifs: 'IFS' };
+export function finderPresetFor(category: string): FinderPreset {
+  const [top, sub = ''] = category.split('/');
+  const preset: FinderPreset = {};
+  if (OFFICE_LOCATION[top]) preset.loc = [OFFICE_LOCATION[top]];
+  if (top === 'current-openings' || /^current-openings/.test(sub)) preset.openOnly = true;
+  if (CATEGORY_SPECIALTY[sub]) preset.spec = [CATEGORY_SPECIALTY[sub]];
+  if (CATEGORY_APPROACH[sub]) preset.appr = [CATEGORY_APPROACH[sub]];
+  if (sub === 'teens') preset.age = ['Teens'];
+  return preset;
+}

@@ -8,7 +8,7 @@ export default defineConfig({
   trailingSlash: 'never',
   integrations: [
     sitemap({
-      filter: (page) => !/\/(404|ourteam-preview|orientation|employeeportal|digital-products-2|onboarding|reception-portal|reception-onboarding|scheduling-new-client|crisis-call)/.test(page),
+      filter: (page) => !/\/(404|orientation|employeeportal|digital-products-2|onboarding|reception-portal|reception-onboarding|scheduling-new-client|crisis-call)/.test(page),
     }),
   ],
 });
