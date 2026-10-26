@@ -134,16 +134,28 @@ export function parseOpening(text: string) {
   const slots: string[] = [];
   const times = new Set<TimeOfDay>();
   let day = '';
+  let prev: { h: number; end: number } | null = null; // last time read, to spot ranges like "10 AM-5 PM"
   for (const m of t.matchAll(/([a-z]+)|(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/gi)) {
     if (m[1]) {
       const d = m[1].toLowerCase().slice(0, 3);
       if (DAY.test(m[1])) day = DAY_LABEL[d];
+      prev = null;
       continue;
     }
     const h = hour24(Number(m[2]), m[4]);
-    if (h < 6 || h > 21) continue;
+    const end = (m.index ?? 0) + m[0].length;
+    if (h < 6 || h > 21) { prev = null; continue; }
+    // Range end ("10 AM-5 PM", "12:30 PM- 3:30"): the range covers its start up to, not including,
+    // its end, so a range ending at 5 PM adds afternoons but no evening.
+    if (prev && h > prev.h && /^\s*[-–]\s*$/.test(t.slice(prev.end, m.index))) {
+      for (let x = prev.h + 1; x < h; x++) times.add(bucket(x));
+      slots[slots.length - 1] += `–${fmt(h, m[3] ?? '')}`;
+      prev = null;
+      continue;
+    }
     times.add(bucket(h));
     slots.push(`${day ? day + ' ' : ''}${fmt(h, m[3] ?? '')}`);
+    prev = { h, end };
   }
   if (slots.length) return { status: 'open' as Status, note: slots.slice(0, 3).join(', ') + (slots.length > 3 ? ` +${slots.length - 3} more` : ''), times: TIMES.filter((x) => times.has(x)) };
   return out;
