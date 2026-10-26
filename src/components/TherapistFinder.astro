@@ -5,7 +5,7 @@
 import { site } from '../data/site';
 import { bookingAttrs } from '../lib/booking';
 import BookingScript from './BookingScript.astro';
-import { getFinderData, therapistPhotoAlt, type FinderPreset, LOCATIONS, TIMES, AGES, SEES, SPECIALTIES, APPROACHES, INSURERS } from '../lib/therapist-sheet';
+import { getFinderData, therapistPhotoAlt, matchesPreset, type FinderPreset, LOCATIONS, TIMES, AGES, SEES, SPECIALTIES, APPROACHES, INSURERS } from '../lib/therapist-sheet';
 
 // preset: filters already switched on when the page loads (used by the /ourteam/<office>/<specialty>
 // pages). Visitors can change or clear them. Cards that don't match start hidden in the HTML.
@@ -20,10 +20,7 @@ const usedApproaches = used(APPROACHES, 'approaches', preset.appr);
 const usedSpecialties = used(SPECIALTIES, 'specialties', preset.spec);
 
 const presetGroups = (['loc', 'spec', 'appr', 'age', 'sees'] as const).filter((g) => preset[g]?.length);
-const field = { loc: 'locations', spec: 'specialties', appr: 'approaches', age: 'ages', sees: 'sees' } as const;
-const matches = (t: (typeof therapists)[number]) =>
-  (!preset.openOnly || t.status === 'open') &&
-  presetGroups.every((g) => preset[g]!.some((v) => (t[field[g]] as string[]).includes(v)));
+const matches = (t: (typeof therapists)[number]) => matchesPreset(t, preset);
 const shownCount = therapists.filter(matches).length;
 const anyPreset = presetGroups.length > 0 || !!preset.openOnly;
 const isChecked = (key: string, o: string) => ((preset as Record<string, unknown>)[key] as string[] | undefined)?.includes(o) ?? false;
