@@ -3,6 +3,7 @@ title: "Reassurance-Seeking in Relationship OCD: Why It Backfires (and What to D
 date: "2026-08-22T08:12:27.447000-06:00"
 author: "Brady Clegg"
 image: "/images/tangble-2-c36578.jpg"
+imageAlt: "A woman and man sit apart on a sofa, both looking away from each other"
 excerpt: ""
 seoTitle: ""
 seoDescription: "Why asking “Do I really love my partner?” never settles relationship OCD; and the ERP-backed steps that actually quiet the doubt. From Utah OCD therapists."

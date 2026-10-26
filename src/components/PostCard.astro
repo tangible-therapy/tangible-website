@@ -16,7 +16,7 @@ const Tag = size === 'large' ? 'h2' : 'h3';
   data-date={+d.date}
 >
   <a class="bcard-img" href={d.urlPath} tabindex="-1" aria-hidden="true">
-    {d.image ? <img src={d.image} alt="" loading={size === 'large' ? 'eager' : 'lazy'} decoding="async" /> : <span class="bcard-ph" />}
+    {d.image ? <img src={d.image} alt={d.imageAlt || ""} loading={size === 'large' ? 'eager' : 'lazy'} decoding="async" /> : <span class="bcard-ph" />}
     {size === 'large' && <span class="bcard-flag">Featured</span>}
   </a>
   <div class="bcard-body">

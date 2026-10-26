@@ -3,6 +3,7 @@ title: "Local or Not? The Value of Choosing a Local Therapist for Telehealth in 
 date: "2026-03-18T09:54:22.169000-06:00"
 author: "Brady Clegg"
 image: "/images/tangible-23-35f139.jpg"
+imageAlt: "A young woman writes in a notebook on a blanket outdoors with her laptop beside her"
 excerpt: ""
 seoTitle: "Benefits of Choosing a Local Utah Therapist for Telehealth Sessions"
 seoDescription: "Learn why working with a local Utah therapist for telehealth improves connection, cultural understanding, and access to relevant mental health support."

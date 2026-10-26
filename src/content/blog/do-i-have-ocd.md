@@ -3,6 +3,7 @@ title: "“Do I Actually Have OCD?” The Quiet Confusion Many People Carry"
 date: "2026-03-23T16:23:49.578000-06:00"
 author: "Brady Clegg"
 image: "/images/do-you-still-love-me-281-29-92820d.jpg"
+imageAlt: "A tired woman rests her head on her hand while reading at her desk"
 excerpt: ""
 seoTitle: "Do I have OCD?"
 seoDescription: "Wondering “Do I have OCD?” Discover why OCD is so hard to recognize, how doubt keeps you stuck, and when it might be time to seek support through therapy."
@@ -10,7 +11,7 @@ categories: []
 tags: []
 urlPath: "/feel-better-blog/do-i-have-ocd"
 ---
-![](/images/adobestock-1299394821-22061a.jpg)
+![A woman listens thoughtfully to her therapist during a counseling session](/images/adobestock-1299394821-22061a.jpg)
 
 That question alone can feel exhausting. As an [OCD Therapist](/ocd-treatment), I’ve heard this countless times.
 
@@ -33,7 +34,7 @@ It can look like:
 
 Because these experiences happen *inside your mind*, they’re easy to dismiss or mislabel. You might think, *“This is just anxiety,”* or worse, *“This says something about who I am.”*
 
-![](/images/do-you-still-love-me-7a5d0d.jpg)
+![A woman holds a phone showing anxious texts: Where are you? Who are you with? Do you still love me?](/images/do-you-still-love-me-7a5d0d.jpg)
 
 ### 2. Doubt Is Built Into OCD Itself
 
@@ -49,7 +50,7 @@ This isn’t a coincidence; it’s part of the pattern. OCD thrives on doubt, an
 
 So the very condition you’re trying to identify can actively make you *less sure* about identifying it.
 
-![](/images/unsplash-image-fvrtlkgq700-46cd40.jpg)
+![A woman lies in bed, awake and worn out](/images/unsplash-image-fvrtlkgq700-46cd40.jpg)
 
 ### 3. The Content Feels Personal, So It Feels Meaningful
 
@@ -78,7 +79,7 @@ But many compulsions are mental:
 
 Because these happen quietly, they can feel like *problem-solving* rather than part of a cycle. You might even feel responsible for continuing them, because it seems like you’re just “being thorough” or “trying to be sure.”
 
-![](/images/unsplash-image-7qt9a9qzcua-89f55e.jpg)
+![A woman sits deep in thought with her hands pressed to her face](/images/unsplash-image-7qt9a9qzcua-89f55e.jpg)
 
 ### 5. You May Minimize Your Own Experience
 
@@ -108,7 +109,7 @@ The more you try to answer these questions, the more they tend to grow.
 
 So the struggle isn’t a sign that you’re failing, it’s a sign that you’re using a strategy (overthinking for certainty) that the problem itself keeps feeding.
 
-![](/images/do-you-still-love-me-1-e5561f.jpg)
+![A tired woman rests her head on her hand while reading at her desk](/images/do-you-still-love-me-1-e5561f.jpg)
 
 ### You’re Not Alone in This
 

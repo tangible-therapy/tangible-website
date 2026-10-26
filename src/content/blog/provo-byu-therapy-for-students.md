@@ -3,6 +3,7 @@ title: "Therapy & BYU: Finding Strength within you"
 date: "2026-04-10T14:47:57.580000-06:00"
 author: "Brady Clegg"
 image: "/images/xdo5ntqlfnut2rwx0ogju2ahozchxofknhfqg1o2-c4e636.webp"
+imageAlt: "BYU's LaVell Edwards Stadium in Provo, Utah, with Y Mountain behind it"
 excerpt: ""
 seoTitle: "Therapy & BYU: Rising Strong"
 seoDescription: "BYU students face lots of challenges and here's how therapy can help. Learn how to navigate stress, perfectionism, faith, and identity while building self-compassion and emotional resilience."
@@ -10,7 +11,7 @@ categories: []
 tags: []
 urlPath: "/feel-better-blog/provo-byu-therapy-for-students"
 ---
-![](/images/xdo5ntqlfnut2rwx0ogju2ahozchxofknhfqg1o2-b507c1.webp)
+![BYU's LaVell Edwards Stadium in Provo, Utah, with Y Mountain behind it](/images/xdo5ntqlfnut2rwx0ogju2ahozchxofknhfqg1o2-b507c1.webp)
 
 *BYU Stadium in Provo Utah*
 
@@ -31,7 +32,7 @@ These goals can be meaningful and motivating. But they can also create pressure 
 
 In therapy, there’s room to step outside of that pressure. You don’t have to present a polished version of yourself. You can be honest about doubts, struggles, or parts of your experience that feel confusing or heavy.
 
-![](/images/tangible-26-1606a7.jpg)
+![A smiling young woman with curly brown hair in an orange sweater](/images/tangible-26-1606a7.jpg)
 
 ### Emily’s Story
 
@@ -79,7 +80,7 @@ Therapy offers a space where complexity is welcome. You’re allowed to explore 
 
 ### Balancing Faith, Identity, and Mental Health
 
-![](/images/tangible-24-966565.jpg)
+![Provo City Center Temple at dusk with downtown Provo, Utah, and the mountains behind](/images/tangible-24-966565.jpg)
 
 You might find yourself wondering:
 
@@ -114,7 +115,7 @@ Therapy helps challenge these patterns gently. Instead of striving to be perfect
 
 ### What Therapy Can Offer You
 
-![](/images/tangible-23-35f139.jpg)
+![A college student writes in a notebook on a blanket outdoors with her laptop beside her](/images/tangible-23-35f139.jpg)
 
 At Tangible, we care about BYU students. That’s why we are a trusted partner of the [BYU CAPS](https://caps.byu.edu/) program. With our [Provo office](/provo-office) just south of campus, we provide an easily accessible space where you can find:
 

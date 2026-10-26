@@ -3,6 +3,7 @@ title: "When Faith No Longer Fits: A Therapist’s Guide to Leaving a Lifelong R
 date: "2025-05-09T13:45:22.785000-06:00"
 author: "Brady Clegg"
 image: "/images/unsplash-image-ruaabj4hjam-52dacb.jpg"
+imageAlt: "A gold statue atop a temple dome under a cloudy sky"
 excerpt: ""
 seoTitle: "Leaving Religion Guide for Healing"
 seoDescription: "Leaving religion can be painful yet freeing. Discover steps to heal, rebuild identity, and find peace during faith transitions with Tangible Mental Health."

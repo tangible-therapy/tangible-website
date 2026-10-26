@@ -3,6 +3,7 @@ title: "How Does EMDR Therapy Work? A Complete Guide From a Therapist’s Perspe
 date: "2023-12-21T16:14:00.467000-06:00"
 author: "Brady Clegg"
 image: "/images/image-asset-638c0b.jpeg"
+imageAlt: "Swirling blue lines like a fingerprint or ripples of light"
 excerpt: ""
 seoTitle: "How Does EMDR Work?"
 seoDescription: "How does EMDR therapy work? Learn about the 8 phases, bilateral stimulation, and the neuroscience behind one of the most effective trauma treatments. Provo, Orem & Sandy, UT."

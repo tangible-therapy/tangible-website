@@ -25,6 +25,8 @@ const blog = defineCollection({
     date: z.coerce.date(),
     author: z.string().optional().default(''),
     image: z.string().optional().default(''),
+    // Description of the featured image for screen readers and Google Images
+    imageAlt: z.string().optional().default(''),
     excerpt: z.string().optional().default(''),
     seoTitle: z.string().optional().default(''),
     seoDescription: z.string().optional().default(''),
