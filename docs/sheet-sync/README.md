@@ -7,7 +7,7 @@ office/specialty tags still come from `src/content/team/<slug>.md`.
 ## How it works
 
 1. Someone edits the **openings**, **modalities** or **Insurances** tab.
-2. An Apps Script in the sheet notes the change. Every 10 minutes it checks: if there were edits and
+2. The "Website feed" Apps Script notes the change. Every 10 minutes it checks: if there were edits and
    nobody has edited for 5 minutes, it calls a Netlify **build hook**.
 3. Netlify rebuilds the site (about 1–2 minutes). During the build, `src/lib/therapist-sheet.ts`
    reads the sheet through the script's private web feed and bakes the data into the HTML.
@@ -47,8 +47,10 @@ columns.
 
 Claude can't do these steps (they need your Google and Netlify logins and permission approvals).
 
-1. Open **tangible sheets** → **Extensions → Apps Script**. Paste the contents of
-   `docs/sheet-sync/apps-script.gs`, name the project "Website feed", and click **Save**.
+1. Go to **script.google.com → New project** (signed in as brady@tangiblementalhealth.com). Paste the
+   contents of `docs/sheet-sync/apps-script.gs`, name the project "Website feed", and click **Save**.
+   It's a separate project on purpose: the script already attached to the sheet ("New passdown response")
+   has its own web app, and this keeps it untouched. The feed reads the sheet by its ID (`SHEET_ID`).
 2. Choose **setup** in the function menu and click **Run**. Approve the permissions Google asks for.
    The log shows a **feed key** — copy it.
 3. Click **Deploy → New deployment → Web app**. Execute as: **Me**. Who has access: **Anyone**.

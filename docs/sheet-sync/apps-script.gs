@@ -1,7 +1,9 @@
 /**
  * Tangible website <- "tangible sheets"
  *
- * Paste this into the "tangible sheets" Google Sheet: Extensions > Apps Script.
+ * A STANDALONE Apps Script project (script.google.com > New project, named "Website feed").
+ * It is kept separate from the script already attached to the sheet ("New passdown response"),
+ * so that script's own web app is untouched. It reads the sheet by ID (SHEET_ID below).
  * It does two things:
  *   1. doGet(): a private web feed the website reads when it builds. It returns ONLY the
  *      public columns below (never the Clients, NPI, Referalls or password tabs).
@@ -18,13 +20,16 @@ var FEED_TABS = {
   insurances: { tab: 'Insurances', cols: 'A:L' },    // insurer columns with therapist names / ALL
 };
 var SETTLE_MINUTES = 5;
+// "tangible sheets" (owned by brady@tangiblementalhealth.com). Change this if the sheet is ever replaced.
+var SHEET_ID = '1QIrJbIzoNtenFfOqAGBJzyx3nYSPVkLqOu7ECwLx-Kw';
+function sheet_() { return SpreadsheetApp.openById(SHEET_ID); }
 
 function doGet(e) {
   var props = PropertiesService.getScriptProperties();
   var key = props.getProperty('FEED_KEY');
   if (!key || !e || !e.parameter || e.parameter.key !== key) return json_({ error: 'unauthorized' });
 
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = sheet_();
   var out = { generatedAt: new Date().toISOString() };
   Object.keys(FEED_TABS).forEach(function (name) {
     var sheet = findSheet_(ss, FEED_TABS[name].tab);
@@ -39,7 +44,7 @@ function doGet(e) {
 // Installable "On edit" / "On change" trigger (created by setup()).
 function markChanged(e) {
   try {
-    var name = e && e.range ? e.range.getSheet().getName().toLowerCase() : '';
+    var name = e && e.range ? e.range.getSheet().getName().trim().toLowerCase() : '';
     var watched = Object.keys(FEED_TABS).map(function (k) { return FEED_TABS[k].tab.toLowerCase(); });
     if (name && watched.indexOf(name) === -1) return; // edits on other tabs don't rebuild the site
   } catch (err) { /* onChange events have no range: treat as a change */ }
@@ -64,7 +69,7 @@ function rebuildIfChanged() {
 
 // Run once (select "setup" and click Run). Safe to run again; it replaces its own triggers.
 function setup() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = sheet_();
   ScriptApp.getProjectTriggers().forEach(function (t) {
     if (['markChanged', 'rebuildIfChanged'].indexOf(t.getHandlerFunction()) !== -1) ScriptApp.deleteTrigger(t);
   });
