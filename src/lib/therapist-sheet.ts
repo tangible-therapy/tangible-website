@@ -76,11 +76,14 @@ const CATEGORY_SPECIALTY: Record<string, string> = {
   lgbt: 'LGBTQ+', lgbtq: 'LGBTQ+', grief: 'Grief', 'eating-disorders': 'Eating disorders',
   'eating-disorder': 'Eating disorders', addiction: 'Addiction',
 };
-// Words in the sheet's "specialties" column -> the same labels.
+// Words in the sheet's two specialty columns (E "preferences" = full list, F "specialties" = focus areas)
+// -> specialty labels. "Couples" is handled with the ages column (see sees below).
+// "Internet Addiction" / "Video Game Addiction" alone don't count as Addiction.
 const SPECIALTY_WORDS: [string, RegExp][] = [
-  ['Anxiety', /anx/i], ['Depression', /depress/i], ['Trauma/PTSD', /trauma|ptsd/i], ['OCD', /\bocd\b/i],
-  ['ADHD', /adhd/i], ['Autism', /autis/i], ['Couples', /couple/i], ['Faith transitions', /faith/i],
-  ['LGBTQ+', /lgbt/i], ['Grief', /grief|greif/i], ['Eating disorders', /eating/i], ['Addiction', /addiction|substance/i],
+  ['Anxiety', /anx/i], ['Depression', /depress/i], ['Trauma/PTSD', /trauma|ptsd/i], ['OCD', /\bocd\b|obsessive/i],
+  ['ADHD', /adhd/i], ['Autism', /autis|asperger/i], ['Faith transitions', /faith/i],
+  ['LGBTQ+', /lgbt|transgender/i], ['Grief', /grief|greif/i], ['Eating disorders', /eating|body image/i],
+  ['Addiction', /\baddiction\b|substance|alcohol/i],
 ];
 export const SPECIALTIES = ['Anxiety', 'Depression', 'Trauma/PTSD', 'OCD', 'ADHD', 'Autism', 'Couples', 'Faith transitions', 'LGBTQ+', 'Grief', 'Eating disorders', 'Addiction'];
 
@@ -209,7 +212,7 @@ async function build(): Promise<FinderData> {
   };
 
   // Openings tab: "Name: text" rows grouped under office headings
-  const openings = new Map<string, { status: Status; note: string; times: TimeOfDay[]; virtualOnly: boolean; inPersonOnly: boolean; noTeens: boolean; credential: string }>();
+  const openings = new Map<string, { status: Status; note: string; times: TimeOfDay[]; office: string; virtualOnly: boolean; inPersonOnly: boolean; noTeens: boolean; credential: string }>();
   let section = '';
   for (const row of feed.openings ?? []) {
     const cell = String(row[0] ?? '');
@@ -229,6 +232,7 @@ async function build(): Promise<FinderData> {
     if (parsed.status === 'unknown' && clean(m[3])) warnings.push(`Openings: couldn't read "${clean(m[3])}" for ${clean(m[1])}`);
     openings.set(slug, {
       ...parsed,
+      office: /orem/.test(section) ? 'Orem' : /provo/.test(section) ? 'Provo' : /sandy/.test(section) ? 'Sandy' : '',
       virtualOnly: /virtual/.test(section),
       inPersonOnly: /in person only|in-person only/i.test(cell),
       noTeens: /no (more )?teens/i.test(cell),
@@ -287,56 +291,81 @@ async function build(): Promise<FinderData> {
     const cats = t.data.categories;
     const body = t.body ?? '';
 
-    // Locations: website categories, adjusted by the sheet (virtual-only / in-person-only)
-    const loc = new Set<string>();
-    if (cats.some((c) => c.startsWith('orem-office'))) loc.add('Orem');
-    if (cats.some((c) => c.startsWith('provo-office'))) loc.add('Provo');
-    if (cats.some((c) => c.startsWith('sandy'))) loc.add('Sandy');
-    if (cats.some((c) => c.startsWith('telehealth'))) loc.add('Telehealth');
+    // THE SHEET IS THE SOURCE OF TRUTH. The old Squarespace category tags in the profile files are
+    // only used for a therapist missing from a sheet tab (and a warning is logged).
     const o = openings.get(t.id);
-    if (o?.virtualOnly) { loc.clear(); loc.add('Telehealth'); }
-    if (o?.inPersonOnly) loc.delete('Telehealth');
+    const r = mods.get(t.id);
+    const tagged = (sub: string) => cats.some((c) => c.endsWith('/' + sub));
 
-    // Status: the sheet wins; otherwise fall back to the website's Current Openings tag
+    // Office + telehealth: the office heading they sit under in the openings tab. Everyone offers
+    // telehealth unless their line says "in person only"; "Virtual only" = telehealth only.
+    const loc = new Set<string>();
+    if (o) {
+      if (o.office && !o.virtualOnly) loc.add(o.office);
+      if (!o.inPersonOnly) loc.add('Telehealth');
+    } else {
+      warnings.push(`${name}: not in the openings tab, using old website tags for office and status`);
+      if (cats.some((c) => c.startsWith('orem-office'))) loc.add('Orem');
+      if (cats.some((c) => c.startsWith('provo-office'))) loc.add('Provo');
+      if (cats.some((c) => c.startsWith('sandy'))) loc.add('Sandy');
+      if (cats.some((c) => c.startsWith('telehealth'))) loc.add('Telehealth');
+    }
+
+    // Status: openings tab; old Current Openings tag only if they're missing from it
     let status: Status = o?.status ?? 'unknown';
-    if (status === 'unknown') status = cats.some((c) => /current-openings/.test(c)) ? 'open' : 'closed';
+    if (status === 'unknown' && !o) status = cats.some((c) => /current-openings/.test(c)) ? 'open' : 'closed';
+    if (status === 'unknown') status = 'closed';
 
-    // Modalities tab
-    const r = mods.get(t.id) ?? [];
-    const ages = r[1] ?? '';
+    // Modalities tab columns: [0] name, [1] ages, [2] modalities, [3] style, [4] full specialty list, [5] focus specialties, [6] gender
+    if (!r) warnings.push(`${name}: not in the modalities tab, using old website tags for ages, specialties and approaches`);
+    const ages = r?.[1] ?? '';
+    const specText = [r?.[1], r?.[4], r?.[5]].join(' , ').replace(/(internet|video game)\s+addiction/gi, ' ');
+    const noCouples = /no couples/i.test(specText);
+
     const ageSet = new Set<string>();
-    if (/kid|child|\b[5-9]\s*\+/i.test(ages)) ageSet.add('Kids');
-    if (/teen|pre-?teen|\b1[0-7]\s*\+|13-17|11-12/i.test(ages)) ageSet.add('Teens');
-    if (/adult|18/i.test(ages)) ageSet.add('Adults');
-    if (/elder|65/i.test(ages)) ageSet.add('Older adults');
-    if (!ageSet.size) ageSet.add('Adults');
-    if (cats.some((c) => c.endsWith('/teens'))) ageSet.add('Teens');
+    if (r) {
+      if (/kid|child|\b[5-9]\s*\+/i.test(ages)) ageSet.add('Kids');
+      if (/teen|pre-?teen|\b1[0-7]\s*\+|13-17|11-12/i.test(ages)) ageSet.add('Teens');
+      if (/adult|18/i.test(ages)) ageSet.add('Adults');
+      if (/elder|65/i.test(ages)) ageSet.add('Older adults');
+      if (!ageSet.size) ageSet.add('Adults');
+    } else {
+      ageSet.add('Adults');
+      if (tagged('teens')) ageSet.add('Teens');
+    }
     if (o?.noTeens) ageSet.delete('Teens');
 
     const sees = new Set(['Individuals']);
-    if (/couple/i.test(ages) || cats.some((c) => c.endsWith('/couples'))) sees.add('Couples');
-    if (/famil/i.test(ages) || /family therapy/i.test(r[2] ?? '')) sees.add('Families');
+    if (r ? !noCouples && /couple|marital/i.test(specText) : tagged('couples')) sees.add('Couples');
+    if (r && (/famil/i.test(ages) || /family therapy/i.test([r[2], r[4], r[5]].join(' ')))) sees.add('Families');
 
     const spec = new Set<string>();
-    for (const c of cats) { const s = CATEGORY_SPECIALTY[c.split('/')[1] ?? '']; if (s) spec.add(s); }
-    for (const [label, re] of SPECIALTY_WORDS) if (re.test(r[5] ?? '')) spec.add(label);
+    if (r) {
+      for (const [label, re] of SPECIALTY_WORDS) if (re.test(specText)) spec.add(label);
+      if (sees.has('Couples')) spec.add('Couples');
+    } else {
+      for (const c of cats) { const x = CATEGORY_SPECIALTY[c.split('/')[1] ?? '']; if (x) spec.add(x); }
+    }
 
     const appr = new Set<string>();
-    for (const [label, re] of APPROACH_WORDS) if (re.test(r[2] ?? '')) appr.add(label);
-    if (cats.some((c) => c.endsWith('/emdr'))) appr.add('EMDR');
-    if (cats.some((c) => c.endsWith('/ifs'))) appr.add('IFS');
+    if (r) {
+      for (const [label, re] of APPROACH_WORDS) if (re.test(r[2] ?? '')) appr.add(label);
+    } else {
+      if (tagged('emdr')) appr.add('EMDR');
+      if (tagged('ifs')) appr.add('IFS');
+    }
 
     // Gender: sheet, checked against the bio's pronouns
     const she = (body.match(/\b(she|her|hers)\b/gi) ?? []).length;
     const he = (body.match(/\b(he|him|his)\b/gi) ?? []).length;
     const bioGender = she > he * 2 ? 'Female' : he > she * 2 ? 'Male' : '';
-    const g = String(r[6] ?? '');
+    const g = String(r?.[6] ?? '');
     let gender = /female|woman/i.test(g) ? 'Female' : /male|man/i.test(g) ? 'Male' : '';
     if (gender && bioGender && gender !== bioGender) { warnings.push(`${name}: sheet says ${gender}, bio pronouns suggest ${bioGender} — using ${bioGender}`); gender = bioGender; }
     if (!gender) gender = bioGender;
 
     const languages = ['English'];
-    if (/spanish/i.test(r.join(' ')) || /spanish/i.test(body)) languages.push('Spanish');
+    if (/spanish/i.test((r ?? []).join(' ')) || /spanish/i.test(body)) languages.push('Spanish');
 
     return {
       slug: t.id, name, credential: credential || o?.credential || '', photo: t.data.photo, order: t.data.order,
@@ -371,6 +400,17 @@ export function finderPresetFor(category: string): FinderPreset {
   if (CATEGORY_APPROACH[sub]) preset.appr = [CATEGORY_APPROACH[sub]];
   if (sub === 'teens') preset.age = ['Teens'];
   return preset;
+}
+
+// Does a therapist match a set of finder filters? (Used by the finder's filter pages and by the
+// <Summary kind="team" category="..."> carousels, so both follow the sheet.)
+export function matchesPreset(t: Therapist, preset: FinderPreset): boolean {
+  if (preset.openOnly && t.status !== 'open') return false;
+  const field = { loc: 'locations', spec: 'specialties', appr: 'approaches', age: 'ages', sees: 'sees' } as const;
+  return (['loc', 'spec', 'appr', 'age', 'sees'] as const).every((g) => {
+    const want = preset[g];
+    return !want?.length || want.some((v) => (t[field[g]] as string[]).includes(v));
+  });
 }
 
 // Photo description for a therapist, naming where they see clients, e.g.
