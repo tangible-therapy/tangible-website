@@ -5,12 +5,12 @@
 import { site } from '../data/site';
 import { bookingAttrs } from '../lib/booking';
 import BookingScript from './BookingScript.astro';
-import { getFinderData, type FinderPreset, LOCATIONS, TIMES, AGES, SEES, SPECIALTIES, APPROACHES, INSURERS } from '../lib/therapist-sheet';
+import { getFinderData, therapistPhotoAlt, type FinderPreset, LOCATIONS, TIMES, AGES, SEES, SPECIALTIES, APPROACHES, INSURERS } from '../lib/therapist-sheet';
 
 // preset: filters already switched on when the page loads (used by the /ourteam/<office>/<specialty>
 // pages). Visitors can change or clear them. Cards that don't match start hidden in the HTML.
-interface Props { heading?: string; preset?: FinderPreset }
-const { heading = 'Find Your Therapist', preset = {} } = Astro.props;
+interface Props { heading?: string; intro?: string; preset?: FinderPreset }
+const { heading = 'Find Your Therapist', intro, preset = {} } = Astro.props;
 const { therapists } = await getFinderData();
 
 // Options shown in each filter: the ones at least one therapist has, plus anything preset on this page.
@@ -52,6 +52,7 @@ const officeText = (locs: string[]) => locs.filter((l) => l !== 'Telehealth').jo
 <section class="sec t-black tf" data-finder>
   <div class="tf-head">
     <h1>{heading}</h1>
+    {intro && <p class="tf-intro">{intro}</p>}
 
     <div class="tf-bar" role="group" aria-label="Filter therapists">
       {pills.map((p, i) => (
@@ -125,7 +126,7 @@ const officeText = (locs: string[]) => locs.filter((l) => l !== 'Telehealth').jo
       >
         <a href={`/ourteam/p/${t.slug}`}>
           <span class="tf-photo">
-            <img src={t.photo} alt={`${t.name}, ${t.credential}`} width="600" height="750" loading={i < 6 ? 'eager' : 'lazy'} decoding="async" />
+            <img src={t.photo} alt={therapistPhotoAlt(t)} width="600" height="750" loading={i < 6 ? 'eager' : 'lazy'} decoding="async" />
           </span>
           <h2 class="tf-name">{t.name}</h2>
           <span class="tf-meta">{[t.credential, officeText(t.locations)].filter(Boolean).join(' · ')}</span>
@@ -159,6 +160,7 @@ const officeText = (locs: string[]) => locs.filter((l) => l !== 'Telehealth').jo
 
 <style>
   .tf { padding-bottom: 5vw; }
+  .tf-intro { margin: -0.6rem 0 0; max-width: 60ch; text-align: center; color: #fff; font-size: 15px; line-height: 1.6; }
   .tf-head { max-width: 1080px; margin: 0 auto; padding: 3vw var(--gutter) 0; display: flex; flex-direction: column; align-items: center; gap: 1.4rem; box-sizing: content-box; }
   .tf-head h1 { font-size: var(--h2); color: #fff; margin: 0; text-align: center; }
 

@@ -6,7 +6,7 @@
 import { getCollection } from 'astro:content';
 import categories from '../data/team-categories.json';
 import { site } from '../data/site';
-import { getFinderData, type Status } from '../lib/therapist-sheet';
+import { getFinderData, therapistPhotoAlt, type Status } from '../lib/therapist-sheet';
 import { bookingAttrs } from '../lib/booking';
 import BookingScript from './BookingScript.astro';
 
@@ -31,7 +31,7 @@ walk(categories as Cat[]);
 
 // Team cards also carry the therapist's status from the sheet data, so photos get the same
 // Accepting / Waitlist / Not accepting tag and Book now / Call now button as the finder.
-type Card = { href: string; img: string; title: string; meta?: string; text?: string; slug?: string; name?: string; status?: Status; booking?: boolean };
+type Card = { href: string; img: string; title: string; alt?: string; meta?: string; text?: string; slug?: string; name?: string; status?: Status; booking?: boolean };
 let cards: Card[] = [];
 const statusOf = new Map((kind === 'team' ? (await getFinderData()).therapists : []).map((t) => [t.slug, t]));
 if (kind === 'team') {
@@ -57,6 +57,7 @@ if (kind === 'team') {
     img: t.data.photo,
     title: t.data.name,
     slug: t.id,
+    alt: statusOf.get(t.id) ? therapistPhotoAlt(statusOf.get(t.id)!) : t.data.name,
     name: statusOf.get(t.id)?.name ?? t.data.name,
     status: statusOf.get(t.id)?.status,
     booking: statusOf.get(t.id)?.booking,
@@ -66,7 +67,7 @@ if (kind === 'team') {
   const all = (await getCollection('blog')).filter((p) => !p.data.draft).sort((a, b) => +b.data.date - +a.data.date);
   let list = items.length ? items.map((s) => all.find((p) => p.id === s)).filter(Boolean) : all;
   if (limit) list = list.slice(0, limit);
-  cards = list.map((p: any) => ({ href: p.data.urlPath ?? `/feel-better-blog/${p.id}`, img: p.data.image, title: p.data.title, text: p.data.excerpt }));
+  cards = list.map((p: any) => ({ href: p.data.urlPath ?? `/feel-better-blog/${p.id}`, img: p.data.image, title: p.data.title, alt: p.data.imageAlt || '', text: p.data.excerpt }));
 }
 const isCarousel = design === 'carousel';
 const showTags = kind === 'team' && design !== 'list';
@@ -83,7 +84,7 @@ const anyBook = showTags && cards.some((c) => c.status === 'open' && c.booking);
     {cards.map((c) => (
       <li class="s-item">
         <a href={c.href}>
-          {c.img && <img src={c.img} alt={c.title} loading="lazy" />}
+          {c.img && <img src={c.img} alt={c.alt ?? c.title} loading="lazy" />}
           <div>
             <h3 class="s-title">{c.title}</h3>
             {cats && c.meta && <p class="s-meta">{c.meta}</p>}

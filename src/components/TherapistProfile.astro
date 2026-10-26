@@ -7,7 +7,7 @@ import { render } from 'astro:content';
 import { site } from '../data/site';
 import { bookingAttrs } from '../lib/booking';
 import BookingScript from './BookingScript.astro';
-import { getFinderData, type Therapist } from '../lib/therapist-sheet';
+import { getFinderData, therapistPhotoAlt, type Therapist } from '../lib/therapist-sheet';
 
 interface Props {
   entry: CollectionEntry<'team'>;
@@ -76,7 +76,7 @@ const note = t.status === 'open'
   <section class="tp-hero">
     <div class="tp-wrap tp-hero-grid">
       <div class="tp-photo">
-        <img src={t.photo} alt={`${t.name}, ${t.credential}`} width="900" height="1125" decoding="async" fetchpriority="high" />
+        <img src={t.photo} alt={therapistPhotoAlt(t)} width="900" height="1125" decoding="async" fetchpriority="high" />
       </div>
       <div class="tp-intro">
         <p class="tp-crumbs"><a href={backHref}>{backLabel}</a><span aria-hidden="true"> / </span>{t.name}</p>
@@ -151,7 +151,7 @@ const note = t.status === 'open'
           {suggested.map((o) => (
             <li class="tp-card">
               <a href={profileHref(o.slug)}>
-                <span class="tp-card-photo"><img src={o.photo} alt={`${o.name}, ${o.credential}`} width="600" height="750" loading="lazy" decoding="async" /></span>
+                <span class="tp-card-photo"><img src={o.photo} alt={therapistPhotoAlt(o)} width="600" height="750" loading="lazy" decoding="async" /></span>
                 <span class="tp-card-name">{o.name}</span>
                 <span class="tp-card-meta">{[o.credential, officeOf(o)].filter(Boolean).join(' · ')}</span>
               </a>

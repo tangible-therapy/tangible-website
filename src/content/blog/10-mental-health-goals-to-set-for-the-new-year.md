@@ -3,6 +3,7 @@ title: "10 Mental Health Goals to Set for the New Year"
 date: "2025-12-17T19:00:00.762000-06:00"
 author: "Kelsee Stevens"
 image: "/images/open-notebook-with-new-year-s-goals-list-checked-b-15ae63.jpg"
+imageAlt: "A notebook titled New Year's Goals with Goals, Plan and Action checked off, beside coffee and a laptop"
 excerpt: ""
 seoTitle: "Mental Health Goals for the New Year | Tangible Therapy"
 seoDescription: "Discover mental health goals to set for the new year. Learn how a licensed mental health counselor and individual counseling can support lasting growth."
@@ -72,7 +73,7 @@ Unresolved emotional experiences often show up as anxiety, irritability, burnout
 
 A licensed mental health counselor supports you through this work using evidence-based methods like [EMDR](/emdr-therapy), somatic strategies, or parts work — whatever aligns with your needs. Addressing unresolved stress doesn’t happen overnight, but it creates lasting change that supports every area of your life.
 
-![](/images/colorful-crumpled-sticky-notes-with-popular-new-ye-e3c2a5.jpg)
+![Colorful sticky notes with New Year's goals like Get Fit, Save Money and Help Others](/images/colorful-crumpled-sticky-notes-with-popular-new-ye-e3c2a5.jpg)
 
 ## 7. Improve sleep and nervous system regulation
 

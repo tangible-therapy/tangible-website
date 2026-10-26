@@ -372,3 +372,15 @@ export function finderPresetFor(category: string): FinderPreset {
   if (sub === 'teens') preset.age = ['Teens'];
   return preset;
 }
+
+// Photo description for a therapist, naming where they see clients, e.g.
+// "Phil Childs, CSW, therapist at Tangible Therapy in Orem, Utah" or
+// "Kelley Graves, AMFT, telehealth therapist at Tangible Therapy, Utah".
+export function therapistPhotoAlt(t: Pick<Therapist, 'name' | 'credential' | 'locations'>): string {
+  const who = [t.name, t.credential].filter(Boolean).join(', ');
+  const offices = t.locations.filter((l) => l !== 'Telehealth');
+  const list = offices.length > 1 ? `${offices.slice(0, -1).join(', ')} and ${offices[offices.length - 1]}` : offices[0];
+  return offices.length
+    ? `${who}, therapist at Tangible Therapy in ${list}, Utah`
+    : `${who}, telehealth therapist at Tangible Therapy, Utah`;
+}

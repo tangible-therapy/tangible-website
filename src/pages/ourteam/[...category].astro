@@ -2,6 +2,7 @@
 import Base from '../../layouts/Base.astro';
 import TherapistFinder from '../../components/TherapistFinder.astro';
 import { finderPresetFor } from '../../lib/therapist-sheet';
+import { teamPageSeo } from '../../lib/team-page-seo';
 import categories from '../../data/team-categories.json';
 import Before from '../../components/sections/ourteam-before.astro';
 import After from '../../components/sections/ourteam-after.astro';
@@ -18,12 +19,12 @@ export function getStaticPaths() {
   return out;
 }
 const { category } = Astro.params;
-const { label, parent } = Astro.props as { label: string; parent?: string };
-// Same URLs as the old Squarespace filter pages; each opens the finder with that office/specialty switched on.
-const heading = parent ? `${parent}: ${label}` : label;
+// Same URLs as the old Squarespace filter pages; each opens the finder with that office/specialty
+// switched on, with its own title, heading, description and intro (src/lib/team-page-seo.ts).
+const seo = teamPageSeo(category!);
 ---
-<Base title={`${label} — Find Your Therapist | Tangible Therapy`} description={`Tangible Therapy therapists${parent ? ` at our ${parent}` : ''}: ${label}. Find the right therapist for you in Utah.`}>
+<Base title={seo.title} description={seo.description}>
   <Before />
-  <TherapistFinder heading={heading} preset={finderPresetFor(category!)} />
+  <TherapistFinder heading={seo.heading} intro={seo.intro} preset={finderPresetFor(category!)} />
   <After />
 </Base>

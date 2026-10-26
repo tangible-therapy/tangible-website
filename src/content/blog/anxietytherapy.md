@@ -3,6 +3,7 @@ title: "Embracing the Shadows: A Sanctuary for Navigating Anxiety and Depression
 date: "2019-05-28T09:13:10.536000-06:00"
 author: "Brady Clegg"
 image: "/images/image-asset-05b722.jpeg"
+imageAlt: "A woman's long shadow stretches across a sunlit white floor"
 excerpt: ""
 seoTitle: "Anxiety & Depression Therapy"
 seoDescription: "Anxiety and depression therapy to heal, reconnect, and grow stronger. Find compassionate guidance and support for your journey at Tangible Mental Health."
