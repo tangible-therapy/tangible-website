@@ -88,6 +88,136 @@
   status = 301
 
 
+# Old Squarespace addresses Google reported as 404 (Search Console, 26 Oct 2026)
+[[redirects]]
+  from = "/autism"
+  to = "/autism-therapy"
+  status = 301
+[[redirects]]
+  from = "/ptsd"
+  to = "/ptsd-therapy"
+  status = 301
+[[redirects]]
+  from = "/couples"
+  to = "/couples-counseling"
+  status = 301
+[[redirects]]
+  from = "/ocd"
+  to = "/ocd-treatment"
+  status = 301
+[[redirects]]
+  from = "/depression"
+  to = "/depression-therapy"
+  status = 301
+[[redirects]]
+  from = "/faith-transitions"
+  to = "/faith-transition-therapy"
+  status = 301
+[[redirects]]
+  from = "/teens"
+  to = "/therapy-for-teens"
+  status = 301
+[[redirects]]
+  from = "/grief"
+  to = "/grief-therapy"
+  status = 301
+[[redirects]]
+  from = "/home-1/anxiety"
+  to = "/anxiety-therapy"
+  status = 301
+[[redirects]]
+  from = "/home-1/autism"
+  to = "/autism-therapy"
+  status = 301
+[[redirects]]
+  from = "/home-1/depression"
+  to = "/depression-therapy"
+  status = 301
+[[redirects]]
+  from = "/family-therapy-1"
+  to = "/family-counseling"
+  status = 301
+[[redirects]]
+  from = "/team"
+  to = "/ourteam"
+  status = 301
+[[redirects]]
+  from = "/home-1-1"
+  to = "/"
+  status = 301
+[[redirects]]
+  from = "/ourteam/p/allorawalters"
+  to = "/ourteam/p/allora-walters"
+  status = 301
+[[redirects]]
+  from = "/ourteam/p/kelley"
+  to = "/ourteam/p/kelley-graves"
+  status = 301
+[[redirects]]
+  from = "/ourteam/p/grace"
+  to = "/ourteam/p/grace-samuels"
+  status = 301
+[[redirects]]
+  from = "/ourteam/p/jordynhoopes"
+  to = "/ourteam/p/jordyn-hoopes"
+  status = 301
+[[redirects]]
+  from = "/ourteam/p/michealazarbock"
+  to = "/ourteam/p/micheala-zarbock"
+  status = 301
+[[redirects]]
+  from = "/ourteam/p/sophiecaughman"
+  to = "/ourteam/p/sophie-caughman"
+  status = 301
+[[redirects]]
+  from = "/ourteam/p/tanya-rummler-lcsw-gyl6w"
+  to = "/ourteam/p/tanya-rummler-lcsw"
+  status = 301
+[[redirects]]
+  from = "/ourteam/p/isabella-marrott-lcsw-gyl6w-hrmhm"
+  to = "/ourteam/p/isabella-marrott"
+  status = 301
+[[redirects]]
+  from = "/ourteam/p/linda-pomar"
+  to = "/ourteam"
+  status = 301
+[[redirects]]
+  from = "/ourteam/p/hunter-wood"
+  to = "/ourteam"
+  status = 301
+[[redirects]]
+  from = "/ourteam/p/kyle-hansen"
+  to = "/ourteam"
+  status = 301
+[[redirects]]
+  from = "/ourteam/p/basic-package-zxx7j-pddtn"
+  to = "/ourteam"
+  status = 301
+[[redirects]]
+  from = "/ourteam/p/basic-package-zxx7j-ggr4c-p8gas-6t3gx"
+  to = "/ourteam"
+  status = 301
+[[redirects]]
+  from = "/ourteam/p/basic-package-zxx7j-pddtn-8py9d-4skgy"
+  to = "/ourteam"
+  status = 301
+[[redirects]]
+  from = "/meet-our-team/p/*"
+  to = "/"
+  status = 301
+[[redirects]]
+  from = "/digital-products-2-1"
+  to = "/digital-products-2"
+  status = 301
+[[redirects]]
+  from = "/feel-better-blog/y93q55pw7l7i1dwcqpt3z1d5ea0g68"
+  to = "/feel-better-blog"
+  status = 301
+[[redirects]]
+  from = "/feel-better-blog/avcg8opno8dffpra4br3j125fl0xud"
+  to = "/feel-better-blog"
+  status = 301
+
 # Retired therapist finder preview pages (Oct 2026): the finder and new profiles are now live
 [[redirects]]
   from = "/ourteam-preview"
