@@ -1,0 +1,335 @@
+---
+// Redesigned therapist profile (demo). The bio comes unchanged from src/content/team/<slug>.md;
+// the at-a-glance details (status, ages, populations, specialties, approaches, insurance) come from
+// the same merged data as the therapist finder (src/lib/therapist-sheet.ts).
+import type { CollectionEntry } from 'astro:content';
+import { render } from 'astro:content';
+import { site } from '../data/site';
+import { bookingAttrs } from '../lib/booking';
+import BookingScript from './BookingScript.astro';
+import { getFinderData, type Therapist } from '../lib/therapist-sheet';
+
+interface Props {
+  entry: CollectionEntry<'team'>;
+  t: Therapist;
+  backHref?: string;
+  backLabel?: string;
+  profileHref?: (slug: string) => string;
+}
+const { entry, t, backHref = '/ourteam', backLabel = 'Find Your Therapist', profileHref = (slug: string) => `/ourteam/p/${slug}` } = Astro.props;
+const { Content } = await render(entry);
+const first = t.name.split(' ')[0];
+
+const statusLabel = { open: 'Accepting new clients', wait: 'Waitlist', closed: 'Not accepting new clients', unknown: 'Not accepting new clients' }[t.status];
+const statusDot = { open: 'is-open', wait: 'is-wait', closed: 'is-closed', unknown: 'is-closed' }[t.status];
+
+const offices = t.locations.filter((l) => l !== 'Telehealth');
+const where = [
+  offices.length ? `${offices.join(' & ')} office${offices.length > 1 ? 's' : ''}` : '',
+  t.locations.includes('Telehealth') ? (offices.length ? 'Telehealth' : 'Telehealth only') : offices.length ? 'In person only' : '',
+].filter(Boolean).join(' · ');
+
+const languagesOther = t.languages.filter((l) => l !== 'English');
+const facts = [
+  { label: 'Location', value: where },
+  { label: 'Ages', value: t.ages.join(', ') },
+  { label: 'Sees', value: t.sees.join(', ') },
+  t.status === 'open' && t.times.length ? { label: 'Openings', value: t.times.join(', ') } : null,
+  languagesOther.length ? { label: 'Languages', value: t.languages.join(', ') } : null,
+].filter((f): f is { label: string; value: string } => !!f && !!f.value);
+
+// Suggested therapists: same office (telehealth-only therapists -> other telehealth therapists),
+// accepting new clients right now (from the sheet, so this refreshes on every sheet-triggered rebuild),
+// best overlap first (shared specialties, then ages / who they see), then the usual team order.
+const { therapists: everyone } = await getFinderData();
+const myOffices = t.locations.filter((l) => l !== 'Telehealth');
+const sameClinic = (o: Therapist) =>
+  myOffices.length ? o.locations.some((l) => myOffices.includes(l)) : o.locations.includes('Telehealth');
+const overlap = (o: Therapist) =>
+  o.specialties.filter((x) => t.specialties.includes(x)).length * 2 +
+  o.ages.filter((x) => t.ages.includes(x)).length +
+  o.sees.filter((x) => t.sees.includes(x)).length;
+const suggested = everyone
+  .filter((o) => o.slug !== t.slug && o.status === 'open' && sameClinic(o))
+  .map((o) => ({ o, score: overlap(o) }))
+  .sort((a, b) => b.score - a.score || a.o.order - b.o.order)
+  .slice(0, 12)
+  .map(({ o }) => o);
+const clinicName = myOffices.length === 1 ? myOffices[0] : myOffices.length ? 'our' : 'telehealth';
+const officeOf = (o: Therapist) => {
+  const offs = o.locations.filter((l) => l !== 'Telehealth');
+  return offs.length ? offs.join(', ') : 'Telehealth';
+};
+
+const book = bookingAttrs(t.slug);
+// Online booking only for therapists accepting new clients (a closed therapist's SimplePractice page
+// shows "Unavailable"); everyone else gets the Call button plus a line that fits their status.
+const canBook = t.booking && t.status === 'open';
+const note = t.status === 'open'
+  ? 'Free 15-minute consult with your therapist before you book.'
+  : t.status === 'wait'
+    ? `Call us to join ${first}'s waitlist, or to find a therapist with openings now.`
+    : `${first} isn't taking new clients right now. Call us, or see therapists with openings below.`;
+---
+<article class="tp">
+  <!-- Hero -->
+  <section class="tp-hero">
+    <div class="tp-wrap tp-hero-grid">
+      <div class="tp-photo">
+        <img src={t.photo} alt={`${t.name}, ${t.credential}`} width="900" height="1125" decoding="async" fetchpriority="high" />
+      </div>
+      <div class="tp-intro">
+        <p class="tp-crumbs"><a href={backHref}>{backLabel}</a><span aria-hidden="true"> / </span>{t.name}</p>
+        <span class="tp-status"><span class={`tp-dot ${statusDot}`} />{statusLabel}</span>
+        <h1>{t.name}</h1>
+        {t.credential && <p class="tp-cred">{t.credential}</p>}
+
+        <dl class="tp-facts">
+          {facts.map((f) => (<div><dt>{f.label}</dt><dd>{f.value}</dd></div>))}
+        </dl>
+
+        <div class="tp-ctas" data-hero-ctas>
+          {canBook && <a class="tp-btn tp-btn-primary" href={site.clientPortal} {...book} aria-label={`Book online with ${t.name}`}>Book online</a>}
+          <a class="tp-btn tp-btn-ghost" href={site.phoneHref}>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1z" /></svg>
+            Call {site.phone}
+          </a>
+        </div>
+        <p class="tp-note">{note}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Bio + details -->
+  <section class="tp-body">
+    <div class="tp-wrap tp-body-grid">
+      <div class="tp-bio">
+        <h2>About {first}</h2>
+        <div class="rte"><Content /></div>
+      </div>
+
+      <aside class="tp-side" aria-label={`${first}'s details`}>
+        {t.specialties.length > 0 && (
+          <div class="tp-block">
+            <h3>Specialties</h3>
+            <ul class="tp-chips">{t.specialties.map((s) => <li>{s}</li>)}</ul>
+          </div>
+        )}
+        {t.approaches.length > 0 && (
+          <div class="tp-block">
+            <h3>Approaches</h3>
+            <ul class="tp-chips">{t.approaches.map((a) => <li>{a}</li>)}</ul>
+          </div>
+        )}
+        <div class="tp-block">
+          <h3>Insurance</h3>
+          {t.insurance.length > 0 ? (
+            <ul class="tp-ins">
+              {t.insurance.map((i) => (
+                <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7" /></svg>{i}</li>
+              ))}
+            </ul>
+          ) : (
+            <p class="tp-small">Call us to check whether {first} is in-network with your plan.</p>
+          )}
+          <p class="tp-small">Plans change — give us a call and we'll confirm your benefits.</p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- Suggested therapists from the same clinic with openings -->
+  <section class="tp-more" aria-labelledby="tp-more-h">
+    <div class="tp-wrap">
+      <h2 id="tp-more-h">{myOffices.length === 1 ? `Other ${clinicName} therapists with openings` : myOffices.length ? 'Other therapists at these offices with openings' : 'Other telehealth therapists with openings'}</h2>
+      {suggested.length > 0 ? (
+        <div class="tp-rail" data-rail>
+          <button type="button" class="tp-arrow tp-prev" data-dir="-1" aria-label="Previous therapists" disabled>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+          </button>
+        <ul class="tp-more-grid" data-track>
+          {suggested.map((o) => (
+            <li class="tp-card">
+              <a href={profileHref(o.slug)}>
+                <span class="tp-card-photo"><img src={o.photo} alt={`${o.name}, ${o.credential}`} width="600" height="750" loading="lazy" decoding="async" /></span>
+                <span class="tp-card-name">{o.name}</span>
+                <span class="tp-card-meta">{[o.credential, officeOf(o)].filter(Boolean).join(' · ')}</span>
+              </a>
+              <div class="tp-card-over">
+                <span class="tp-card-tag"><span class="tp-dot is-open" />Accepting new clients</span>
+                {o.booking ? (
+                  <a class="tp-card-act" href={site.clientPortal} {...bookingAttrs(o.slug)} aria-label={`Book now with ${o.name}`}>Book now</a>
+                ) : (
+                  <a class="tp-card-act" href={site.phoneHref} aria-label={`Call ${site.phone} about ${o.name}`}>Call now</a>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+          <button type="button" class="tp-arrow tp-next" data-dir="1" aria-label="More therapists">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+          </button>
+        </div>
+      ) : (
+        <p class="tp-more-empty">No other {clinicName === 'our' ? '' : clinicName + ' '}therapists have openings right now. Call <a href={site.phoneHref}>{site.phone}</a> and we'll help you find the right fit.</p>
+      )}
+    </div>
+  </section>
+
+  <!-- Phones: slim bar with both actions once the hero buttons scroll away -->
+  <div class="tp-sticky" data-sticky hidden>
+    {canBook && <a class="tp-btn tp-btn-primary" href={site.clientPortal} {...book} aria-label={`Book online with ${t.name}`}>Book online</a>}
+    <a class="tp-btn tp-btn-dark" href={site.phoneHref}>Call {site.phone}</a>
+  </div>
+</article>
+
+<BookingScript />
+<script>
+  const bar = document.querySelector<HTMLElement>('[data-sticky]');
+  const ctas = document.querySelector('[data-hero-ctas]');
+  if (bar && ctas && 'IntersectionObserver' in window) {
+    new IntersectionObserver(([e]) => { bar.hidden = e.isIntersecting || e.boundingClientRect.top > 0; }).observe(ctas);
+  }
+
+  // Suggested therapists: one row, arrows scroll by a page of cards; arrows hide when everything fits.
+  document.querySelectorAll<HTMLElement>('[data-rail]').forEach((rail) => {
+    const track = rail.querySelector<HTMLElement>('[data-track]')!;
+    const prev = rail.querySelector<HTMLButtonElement>('.tp-prev')!;
+    const next = rail.querySelector<HTMLButtonElement>('.tp-next')!;
+    const update = () => {
+      const max = track.scrollWidth - track.clientWidth;
+      rail.classList.toggle('is-static', max <= 2);
+      prev.disabled = track.scrollLeft <= 2;
+      next.disabled = track.scrollLeft >= max - 2;
+      const photo = track.querySelector<HTMLElement>('.tp-card-photo');
+      if (photo) rail.style.setProperty('--photo-mid', `${photo.offsetHeight / 2}px`);
+    };
+    [prev, next].forEach((b) =>
+      b.addEventListener('click', () => track.scrollBy({ left: Number(b.dataset.dir) * track.clientWidth, behavior: 'smooth' })),
+    );
+    track.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    update();
+  });
+</script>
+
+<style>
+  .tp { --tp-ink: #2f3530; --tp-muted: #5d665f; --tp-line: #e4e8e3; --tp-chip: #eef2ed; }
+  .tp-wrap { max-width: 1120px; margin: 0 auto; padding: 0 var(--gutter); box-sizing: content-box; }
+
+  /* Hero */
+  .tp-hero { background: var(--sage); color: #fff; padding: 3.5rem 0 4rem; }
+  .tp-hero-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(2rem, 5vw, 4.5rem); align-items: center; }
+  .tp-photo { border-radius: 16px; overflow: hidden; aspect-ratio: 4 / 5; background: #9dab9d; box-shadow: 0 18px 40px rgba(47, 58, 48, .18); }
+  .tp-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .tp-crumbs { margin: 0 0 1.6rem; font-size: 13px; color: var(--tp-ink); }
+  .tp-crumbs a { color: var(--tp-ink); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+  .tp-status { display: inline-flex; align-items: center; gap: 7px; height: 28px; padding: 1px 12px 0; border-radius: 300px; background: rgba(255, 255, 255, .92); color: var(--tp-ink); font-size: 12.5px; font-weight: 500; line-height: 1; }
+  .tp-dot { width: 7px; height: 7px; border-radius: 50%; }
+  .tp-dot.is-open { background: #3d8b5a; }
+  .tp-dot.is-wait { background: #e0b000; }
+  .tp-dot.is-closed { background: #d64545; }
+  .tp-intro h1 { margin: .9rem 0 0; color: #fff; font-size: clamp(2.1rem, 4.2vw, 3.4rem); font-weight: 500; line-height: 1.1; letter-spacing: -.01em; }
+  .tp-cred { margin: .45rem 0 0; font-size: 1.05rem; font-weight: 500; color: var(--tp-ink); letter-spacing: .04em; }
+
+  .tp-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.1rem 2rem; margin: 2rem 0 0; padding: 1.4rem 0 0; border-top: 1px solid rgba(47, 53, 48, .18); }
+  .tp-facts dt { font-size: 11.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: #4a524b; }
+  .tp-facts dd { margin: .25rem 0 0; font-size: 15.5px; font-weight: 500; color: var(--tp-ink); }
+
+  .tp-ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 2.2rem; }
+  .tp-btn { display: inline-flex; align-items: center; justify-content: center; gap: 9px; box-sizing: border-box; height: 52px; padding: 1px 28px 0; border-radius: 300px; font-size: 15.5px; font-weight: 500; line-height: 1; letter-spacing: .01em; text-decoration: none; white-space: nowrap; transition: background .15s, color .15s, transform .15s, box-shadow .15s; }
+  .tp-btn svg { width: 17px; height: 17px; fill: currentColor; flex: 0 0 auto; margin-top: -1px; }
+  .tp-btn-primary { background: #fff; color: var(--charcoal) !important; box-shadow: 0 6px 18px rgba(47, 58, 48, .14); }
+  .tp-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(47, 58, 48, .2); }
+  .tp-btn-ghost { background: var(--charcoal); color: #fff !important; }
+  .tp-btn-ghost:hover { background: #262927; transform: translateY(-1px); }
+  .tp-btn-dark { background: var(--charcoal); color: #fff !important; }
+  .tp-btn:focus-visible { outline: 3px solid var(--charcoal); outline-offset: 3px; }
+  .tp-note { margin: 1rem 0 0; font-size: 13.5px; color: var(--tp-ink); }
+
+  /* Body */
+  .tp-body { background: #fff; color: var(--tp-ink); padding: 4.5rem 0 5rem; }
+  .tp-body-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); gap: clamp(2rem, 5vw, 4.5rem); align-items: start; }
+  .tp-bio h2 { margin: 0 0 1.2rem; color: var(--charcoal); font-size: clamp(1.5rem, 2.4vw, 2rem); font-weight: 500; }
+  .tp-bio .rte { font-size: 1.02rem; line-height: 1.85; color: var(--tp-ink); max-width: 64ch; }
+  .tp-bio .rte :global(p) { margin: 0 0 1.1em; }
+
+  .tp-side { border: 1px solid var(--tp-line); border-radius: 16px; padding: 1.6rem 1.6rem .4rem; position: sticky; top: 1.5rem; }
+  .tp-block { padding-bottom: 1.3rem; margin-bottom: 1.3rem; border-bottom: 1px solid var(--tp-line); }
+  .tp-block:last-child { border-bottom: 0; margin-bottom: 0; }
+  .tp-block h3 { margin: 0 0 .75rem; font-size: 11.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--tp-muted); }
+  .tp-chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+  .tp-chips li { padding: 6px 12px 5px; border-radius: 300px; background: var(--tp-chip); font-size: 13.5px; line-height: 1.3; }
+  .tp-ins { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px 14px; }
+  .tp-ins li { display: flex; align-items: flex-start; gap: 7px; font-size: 14px; line-height: 1.35; }
+  .tp-ins svg { width: 15px; height: 15px; flex: 0 0 15px; margin-top: 2px; fill: none; stroke: #3d8b5a; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+  .tp-small { margin: .9rem 0 0; font-size: 12.5px; line-height: 1.5; color: var(--tp-muted); }
+
+  /* Suggested therapists */
+  .tp-more { background: var(--sage); padding: 4rem 0 4.5rem; }
+  .tp-more h2 { margin: 0 0 2rem; color: #fff; font-size: clamp(1.5rem, 2.4vw, 2rem); font-weight: 500; text-align: center; }
+  .tp-rail { --per: 4; --gap: 28px; position: relative; }
+  .tp-more-grid { list-style: none; margin: 0; padding: 4px 0 8px; display: flex; gap: var(--gap); overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; overscroll-behavior-x: contain; scrollbar-width: none; }
+  .tp-more-grid::-webkit-scrollbar { display: none; }
+  .tp-card { position: relative; flex: 0 0 calc((100% - (var(--per) - 1) * var(--gap)) / var(--per)); scroll-snap-align: start; }
+  .tp-arrow { position: absolute; top: calc(4px + var(--photo-mid, 40%)); z-index: 2; width: 44px; height: 44px; margin-top: -22px; border: 0; border-radius: 50%; background: #fff; color: var(--charcoal); display: grid; place-items: center; cursor: pointer; box-shadow: 0 6px 18px rgba(47, 58, 48, .2); transition: opacity .15s, transform .15s; }
+  .tp-arrow svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .tp-arrow:hover:not(:disabled) { transform: scale(1.06); }
+  .tp-arrow:focus-visible { outline: 3px solid var(--charcoal); outline-offset: 2px; }
+  .tp-arrow:disabled { opacity: 0; pointer-events: none; }
+  .tp-prev { left: -22px; }
+  .tp-next { right: -22px; }
+  .tp-rail.is-static .tp-arrow { display: none; }
+  .tp-card > a { display: flex; flex-direction: column; align-items: center; text-align: center; text-decoration: none; }
+  .tp-card-photo { display: block; width: 100%; aspect-ratio: 4 / 5; border-radius: 12px; overflow: hidden; background: #9dab9d; box-shadow: 0 6px 18px rgba(47, 58, 48, .12); margin-bottom: 12px; }
+  .tp-card-photo img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .5s ease; }
+  .tp-card > a:hover img { transform: scale(1.03); }
+  .tp-card-name { font-size: 17px; font-weight: 500; line-height: 1.3; color: #fff; }
+  .tp-card-meta { margin-top: 2px; font-size: 13px; color: var(--tp-ink); }
+  .tp-card-over { position: absolute; top: 0; left: 0; right: 0; aspect-ratio: 4 / 5; pointer-events: none; }
+  .tp-card-tag { position: absolute; top: 9px; left: 9px; display: inline-flex; align-items: center; gap: 6px; box-sizing: border-box; height: 24px; padding: 1px 9px 0; border-radius: 300px; background: rgba(255, 255, 255, .9); color: var(--tp-ink); font-size: 10.5px; font-weight: 500; line-height: 1; white-space: nowrap; }
+  .tp-card-act { position: absolute; bottom: 11px; left: 50%; transform: translateX(-50%); pointer-events: auto; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; height: 32px; min-width: 104px; padding: 1px 18px 0; border-radius: 300px; background: rgba(47, 51, 48, .82); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); color: #fff !important; font-size: 12.5px; font-weight: 500; line-height: 1; text-decoration: none; white-space: nowrap; box-shadow: 0 4px 14px rgba(0, 0, 0, .18); transition: background .15s, transform .15s; }
+  .tp-card-act:hover { background: rgba(20, 22, 21, .92); transform: translateX(-50%) translateY(-1px); }
+  .tp-card-act:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+  .tp-more-empty { margin: 0 auto; max-width: 46ch; text-align: center; color: var(--tp-ink); font-size: 1rem; }
+  .tp-more-empty a { color: var(--tp-ink); font-weight: 500; }
+
+  .tp-sticky { display: none; }
+
+  @media (max-width: 1024px) {
+    .tp-rail { --per: 3; --gap: 20px; }
+    .tp-facts { grid-template-columns: 1fr 1fr; }
+    .tp-body-grid { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+    .tp-ins { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 860px) {
+    .tp-hero { padding: 1.5rem 0 2.5rem; }
+    .tp-hero-grid { grid-template-columns: 1fr; gap: 1.6rem; }
+    .tp-crumbs { margin-bottom: 1.1rem; }
+    .tp-photo { aspect-ratio: 1 / 1; max-height: 70vh; }
+    .tp-photo img { object-position: 50% 22%; }
+    .tp-body { padding: 3rem 0 3.5rem; }
+    .tp-more { padding: 3rem 0 6.5rem; }
+    .tp-rail { --per: 2; --gap: 14px; }
+    .tp-arrow { width: 38px; height: 38px; margin-top: -19px; }
+    .tp-prev { left: -8px; }
+    .tp-next { right: -8px; }
+    .tp-card-name { font-size: 15px; }
+    .tp-card-meta { font-size: 12px; }
+    .tp-card-tag { top: 7px; left: 7px; height: 22px; padding: 1px 7px 0; font-size: 9.5px; }
+    .tp-card-act { bottom: 8px; height: 28px; min-width: 88px; padding: 1px 12px 0; font-size: 11.5px; }
+    .tp-body-grid { grid-template-columns: 1fr; }
+    .tp-side { position: static; }
+    .tp-ins { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 560px) {
+    .tp-facts { grid-template-columns: 1fr 1fr; gap: 1rem 1.2rem; }
+    .tp-ctas { flex-direction: column; }
+    .tp-btn { width: 100%; }
+    .tp-ins { grid-template-columns: 1fr; }
+    .tp-sticky:not([hidden]) { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); background: rgba(255, 255, 255, .96); backdrop-filter: blur(8px); box-shadow: 0 -6px 20px rgba(0, 0, 0, .08); }
+    .tp-sticky .tp-btn { height: 46px; padding: 1px 10px 0; font-size: 14px; }
+    .tp-sticky .tp-btn-primary { background: #fff; color: var(--charcoal) !important; border: 1.5px solid var(--charcoal); box-shadow: none; }
+    .tp-sticky .tp-btn:only-child { grid-column: 1 / -1; }
+  }
+</style>

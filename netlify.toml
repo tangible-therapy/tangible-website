@@ -88,6 +88,16 @@
   status = 301
 
 
+# Retired therapist finder preview pages (Oct 2026): the finder and new profiles are now live
+[[redirects]]
+  from = "/ourteam-preview"
+  to = "/ourteam"
+  status = 301
+[[redirects]]
+  from = "/ourteam-preview/p/*"
+  to = "/ourteam/p/:splat"
+  status = 301
+
 # Retired Google Ads landing page
 [[redirects]]
   from = "/google"
