@@ -1,0 +1,253 @@
+---
+// Staff-only: searchable Policies & Procedures handbook.
+// Password-protected by netlify/edge-functions/staff-gate.ts (/employeeportal/*).
+// Text lives in src/data/policies.md:  "# Chapter"  then  "## Section"  then the section text.
+// Review highlighting ({+new+} {-removed-} :::new blocks) is explained in src/lib/changes.ts.
+import Base from '../../layouts/Base.astro';
+import raw from '../../data/policies.md?raw';
+import { renderWithChanges, REVIEW } from '../../lib/changes';
+
+const slug = (s: string) => s.toLowerCase().replace(/[’']/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const fm = raw.match(/^---\n([\s\S]*?)\n---\n/);
+const meta = Object.fromEntries((fm?.[1] ?? '').split('\n').map((l) => l.split(/:\s*/).map((x) => x.trim())));
+const body = fm ? raw.slice(fm[0].length) : raw;
+
+type Section = { id: string; title: string; html: string; changed: boolean };
+type Chapter = { id: string; title: string; sections: Section[] };
+const chapters: Chapter[] = [];
+for (const block of body.split(/^# (?!#)/m).filter((b) => b.trim())) {
+  const [titleLine, ...rest] = block.split('\n');
+  const ch: Chapter = { id: slug(titleLine), title: titleLine.trim(), sections: [] };
+  for (const sec of rest.join('\n').split(/^## (?!#)/m).filter((b) => b.trim())) {
+    const [t, ...lines] = sec.split('\n');
+    const src = lines.join('\n').replace(/^### /gm, '#### ');
+    const id = `${ch.id}--${slug(t)}`;
+    ch.sections.push({ id, title: t.trim(), html: renderWithChanges(src), changed: /\{\+|\{-|^:::new/m.test(src) });
+  }
+  chapters.push(ch);
+}
+const changedCount = chapters.flatMap((c) => c.sections).filter((s) => s.changed).length;
+
+// Orientation lessons updated in the same review (shown in the review panel only).
+const orientationChanges = [
+  { title: 'Confidentiality', slug: 'online-presence-t4fxn-hzlan' },
+  { title: 'Attendance', slug: 'online-presence-t4fxn-hzlan-5ac27' },
+  { title: 'Benefits', slug: 'online-presence-t4fxn-hzlan-5ac27-zfbgb' },
+  { title: 'Workplace Behavior', slug: 'online-presence-t4fxn-hzlan-f4dcm' },
+  { title: 'Billing Procedures', slug: 'lesson-2-effective-communication-g89j8-g5sb8-l8ksx' },
+  { title: 'Navigating Crisis', slug: 'lesson-2-effective-communication-g89j8-g5sb8-l8ksx-6tnj4-bjxj2' },
+];
+---
+<Base title="Policies & Procedures | Employee Portal | Tangible Therapy" description="Tangible Mental Health employee policies and procedures." noindex>
+  <div class="pp wrap">
+    <header class="pp-head">
+      <p class="orient-eyebrow">Tangible Mental Health · Employee Portal</p>
+      <h1>{meta.title ?? 'Policies & Procedures'}</h1>
+      <p class="pp-updated">Last updated {meta.updated}</p>
+      <form class="pp-search" role="search" onsubmit="return false">
+        <label for="pp-q" class="sr-only">Search the policies</label>
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <input id="pp-q" type="search" placeholder="Search policies, e.g. PTO, no-show, 401k, DCFS" autocomplete="off" />
+        <button type="button" class="pp-clear" hidden aria-label="Clear search">×</button>
+      </form>
+      <p class="pp-status" aria-live="polite"></p>
+    </header>
+
+    {REVIEW && (
+      <aside class="pp-review" aria-label="Changes for review">
+        <div class="pp-review-top">
+          <div>
+            <strong>Review mode</strong>
+            <span><b data-chg-count>0</b> changes in {changedCount} sections. <mark class="chg-add">Highlighted</mark> text is new or changed; <del class="chg-del">struck-through</del> text is being removed; a <span class="pp-key-block">green bar</span> marks a whole new section.</span>
+          </div>
+          <div class="pp-review-btns">
+            <button type="button" data-chg="prev">← Previous change</button>
+            <button type="button" data-chg="next">Next change →</button>
+            <label><input type="checkbox" data-only-changed /> Only show changed sections</label>
+            <label><input type="checkbox" data-hide-marks /> Preview without highlights</label>
+          </div>
+        </div>
+        <details>
+          <summary>Orientation lessons updated to match ({orientationChanges.length})</summary>
+          <ul>{orientationChanges.map((l) => <li><a href={`/orientation/${l.slug}`}>{l.title}</a></li>)}</ul>
+        </details>
+      </aside>
+    )}
+
+    <div class="pp-layout">
+      <nav class="pp-toc" aria-label="Contents">
+        <p class="pp-toc-title">Contents</p>
+        {chapters.map((c) => (
+          <div class="pp-toc-ch" data-toc-ch={c.id}>
+            <p>{c.title}</p>
+            <ul>{c.sections.map((s) => <li data-toc={s.id}><a href={`#${s.id}`}>{s.title}{REVIEW && s.changed && <span class="pp-dot" title="Changed" />}</a></li>)}</ul>
+          </div>
+        ))}
+      </nav>
+
+      <div class="pp-body">
+        {chapters.map((c) => (
+          <section class="pp-ch" id={c.id} data-ch>
+            <h2>{c.title}</h2>
+            {c.sections.map((s) => (
+              <article class="pp-sec" id={s.id} data-sec data-changed={s.changed ? '' : undefined}>
+                <h3><a href={`#${s.id}`}>{s.title}</a></h3>
+                <div class="rte" data-sec-body set:html={s.html} />
+              </article>
+            ))}
+          </section>
+        ))}
+        <p class="pp-empty" hidden>No policies match your search. Try a different word, or ask your supervisor.</p>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .pp { padding-top: 3rem; padding-bottom: 5rem; color: var(--charcoal); }
+    .pp-head { max-width: 760px; margin-bottom: 2rem; }
+    .pp-head h1 { font-size: clamp(2.1rem, 5vw, 3.4rem); font-weight: 500; line-height: 1.1; margin: 0 0 .4rem; color: var(--charcoal); }
+    .pp-updated { font-size: .9rem; opacity: .65; margin: 0 0 1.6rem; }
+    .pp-search { position: relative; display: flex; align-items: center; }
+    .pp-search svg { position: absolute; left: 1.1rem; color: var(--slate); pointer-events: none; }
+    .pp-search input { width: 100%; font: inherit; font-size: 1.02rem; padding: 1rem 3rem 1rem 3.1rem; border: 1.5px solid #c9d1c9; border-radius: 300px; background: #fff; color: var(--charcoal); }
+    .pp-search input:focus { outline: none; border-color: var(--slate); box-shadow: 0 0 0 4px rgba(86,93,87,.15); }
+    .pp-search input::-webkit-search-cancel-button { display: none; }
+    .pp-clear { position: absolute; right: .7rem; width: 2.2rem; height: 2.2rem; border: 0; border-radius: 50%; background: #eef1ee; color: var(--charcoal); font-size: 1.3rem; line-height: 1; cursor: pointer; }
+    .pp-status { min-height: 1.4em; margin: .7rem 0 0 1.2rem; font-size: .88rem; opacity: .75; }
+
+    .pp-review { background: #fffbea; border: 1px solid #ecd98a; border-radius: 18px; padding: 1.1rem 1.4rem; margin: 0 0 2.2rem; font-size: .92rem; }
+    .pp-review-top { display: flex; flex-wrap: wrap; gap: 1rem 2rem; justify-content: space-between; align-items: center; }
+    .pp-review-top > div:first-child { flex: 1 1 380px; display: grid; gap: .25rem; }
+    .pp-review-btns { display: flex; flex-wrap: wrap; gap: .5rem .9rem; align-items: center; }
+    .pp-review button { font: inherit; font-size: .85rem; padding: .5rem .9rem; border: 1px solid var(--charcoal); border-radius: 300px; background: #fff; color: var(--charcoal); cursor: pointer; }
+    .pp-review button:hover { background: var(--charcoal); color: #fff; }
+    .pp-review label { display: inline-flex; gap: .4rem; align-items: center; font-size: .85rem; cursor: pointer; }
+    .pp-review details { margin-top: .8rem; }
+    .pp-review summary { cursor: pointer; font-weight: 500; }
+    .pp-review ul { margin: .5rem 0 0; padding-left: 1.3rem; columns: 2; }
+    .pp-review a { color: var(--charcoal); }
+    .pp-key-block { border-left: 4px solid #6f9a6f; padding-left: .35rem; }
+
+    .pp-layout { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 3.5rem; align-items: start; }
+    .pp-toc { position: sticky; top: 1.5rem; max-height: calc(100vh - 3rem); overflow: auto; font-size: .88rem; padding-right: .5rem; }
+    .pp-toc-title { font-weight: 600; text-transform: uppercase; letter-spacing: .12em; font-size: .72rem; color: var(--slate); margin: 0 0 .8rem; }
+    .pp-toc-ch > p { font-weight: 500; margin: 1rem 0 .3rem; }
+    .pp-toc ul { list-style: none; margin: 0; padding: 0 0 0 .7rem; border-left: 1px solid #dfe5df; }
+    .pp-toc li a { display: block; padding: .22rem 0; color: var(--charcoal); opacity: .75; text-decoration: none; }
+    .pp-toc li a:hover { opacity: 1; text-decoration: underline; }
+    .pp-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #e0b400; margin-left: .45rem; vertical-align: middle; }
+    .hide-marks .pp-dot { display: none; }
+
+    .pp-body { max-width: 780px; }
+    .pp-ch > h2 { font-size: clamp(1.6rem, 3vw, 2.1rem); font-weight: 500; margin: 0 0 1.2rem; padding-top: .5rem; color: var(--charcoal); }
+    .pp-ch + .pp-ch { margin-top: 3.2rem; }
+    .pp-sec { background: #f5f7f5; border-radius: 22px; padding: 1.6rem 1.8rem; margin-bottom: 1rem; scroll-margin-top: 1rem; line-height: 1.7; }
+    .pp-sec h3 { font-size: 1.25rem; font-weight: 500; margin: 0 0 .8rem; }
+    .pp-sec h3 a { color: inherit; text-decoration: none; }
+    .pp-sec :global(h4) { font-size: 1.02rem; font-weight: 600; margin: 1.4rem 0 .5rem; }
+    .pp-sec :global(p) { margin: 0 0 1em; white-space: normal; }
+    .pp-sec :global(mark.hit) { background: #cfe3cf; color: inherit; border-radius: 3px; padding: 0 .1em; }
+    .pp-empty { padding: 2rem; background: #f5f7f5; border-radius: 22px; }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+    @media (max-width: 1023px) {
+      .pp-layout { grid-template-columns: 1fr; gap: 1.5rem; }
+      .pp-toc { position: static; max-height: none; background: #f5f7f5; border-radius: 18px; padding: 1rem 1.2rem; }
+      .pp-toc ul { columns: 2; column-gap: 1.5rem; }
+      .pp-toc li { break-inside: avoid; }
+    }
+    @media (max-width: 600px) {
+      .pp { padding-top: 2rem; }
+      .pp-sec { padding: 1.2rem 1.1rem; border-radius: 16px; }
+      .pp-toc ul { columns: 1; }
+      .pp-review ul { columns: 1; }
+      .pp-review-btns button { flex: 1 1 40%; }
+    }
+  </style>
+
+  <script is:inline>
+  (() => {
+    const input = document.getElementById('pp-q');
+    const clear = document.querySelector('.pp-clear');
+    const status = document.querySelector('.pp-status');
+    const empty = document.querySelector('.pp-empty');
+    const secs = [...document.querySelectorAll('[data-sec]')].map((el) => {
+      const body = el.querySelector('[data-sec-body]');
+      return { el, body, html: body.innerHTML, text: (el.textContent || '').toLowerCase().replace(/\s+/g, ' ') };
+    });
+    const chs = [...document.querySelectorAll('[data-ch]')];
+    const tocItems = new Map([...document.querySelectorAll('[data-toc]')].map((li) => [li.dataset.toc, li]));
+    const onlyChanged = document.querySelector('[data-only-changed]');
+
+    const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    function highlight(root, terms) {
+      if (!terms.length) return;
+      const re = new RegExp(`(${terms.map(esc).join('|')})`, 'gi');
+      const test = new RegExp(terms.map(esc).join('|'), 'i');
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      const nodes = [];
+      while (walker.nextNode()) if (test.test(walker.currentNode.nodeValue)) nodes.push(walker.currentNode);
+      for (const n of nodes) {
+        const frag = document.createDocumentFragment();
+        n.nodeValue.split(re).forEach((part, i) => {
+          if (!part) return;
+          if (i % 2) { const m = document.createElement('mark'); m.className = 'hit'; m.textContent = part; frag.append(m); }
+          else frag.append(part);
+        });
+        n.replaceWith(frag);
+      }
+    }
+
+    function run() {
+      const q = input.value.trim().toLowerCase();
+      const terms = q.split(/\s+/).filter((t) => t.length > 1);
+      clear.hidden = !q;
+      // Highlight the whole phrase plus longer words, so "no show" doesn't mark every "not".
+      const long = terms.filter((x) => x.length > 2);
+      const hl = [...(terms.length > 1 ? [q.replace(/\s+/g, ' ')] : []), ...(long.length ? long : terms)];
+      const changedOnly = onlyChanged && onlyChanged.checked;
+      let shown = 0;
+      for (const s of secs) {
+        s.body.innerHTML = s.html;
+        const ok = (!terms.length || terms.every((t) => s.text.includes(t))) && (!changedOnly || s.el.hasAttribute('data-changed'));
+        s.el.hidden = !ok;
+        const li = tocItems.get(s.el.id); if (li) li.hidden = !ok;
+        if (ok) { shown++; highlight(s.el.querySelector('[data-sec-body]'), hl); }
+      }
+      for (const c of chs) {
+        const any = [...c.querySelectorAll('[data-sec]')].some((e) => !e.hidden);
+        c.hidden = !any;
+        const t = document.querySelector(`[data-toc-ch="${c.id}"]`); if (t) t.hidden = !any;
+      }
+      empty.hidden = shown > 0;
+      status.textContent = terms.length ? `${shown} section${shown === 1 ? '' : 's'} match “${input.value.trim()}”` : changedOnly ? `Showing ${shown} changed sections` : '';
+      const url = new URL(location.href);
+      if (q) url.searchParams.set('q', input.value.trim()); else url.searchParams.delete('q');
+      history.replaceState(null, '', url);
+    }
+
+    let t;
+    input.addEventListener('input', () => { clearTimeout(t); t = setTimeout(run, 120); });
+    input.addEventListener('keydown', (e) => { if (e.key === 'Escape') { input.value = ''; run(); } });
+    clear.addEventListener('click', () => { input.value = ''; run(); input.focus(); });
+    if (onlyChanged) onlyChanged.addEventListener('change', run);
+    const q0 = new URL(location.href).searchParams.get('q');
+    if (q0) { input.value = q0; run(); }
+
+    // Review helpers
+    const count = document.querySelector('[data-chg-count]');
+    const marks = () => [...document.querySelectorAll('.pp-body .chg-add, .pp-body .chg-del, .pp-body .chg-block')].filter((m) => m.offsetParent && !m.parentElement.closest('.chg-block'));
+    if (count) count.textContent = marks().length;
+    let cur = -1;
+    document.querySelectorAll('[data-chg]').forEach((b) => b.addEventListener('click', () => {
+      const list = marks(); if (!list.length) return;
+      cur = (cur + (b.dataset.chg === 'next' ? 1 : -1) + list.length) % list.length;
+      const el = list[cur];
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.remove('chg-flash'); void el.offsetWidth; el.classList.add('chg-flash');
+    }));
+    const hide = document.querySelector('[data-hide-marks]');
+    if (hide) hide.addEventListener('change', () => document.body.classList.toggle('hide-marks', hide.checked));
+  })();
+  </script>
+</Base>

@@ -1,5 +1,5 @@
 import data from '../data/orientation.json';
-import { micromark } from 'micromark';
+import { renderWithChanges } from './changes';
 
 export type Item =
   | { t: 'text'; md: string }
@@ -19,7 +19,8 @@ export const chapters = lessons.reduce<{ name: string; lessons: Lesson[] }[]>((a
 }, []);
 
 // Lesson text was exported as light markdown; single line breaks are kept as line breaks.
-export const md = (s: string) => micromark(s.replace(/([^\n])\n(?!\n|- |#)/g, '$1  \n'));
+// Review markers ({+new+}, {-removed-}, :::new blocks) are explained in src/lib/changes.ts.
+export const md = (s: string) => renderWithChanges(s.replace(/([^\n])\n(?!\n|- |#)/g, '$1  \n'));
 
 export const summary = (l: Lesson) => {
   const first = l.sections[0]?.find((i) => i.t === 'text') as { md: string } | undefined;

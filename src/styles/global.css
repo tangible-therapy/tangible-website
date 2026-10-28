@@ -733,3 +733,14 @@ html { scroll-behavior: smooth; }
   .orient-pager { grid-template-columns: 1fr; }
   .orient-form iframe { height: 2000px; }
 }
+
+/* Review highlighting for staff content (see src/lib/changes.ts) */
+mark.chg-add { background: #fff1a8; color: inherit; border-radius: 3px; padding: .05em .15em; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+del.chg-del { color: #a33b3b; text-decoration-thickness: 1.5px; background: #fbe9e9; border-radius: 3px; padding: 0 .15em; }
+.chg-block { border-left: 4px solid #6f9a6f; background: rgba(111,154,111,.09); padding: .6rem 0 .6rem 1rem; margin: 0 0 1em; border-radius: 0 10px 10px 0; }
+.chg-block > :last-child { margin-bottom: 0; }
+.chg-flash { animation: chg-flash 1.4s ease; }
+@keyframes chg-flash { 0%, 40% { box-shadow: 0 0 0 4px #e0b400; } 100% { box-shadow: 0 0 0 4px transparent; } }
+.hide-marks mark.chg-add { background: none; padding: 0; }
+.hide-marks del.chg-del { display: none; }
+.hide-marks .chg-block { border: 0; background: none; padding: 0; }
