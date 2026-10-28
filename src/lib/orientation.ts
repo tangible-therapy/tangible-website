@@ -6,7 +6,7 @@ export type Item =
   | { t: 'image'; src: string; alt: string }
   | { t: 'form'; src: string }
   | { t: 'youtube'; id: string; start: string | null }
-  | { t: 'sandbox'; href: string; img: string; title: string; text: string };
+  | { t: 'sandbox'; href: string; img: string; title: string; text: string; button?: string };
 export type Lesson = { slug: string; title: string; chapter: string; sections: Item[][] };
 
 export const lessons = data as Lesson[];

@@ -658,6 +658,37 @@
   ]
  },
  {
+  "slug": "simplepractice-skills-review",
+  "title": "SimplePractice Skills Review",
+  "chapter": "Keys to Success",
+  "sections": [
+   [
+    {
+     "t": "text",
+     "md": "**IN THIS LESSON**\n\n## Show what you know in SimplePractice."
+    }
+   ],
+   [
+    {
+     "t": "text",
+     "md": "# Skills Review"
+    },
+    {
+     "t": "text",
+     "md": "Now that you've practiced, it's time to show you can do it on your own. The skills review uses the same Sample Practice copy of SimplePractice, with made-up clients. You'll get 11 real situations, like booking a client's recurring sessions, recording a late cancellation, writing a note after a safety concern, entering a diagnosis and creating a treatment plan.\n\n- There's no step-by-step guide this time. You do each task yourself.\n- You must get each question right before moving on.\n- If you get stuck, **Get help** shows the next step.\n- When you pass all 11, you'll submit a short form with your name so your supervisor knows you've finished."
+    },
+    {
+     "t": "sandbox",
+     "href": "/orientation/skills-review",
+     "img": "/images/orientation/skills-review-card.webp",
+     "title": "SimplePractice Skills Review",
+     "text": "11 hands-on questions in the Sample Practice copy. Your progress is saved in this browser, so you can take a break and come back.",
+     "button": "Start the skills review"
+    }
+   ]
+  ]
+ },
+ {
   "slug": "slack",
   "title": "Slack",
   "chapter": "Keys to Success",

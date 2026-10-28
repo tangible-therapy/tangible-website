@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Sample Practice | Tangible Orientation</title>
-<!-- Practice copy of SimplePractice for staff training. All clients are made up; nothing is sent anywhere. Linked from the "Simple Practice" orientation lesson. -->
+<!-- Practice copy of SimplePractice for staff training. All clients are made up; nothing is sent anywhere. Linked from the "Simple Practice" orientation lesson. Source of truth for edits: this file. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap">
 <style>
@@ -566,6 +566,8 @@ function advance() {
 
 /* ---------- lessons ---------- */
 const AVERY = 'c1', RILEY = 'c3', MORGAN = 'c4', CASEY = 'c5', QUINN = 'c6';
+// Measurable = a number (digits or words), a frequency, a score/scale/percent, a direction of change or tracking.
+const isMeasurable = t => /\d|%|\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|fifteen|twenty|thirty|forty|fifty|hundred|once|twice|half|daily|nightly|weekly|biweekly|monthly|times?|per|each|every|percent|score|scale|rating|rated|level|gad|phq|pcl|pcl-5|reduce[sd]?|reducing|reduction|decrease[sd]?|increase[sd]?|fewer|lower|higher|track(ed|ing)?|log(ged|ging)?|record(ed|ing)?|measured?|frequency|duration|within|until|by the end)\b/i.test(t);
 const averyToday = () => S.appts.find(a => a.tutNote);
 const jordanAppt = () => S.appts.find(a => a.tutNoShow);
 const lastWeekAvery = () => S.appts.find(a => a.clientId === AVERY && a.date === dayKey(addDays(NOW, -7)));
@@ -635,7 +637,7 @@ const LESSONS = [
         if (!p.problem) return 'Fill in Presenting Problem.';
         if (!p.goal) return 'Fill in the Goal.';
         if (!p.objective) return 'Fill in the Objective.';
-        if (!/\d/.test(p.goal + ' ' + p.objective)) return 'Make it measurable. Add a number, a score or how often to the Goal or Objective (for example "4 days a week").';
+        if (!isMeasurable(p.goal + ' ' + p.objective)) return 'Make it measurable: say how you\'ll know it\'s working, such as a number, a score, how often ("twice a week") or a change you can track.';
         if (!p.freq) return 'Fill in Treatment frequency (for example, Weekly).';
         return true;
       }, target: '#dxtxSave' }
