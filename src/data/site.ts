@@ -9,6 +9,8 @@ export const site = {
   email: 'frontdesk@tangiblementalhealth.com',
   clientPortal: 'https://tangible.clientsecure.me/',
   logo: '/images/asset-1-3x-37f4d6.png',
+  // Website chat bubble (src/components/ChatWidget.astro). false = hidden everywhere.
+  chatbot: true,
   socialImage: '/images/tangiblegreen-7e3f0d.png',
   defaultDescription:
     'Discover the best therapists in Utah County at Tangible Therapy. Expert counseling for anxiety, trauma, couples, and EMDR. Get a free consultation today!',

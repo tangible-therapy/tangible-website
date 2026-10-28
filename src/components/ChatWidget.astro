@@ -1,0 +1,238 @@
+---
+// Website chat bubble (TEST VERSION). Shown on public pages (Base.astro skips noindex/staff pages);
+// turn it off site-wide with chatbot: false in src/data/site.ts.
+// Talks to netlify/functions/chat.mts at /api/chat. The conversation is kept only in this browser tab
+// (sessionStorage) so it survives clicking to another page; nothing is saved on our side.
+import { site } from '../data/site';
+const starters = ['Who has openings near me?', 'What insurance do you take?', 'How much does a session cost?', 'How do I book?'];
+---
+<div class="tc" data-tc>
+  <button type="button" class="tc-launch" aria-expanded="false" aria-controls="tc-panel" data-tc-toggle>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.2 3.6c-.5.4-1.3.1-1.3-.6V16A2.5 2.5 0 0 1 4 13.5z" /></svg>
+    <span>Questions?</span>
+  </button>
+
+  <section class="tc-panel" id="tc-panel" role="dialog" aria-label="Chat with Tangible Therapy" hidden>
+    <header class="tc-head">
+      <div>
+        <strong>Tangible Assistant <em>Beta</em></strong>
+        <span>Automated helper · answers from our website</span>
+      </div>
+      <button type="button" class="tc-close" aria-label="Close chat" data-tc-close>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+      </button>
+    </header>
+
+    <div class="tc-log" data-tc-log aria-live="polite">
+      <div class="tc-msg tc-bot">Hi! I can help you find a therapist, check insurance and costs, or figure out how to book. What can I help with?</div>
+    </div>
+
+    <div class="tc-starters" data-tc-starters>
+      {starters.map((s) => <button type="button" class="tc-chip">{s}</button>)}
+    </div>
+
+    <form class="tc-form" data-tc-form>
+      <label class="tc-sr" for="tc-input">Type your question</label>
+      <textarea id="tc-input" rows="1" maxlength="600" placeholder="Ask a question…" autocomplete="off" data-tc-input></textarea>
+      <button type="submit" class="tc-send" aria-label="Send" data-tc-send>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" /></svg>
+      </button>
+    </form>
+    <p class="tc-note">Please don't share personal or health details here. In a crisis, call or text <a href="tel:988">988</a> or call <a href="tel:911">911</a>. Prefer a person? Call <a href={site.phoneHref}>{site.phone}</a>.</p>
+  </section>
+</div>
+
+<script>
+  type Msg = { role: 'user' | 'assistant'; content: string };
+  const KEY = 'tc.chat.v1';
+  const root = document.querySelector<HTMLElement>('[data-tc]');
+  if (root) {
+    const panel = root.querySelector<HTMLElement>('.tc-panel')!;
+    const toggle = root.querySelector<HTMLButtonElement>('[data-tc-toggle]')!;
+    const close = root.querySelector<HTMLButtonElement>('[data-tc-close]')!;
+    const log = root.querySelector<HTMLElement>('[data-tc-log]')!;
+    const starters = root.querySelector<HTMLElement>('[data-tc-starters]')!;
+    const form = root.querySelector<HTMLFormElement>('[data-tc-form]')!;
+    const input = root.querySelector<HTMLTextAreaElement>('[data-tc-input]')!;
+    const send = root.querySelector<HTMLButtonElement>('[data-tc-send]')!;
+
+    let state: { open: boolean; messages: Msg[] } = { open: false, messages: [] };
+    try {
+      const saved = JSON.parse(sessionStorage.getItem(KEY) || 'null');
+      if (saved && Array.isArray(saved.messages)) state = saved;
+    } catch {}
+    const save = () => { try { sessionStorage.setItem(KEY, JSON.stringify(state)); } catch {} };
+
+    const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
+    // Tiny, safe markdown: **bold**, [links](/path) to our own site / tel / mailto / https, "- " lists.
+    function render(md: string) {
+      const inline = (s: string) =>
+        esc(s)
+          .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+          .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_m, text, href) => {
+            const ok = /^(\/(?!\/)|tel:|mailto:|https:\/\/)/.test(href);
+            if (!ok) return text;
+            const ext = /^https:\/\//.test(href) && !href.startsWith(location.origin);
+            return `<a href="${href}"${ext ? ' target="_blank" rel="noopener"' : ''}>${text}</a>`;
+          });
+      const out: string[] = [];
+      let list: string[] = [];
+      const flush = () => { if (list.length) { out.push(`<ul>${list.map((l) => `<li>${l}</li>`).join('')}</ul>`); list = []; } };
+      for (const line of md.split('\n')) {
+        const m = line.match(/^\s*[-*•]\s+(.*)$/);
+        if (m) { list.push(inline(m[1])); continue; }
+        flush();
+        if (line.trim()) out.push(`<p>${inline(line)}</p>`);
+      }
+      flush();
+      return out.join('');
+    }
+
+    function bubble(m: Msg) {
+      const el = document.createElement('div');
+      el.className = `tc-msg ${m.role === 'user' ? 'tc-user' : 'tc-bot'}`;
+      if (m.role === 'user') el.textContent = m.content;
+      else el.innerHTML = render(m.content);
+      log.appendChild(el);
+      return el;
+    }
+    const scroll = () => { log.scrollTop = log.scrollHeight; };
+
+    state.messages.forEach(bubble);
+    starters.hidden = state.messages.length > 0;
+
+    function setOpen(open: boolean, focus = true) {
+      state.open = open;
+      panel.hidden = !open;
+      root!.classList.toggle('is-open', open);
+      toggle.setAttribute('aria-expanded', String(open));
+      document.documentElement.classList.toggle('tc-lock', open && matchMedia('(max-width: 560px)').matches);
+      save();
+      if (open) { scroll(); if (focus) input.focus(); }
+      else if (focus) toggle.focus();
+    }
+    if (state.open && !matchMedia('(max-width: 560px)').matches) setOpen(true, false);
+
+    toggle.addEventListener('click', () => setOpen(panel.hidden));
+    close.addEventListener('click', () => setOpen(false));
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !panel.hidden) setOpen(false); });
+
+    let busy = false;
+    async function ask(text: string) {
+      text = text.trim().slice(0, 600);
+      if (!text || busy) return;
+      busy = true;
+      send.disabled = true;
+      starters.hidden = true;
+      const q: Msg = { role: 'user', content: text };
+      state.messages.push(q);
+      bubble(q);
+      save();
+      const wait = document.createElement('div');
+      wait.className = 'tc-msg tc-bot tc-typing';
+      wait.innerHTML = '<span></span><span></span><span></span>';
+      wait.setAttribute('aria-label', 'Assistant is typing');
+      log.appendChild(wait);
+      scroll();
+      let reply = '';
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: state.messages.slice(-12) }),
+        });
+        if (res.status === 429) reply = "You're sending messages quickly, so please wait a minute and try again. You can also call us at 435-260-5406.";
+        else reply = ((await res.json().catch(() => ({}))) as { reply?: string }).reply || '';
+      } catch {}
+      if (!reply) reply = "Sorry, I couldn't connect just now. Please try again, or call us at [435-260-5406](tel:4352605406).";
+      wait.remove();
+      const a: Msg = { role: 'assistant', content: reply };
+      state.messages.push(a);
+      bubble(a);
+      save();
+      scroll();
+      busy = false;
+      send.disabled = false;
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const text = input.value;
+      input.value = '';
+      input.style.height = '';
+      ask(text);
+    });
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); }
+    });
+    input.addEventListener('input', () => {
+      input.style.height = '';
+      input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+    });
+    starters.addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest('button');
+      if (b) ask(b.textContent || '');
+    });
+  }
+</script>
+
+<style is:global>
+  .tc { --tc-ink: #2f3530; --tc-dark: var(--charcoal, #3b3f3c); --tc-soft: #eef2ed; --tc-line: #e1e6e0; font-family: Poppins, system-ui, sans-serif; }
+  .tc-launch { position: fixed; right: 20px; bottom: 20px; z-index: 9000; display: inline-flex; align-items: center; gap: 8px; height: 52px; padding: 0 20px 0 16px; border: 0; border-radius: 300px; background: var(--tc-dark); color: #fff; font: inherit; font-size: 15px; font-weight: 500; cursor: pointer; box-shadow: 0 10px 28px rgba(30, 36, 31, .28); transition: transform .15s, box-shadow .15s; }
+  .tc-launch:hover { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(30, 36, 31, .32); }
+  .tc-launch:focus-visible { outline: 3px solid var(--sage, #acb9ac); outline-offset: 3px; }
+  .tc-launch svg { width: 22px; height: 22px; fill: currentColor; }
+  .tc.is-open .tc-launch { display: none; }
+
+  .tc-panel { position: fixed; right: 20px; bottom: 20px; z-index: 9001; width: 380px; height: min(620px, calc(100vh - 40px)); display: flex; flex-direction: column; background: #fff; color: var(--tc-ink); border-radius: 18px; box-shadow: 0 24px 60px rgba(30, 36, 31, .28); overflow: hidden; }
+  .tc-panel[hidden] { display: none; }
+  .tc-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 14px 14px 18px; background: var(--sage, #acb9ac); color: var(--tc-ink); }
+  .tc-head strong { display: block; font-size: 15.5px; font-weight: 600; }
+  .tc-head em { margin-left: 6px; padding: 2px 7px 1px; border-radius: 300px; background: rgba(255, 255, 255, .75); font-size: 10.5px; font-style: normal; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; vertical-align: 2px; }
+  .tc-head span { display: block; margin-top: 2px; font-size: 12px; }
+  .tc-close { flex: 0 0 auto; display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, .6); color: var(--tc-ink); cursor: pointer; }
+  .tc-close:hover { background: #fff; }
+  .tc-close svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+
+  .tc-log { flex: 1 1 auto; overflow-y: auto; padding: 16px 14px 8px; display: flex; flex-direction: column; gap: 10px; overscroll-behavior: contain; }
+  .tc-msg { max-width: 86%; padding: 10px 14px; border-radius: 16px; font-size: 14.5px; line-height: 1.55; overflow-wrap: anywhere; }
+  .tc-msg p { margin: 0 0 .5em; }
+  .tc-msg p:last-child { margin-bottom: 0; }
+  .tc-msg ul { margin: .2em 0 .5em; padding-left: 1.15em; }
+  .tc-msg ul:last-child { margin-bottom: 0; }
+  .tc-msg li { margin: .15em 0; }
+  .tc-bot { align-self: flex-start; background: var(--tc-soft); border-bottom-left-radius: 5px; }
+  .tc-bot a { color: var(--tc-dark); font-weight: 500; text-decoration: underline; text-underline-offset: 2px; }
+  .tc-user { align-self: flex-end; background: var(--tc-dark); color: #fff; border-bottom-right-radius: 5px; white-space: pre-wrap; }
+  .tc-typing { display: inline-flex; gap: 5px; padding: 14px 16px; }
+  .tc-typing span { width: 7px; height: 7px; border-radius: 50%; background: #8a958b; animation: tc-dot 1.2s infinite ease-in-out; }
+  .tc-typing span:nth-child(2) { animation-delay: .15s; }
+  .tc-typing span:nth-child(3) { animation-delay: .3s; }
+  @keyframes tc-dot { 0%, 80%, 100% { opacity: .3; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
+  @media (prefers-reduced-motion: reduce) { .tc-typing span { animation: none; } .tc-launch { transition: none; } }
+
+  .tc-starters { display: flex; flex-wrap: wrap; gap: 6px; padding: 4px 14px 10px; }
+  .tc-starters[hidden] { display: none; }
+  .tc-chip { padding: 7px 12px 6px; border: 1px solid var(--tc-line); border-radius: 300px; background: #fff; color: var(--tc-ink); font: inherit; font-size: 13px; cursor: pointer; }
+  .tc-chip:hover { border-color: var(--tc-dark); }
+
+  .tc-form { display: flex; align-items: flex-end; gap: 8px; margin: 0 12px; padding: 6px 6px 6px 14px; border: 1px solid var(--tc-line); border-radius: 22px; background: #fff; }
+  .tc-form:focus-within { border-color: var(--tc-dark); }
+  .tc-form textarea { flex: 1 1 auto; min-height: 24px; max-height: 120px; margin: 0 0 6px; padding: 0; border: 0; outline: 0; resize: none; background: transparent; color: var(--tc-ink); font: inherit; font-size: 16px; line-height: 1.5; }
+  .tc-send { flex: 0 0 auto; display: grid; place-items: center; width: 38px; height: 38px; border: 0; border-radius: 50%; background: var(--tc-dark); color: #fff; cursor: pointer; }
+  .tc-send:disabled { opacity: .45; cursor: default; }
+  .tc-send svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .tc-note { margin: 0; padding: 8px 16px 12px; font-size: 11.5px; line-height: 1.45; color: #5d665f; }
+  .tc-note a { color: inherit; font-weight: 500; }
+  .tc-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  @media (max-width: 560px) {
+    .tc-launch { right: 14px; bottom: 14px; height: 48px; padding: 0 16px 0 14px; font-size: 14px; }
+    /* Therapist profiles: sit above the sticky Book / Call bar */
+    body:has(.tp-sticky:not([hidden])) .tc-launch { bottom: calc(80px + env(safe-area-inset-bottom)); }
+    .tc-panel { inset: 0; width: auto; height: 100%; height: 100dvh; border-radius: 0; }
+    .tc-note { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
+    html.tc-lock, html.tc-lock body { overflow: hidden; }
+  }
+  @media print { .tc { display: none; } }
+</style>

@@ -2,6 +2,7 @@
 import '../styles/global.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import ChatWidget from '../components/ChatWidget.astro';
 import { site } from '../data/site';
 import pageSchema from '../data/page-schema.json';
 
@@ -98,6 +99,7 @@ const orgSchema = {
     <slot />
   </main>
   <Footer />
+  {site.chatbot && !noindex && <ChatWidget />}
   <script is:inline src="/scripts/site.js" defer></script>
   <script is:inline src={t.callrail} defer></script>
 </body>

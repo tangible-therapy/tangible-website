@@ -1,6 +1,6 @@
 # Tangible Therapy website
 
-Read docs/context/website-context.md before making any change. It explains how the site is built, where things live, the forms and alerts, and the rules below in detail.
+Read docs/context/website-context.md before making any change. The website chatbot is documented in docs/context/chatbot.md. It explains how the site is built, where things live, the forms and alerts, and the rules below in detail.
 
 Key rules:
 - Work on a new branch, open a pull request, and give the owner the Netlify Deploy Preview link (https://deploy-preview-<PR#>--quiet-unicorn-d26839.netlify.app). Merge to main only after the owner approves; merging publishes the live site.
