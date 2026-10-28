@@ -1,6 +1,6 @@
 ---
 // Staff sign-in (Google work accounts only). Not behind the gate itself.
-// Flow: button → Netlify Identity → Google → back here with a token → /.netlify/functions/staff-session sets the staff cookie.
+// Flow: button → Netlify Identity → Google → back here with a token → /api/staff-session sets the staff cookie.
 import { site } from '../data/site';
 ---
 <!doctype html>
@@ -71,7 +71,7 @@ import { site } from '../data/site';
 
       go.hidden = true;
       show('Signing you in…', 'ok');
-      fetch('/.netlify/functions/staff-session', { method: 'POST', headers: { authorization: 'Bearer ' + token }, credentials: 'same-origin' })
+      fetch('/api/staff-session', { method: 'POST', headers: { authorization: 'Bearer ' + token }, credentials: 'same-origin' })
         .then(function (r) { return r.json().catch(function () { return { error: 'http-' + r.status }; }).then(function (b) { return { ok: r.ok, b: b, status: r.status }; }); })
         .then(function (res) {
           if (res.ok) { try { sessionStorage.removeItem('tt_next'); } catch (e) {} location.replace(next); return; }
