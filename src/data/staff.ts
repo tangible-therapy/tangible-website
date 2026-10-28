@@ -5,6 +5,7 @@
 export type StaffLink = { label: string; href: string };
 
 export const employeeLinks: StaffLink[] = [
+  { label: 'Policies & Procedures', href: '/employeeportal/policies' },
   { label: 'Submit Hours', href: 'https://docs.google.com/forms/d/e/1FAIpQLScqzjlYy0R3CTIllUWeO3S8ZrC0JPiHJVtlYSYKlogd3t_dYg/viewform' },
   { label: 'Online Learning', href: '/digital-products-2' },
   // TODO: add the paystub portal address (left blank = button hidden)
