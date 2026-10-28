@@ -633,9 +633,9 @@ const LESSONS = [
         return true;
       }, target: () => $('#naService') && !$('#naService').value ? '#naService' : $('#naRec') && !$('#naRec').checked ? '#naRec' : '#naSave' }
   ]},
-  { id: 'attendance', title: 'No-shows and late cancels', sub: 'Status, then the $75 fee', steps: [
-    { title: 'Open the missed session', text: 'Jordan Testcase didn\'t come to his 2:00 PM session yesterday. You waited 15 minutes and reception called with no answer. On the <b>Calendar</b>, click his appointment.', why: 'No-shows and late cancels (under 24 hours\' notice) are handled exactly the same way. The only difference is which status you pick.', on: 'appt-open', test: d => d.id === jordanAppt()?.id || 'Click Jordan Testcase\'s 2:00 PM appointment from yesterday.', target: () => ui.page === 'calendar' ? `[data-appt="${jordanAppt()?.id}"]` : '[data-nav="calendar"]', go: () => showDate(jordanAppt()?.date) },
-    { title: 'Change the status', text: 'Click the green <b>Show</b> button under his name and choose <b>No show</b>. (For a client who cancels with less than 24 hours\' notice, you\'d choose <b>Late canceled</b> instead. Everything else is the same.)', on: 'status', test: d => (d.id === jordanAppt()?.id && d.status === 'No show') || (d.status === 'Late canceled' ? 'Jordan didn\'t cancel, so this one is a No show. Late canceled is for cancellations with under 24 hours\' notice.' : d.status === 'Show' ? 'Jordan wasn\'t there, so it can\'t stay Show.' : 'Pick No show.'), target: () => $('.menu') ? '[data-status="No show"]' : '#statusBtn' },
+  { id: 'attendance', title: 'No-shows and late cancels', sub: 'Status, then the $75 fee', alert: { title: 'Billing charges what you set', text: 'To charge the fee, set <b>No show</b> or <b>Late canceled</b> and change the fee to <b>$75</b>.', more: 'Not charging, or the client cancelled because they\'re <b>sick</b>? Set the status to <b>Canceled</b> instead. We never charge clients for cancelling because of illness.' }, steps: [
+    { title: 'Open the missed session', text: 'Jordan Testcase didn\'t come to his 2:00 PM session yesterday. You waited 15 minutes and reception called with no answer. On the <b>Calendar</b>, click his appointment.', why: 'No-shows and late cancels (under 24 hours\' notice) are handled exactly the same way. The only difference is which status you pick. Here you\'ve decided to charge Jordan.', on: 'appt-open', test: d => d.id === jordanAppt()?.id || 'Click Jordan Testcase\'s 2:00 PM appointment from yesterday.', target: () => ui.page === 'calendar' ? `[data-appt="${jordanAppt()?.id}"]` : '[data-nav="calendar"]', go: () => showDate(jordanAppt()?.date) },
+    { title: 'Change the status', text: 'Click the green <b>Show</b> button under his name and choose <b>No show</b>. (For a client who cancels with less than 24 hours\' notice, you\'d choose <b>Late canceled</b> instead. Everything else is the same.)', on: 'status', test: d => (d.id === jordanAppt()?.id && d.status === 'No show') || (d.status === 'Late canceled' ? 'Jordan didn\'t cancel, so this one is a No show. Late canceled is for cancellations with under 24 hours\' notice.' : d.status === 'Show' ? 'Jordan wasn\'t there, so it can\'t stay Show.' : d.status === 'Canceled' ? 'Canceled is for when you\'re not charging (like a client who\'s sick). You\'re charging Jordan, so pick No show.' : 'Pick No show.'), target: () => $('.menu') ? '[data-status="No show"]' : '#statusBtn' },
     { title: 'Change the fee to $75', text: 'The fee does <b>not</b> change on its own. Under <b>Billing</b>, change <b>Appointment Fee</b> to <b>75</b>, then click <b>Save</b>.', why: 'Billing charges the client from the status and fee on the calendar, so set both the same day. You\'re only paid for sessions that are charged. Never leave a missed session as Show; billing insurance for it is fraud.', on: 'fee-saved', test: d => {
         if (d.id !== jordanAppt()?.id) return 'Do this on Jordan Testcase\'s appointment.';
         if (d.status !== 'No show' && d.status !== 'Late canceled') return 'Set the status to No show first.';
@@ -970,19 +970,24 @@ const QS = [
       { t: 'Check <b>Recurring</b> and keep it every 1 week.', target: '#naRec', done: () => !!$('#naRec')?.checked },
       { t: 'Set <b>Ends</b> to After <b>10</b> events.', target: '#naEndCount', done: () => $('#naEndCount')?.value === '10' },
       { t: 'Click <b>Save</b>.', target: '#naSave', done: () => false }] },
-  { kind: 'task', title: 'A late cancellation', scenario: '<b>Taylor Mockingbird</b> texted reception 2 hours before today\'s <b>1:00 PM</b> session to cancel. Update the appointment so billing charges correctly.',
+  { kind: 'task', title: 'A late cancellation', scenario: '<b>Taylor Mockingbird</b> texted reception 2 hours before today\'s <b>1:00 PM</b> session to cancel because of a work conflict. Taylor isn\'t sick, and you\'ve decided to charge the fee. Update the appointment so billing charges correctly.',
     on: 'fee-saved', test: d => {
       if (d.id !== taylorToday()?.id) return null;
       if (d.status === 'No show') return 'Taylor did cancel, just with less than 24 hours\' notice. That\'s a Late canceled.';
+      if (d.status === 'Canceled') return 'Canceled is for when you\'re not charging (like a client who\'s sick). Taylor isn\'t sick and you\'re charging, so it\'s Late canceled.';
       if (d.status !== 'Late canceled') return 'Change the status to show Taylor cancelled late.';
       if (d.fee !== 75) return 'The fee doesn\'t change on its own. Set Appointment Fee to 75.';
       return true;
-    }, why: 'Late cancels and no-shows work the same way: change the status, then change the fee to $75.',
+    }, why: 'Late cancels and no-shows work the same way: change the status, then change the fee to $75. Billing charges exactly what you set.',
     help: [...toCalendarToday(() => popFor(taylorToday()?.id)),
       { t: 'Click Taylor Mockingbird\'s <b>1:00 PM</b> appointment today.', target: () => `[data-appt="${taylorToday()?.id}"]`, go: () => showDate(TK), done: () => popFor(taylorToday()?.id) },
       { t: 'Click the status button under the name and choose <b>Late canceled</b>.', target: () => $('.menu') ? '[data-status="Late canceled"]' : '#statusBtn', done: () => taylorToday()?.status === 'Late canceled' },
       { t: 'Under <b>Billing</b>, change <b>Appointment Fee</b> to <b>75</b>.', target: '#apptFee', done: () => +($('#apptFee')?.value) === 75 },
       { t: 'Click <b>Save</b>.', target: '#popSave', done: () => false }] },
+  { kind: 'choice', title: 'A sick client cancels', scenario: 'A client calls 3 hours before their session to cancel because they have the flu. How do you mark the appointment?',
+    options: ['Late canceled, and change the fee to $75', 'Canceled (client cancelled), with no fee', 'No show, and change the fee to $75', 'Leave it as Show'], a: 1,
+    hint: 'Tangible doesn\'t charge clients who cancel because they\'re sick.',
+    why: 'We never charge for cancelling because of illness. When you\'re not charging, set the status to Canceled, not Late canceled.' },
   { kind: 'choice', title: 'Before marking a no-show', scenario: 'A client hasn\'t shown up for their session. Before you mark it a <b>No show</b>, what needs to happen?',
     options: ['Wait 5 minutes', 'Wait at least 15 minutes and reach out (or have reception reach out) to confirm they aren\'t coming', 'Mark it right away; you can change it later', 'Wait until the end of the day'], a: 1,
     hint: 'There\'s a minimum wait time, and someone needs to contact the client.',
