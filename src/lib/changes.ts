@@ -10,7 +10,7 @@ import { micromark } from 'micromark';
 // While REVIEW is true the highlights show on the site so the owner can approve them.
 // After approval: set REVIEW to false (removed text disappears, new text shows as normal),
 // then optionally delete the markers from the content files.
-export const REVIEW = true;
+export const REVIEW = false;
 
 const inline = (html: string) =>
   REVIEW

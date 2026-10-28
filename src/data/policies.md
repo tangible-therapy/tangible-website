@@ -11,7 +11,7 @@ Hello and welcome to the Tangible Mental Health team. This employee handbook def
 
 ## About Tangible Mental Health
 
-When founding TMH careful thought was given to “what would set this practice apart?”. Ultimately the idea was to create a practice that moves away from solely theoretical and intellectualizing and instead connects clients with their emotions in practical ways. At Tangible Mental Health our Mantra is *Helping people **feel** better.* We place an emphasis on creating healing that our clients can feel by connecting them with their emotions through tangible skills.
+When founding Tangible careful thought was given to “what would set this practice apart?”. Ultimately the idea was to create a practice that moves away from solely theoretical and intellectualizing and instead connects clients with their emotions in practical ways. At Tangible Mental Health our Mantra is *Helping people **feel** better.* We place an emphasis on creating healing that our clients can feel by connecting them with their emotions through tangible skills.
 
 Good therapy starts with good therapists. We believe in our team and are selective only to bring in therapists which we believe can be great. Our approach to creating good therapy is to emphasize training and development with all of our therapists. We don’t want perfect therapists, we want therapists who strive to improve for the sake of themselves and their clients. We hope that your experience here will be one of pride, growth, and satisfaction in your work.
 
@@ -23,7 +23,7 @@ Tangible Mental Health is an equal-opportunity employer. We don’t tolerate dis
 
 ## Attendance
 
-TMH expects you to be present during your scheduled working hours. If you face an emergency that prevents you from coming to work, you will be responsible for ensuring any impacted parties (including clients) are notified. All absences should be reported to your direct supervisor via text or email. It is important that we create a calm, consistent environment for our clients and employees. Repeated absenteeism impacts this environment, and may be cause for termination.
+Tangible expects you to be present during your scheduled working hours. If you face an emergency that prevents you from coming to work, you will be responsible for ensuring any impacted parties (including clients) are notified. All absences should be reported to your direct supervisor via text or email. It is important that we create a calm, consistent environment for our clients and employees. Repeated absenteeism impacts this environment, and may be cause for termination.
 
 ## Confidentiality and data protection
 
@@ -52,11 +52,11 @@ You must not:
 
 ## Harassment and violence
 
-TMH believes in creating a safe work environment for its employees. Employees should be mindful of jokes, comments and actions and how they may impact or be perceived by those around them. Behaviors that create an unsafe work environment for others (clients or coworkers) will not be tolerated. Sexual harassment of any sort is strictly prohibited. If you’re being harassed, whether by a colleague, customer or vendor, please talk to your supervisor.
+Tangible believes in creating a safe work environment for its employees. Employees should be mindful of jokes, comments and actions and how they may impact or be perceived by those around them. Behaviors that create an unsafe work environment for others (clients or coworkers) will not be tolerated. Sexual harassment of any sort is strictly prohibited. If you’re being harassed, whether by a colleague, customer or vendor, please talk to your supervisor.
 
 ## Dress code
 
-TMH asks that all employees show up in professional, business casual attire. Your supervisor may provide you with further guidance on workplace dress at their discretion to ensure our environment remains professional and client-centered.
+Tangible asks that all employees show up in professional, business casual attire. Your supervisor may provide you with further guidance on workplace dress at their discretion to ensure our environment remains professional and client-centered.
 
 ## Cyber security and digital devices
 
@@ -177,7 +177,7 @@ Our company offers three months of unpaid parental leave. If you are about to be
 
 ## Employee wellness and health insurance
 
-Employee wellness is important to us, and critical for creating a trauma-informed environment. We encourage all employees to create a healthy work-life balance, and to build wellness activities into their work day. TMH does not provide insurance for employees. We provide reimbursement (up to $500{+ a month+}) for full-time employees to find a suitable health plan through the marketplace. Employees must be meeting and maintaining full-time employment status to qualify for reimbursement.
+Employee wellness is important to us, and critical for creating a trauma-informed environment. We encourage all employees to create a healthy work-life balance, and to build wellness activities into their work day. Tangible does not provide insurance for employees. We provide reimbursement (up to $500{+ a month+}) for full-time employees to find a suitable health plan through the marketplace. Employees must be meeting and maintaining full-time employment status to qualify for reimbursement.
 
 {+If you get health insurance through a parent or spouse, that premium can also be reimbursed. Once you’ve reached full-time hours, send a picture of a health insurance premium receipt to your supervisor and the reimbursement will be added to your paychecks.+}
 
