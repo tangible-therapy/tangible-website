@@ -60,6 +60,7 @@ import { site } from '../data/site';
       if (q.get('out')) show('You have been signed out.', 'ok');
       if (q.get('error') === 'removed') show('Your account is no longer on the staff list. Ask your office director if this is a mistake.');
 
+      document.cookie = 'nf_jwt=; Path=/; Max-Age=0; Secure; SameSite=Lax'; // clear leftovers from older versions
       var h = new URLSearchParams(location.hash.slice(1));
       history.replaceState(null, '', location.pathname + location.search);
       if (h.get('error')) {
@@ -71,10 +72,8 @@ import { site } from '../data/site';
 
       go.hidden = true;
       show('Signing you in…', 'ok');
-      // Hand the Identity token over as the nf_jwt cookie (what Netlify's own library does); Netlify verifies it
-      // before /api/staff-session runs. The function clears it again once the staff session is set.
-      document.cookie = 'nf_jwt=' + token + '; Path=/; Max-Age=300; Secure; SameSite=Lax';
-      fetch('/api/staff-session', { method: 'POST', credentials: 'same-origin' })
+      // Token goes in the body (see netlify/functions/staff-session.mts for why).
+      fetch('/api/staff-session', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ token: token }), credentials: 'same-origin' })
         .then(function (r) { return r.text().then(function (t) { var b; try { b = JSON.parse(t); } catch (e) { b = { error: 'http-' + r.status + ' ' + t.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120) }; } return { ok: r.ok, b: b, status: r.status }; }); })
         .then(function (res) {
           if (res.ok) { try { sessionStorage.removeItem('tt_next'); } catch (e) {} location.replace(next); return; }

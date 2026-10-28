@@ -1,24 +1,26 @@
-// POST /api/staff-session  (Identity token in the nf_jwt cookie, set by /staff-login)
-// Called by /staff-login after "Sign in with Google". Netlify verifies the Identity token before this runs
-// and exposes the result as globalThis.netlifyIdentityContext (same mechanism @netlify/identity uses).
-// Only @tangiblementalhealth.com Google accounts are accepted; unknown work accounts are added as "pending".
+// POST /api/staff-session  { token }  — called by /staff-login after "Sign in with Google".
+// Checks the Identity token with Netlify Identity, only accepts @tangiblementalhealth.com Google accounts,
+// adds unknown work accounts to the staff list as "pending", and sets the staff session cookie.
+// IMPORTANT (Oct 2026): send the token in the request body. Sending it as an Authorization header or the
+// nf_jwt cookie made Netlify fail the request before the function ran ("Internal Error") on protected previews.
+// The token is checked against Identity on the site's main address (env URL), because preview addresses
+// are password-protected and answer server-side requests with a login page. Identity is shared by all deploys.
 import { createSession, getPerson, savePerson, sessionCookieHeader } from '../lib/staff-session.ts';
 import { isWorkEmail } from '../../src/data/staff-access.ts';
 
 const json = (body: unknown, status = 200, headers: Record<string, string> = {}) =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', ...headers } });
 
-async function verifiedUser(req: Request): Promise<any | null> {
-  const ctx = (globalThis as any).netlifyIdentityContext;
-  const token = ctx?.token || (req.headers.get('cookie') || '').match(/(?:^|;\s*)nf_jwt=([^;]+)/)?.[1] || '';
-  // Prefer the full user record from Identity (internal URL from Netlify), fall back to the verified token claims.
-  if (ctx?.url && token) {
+async function verifiedUser(req: Request, token: string): Promise<any | null> {
+  const bases = [...new Set([Netlify.env.get('URL'), new URL(req.url).origin].filter(Boolean) as string[])];
+  for (const base of bases) {
     try {
-      const r = await fetch(`${ctx.url}/user`, { headers: { authorization: `Bearer ${token}` } });
+      const r = await fetch(`${base}/.netlify/identity/user`, { headers: { authorization: `Bearer ${token}` } });
+      if (r.status === 401 || r.status === 403) return null;
       if (r.ok && (r.headers.get('content-type') || '').includes('json')) return await r.json();
     } catch {}
   }
-  return ctx?.user || null;
+  throw new Error('could not reach Netlify Identity');
 }
 
 export default async (req: Request) => {
@@ -26,7 +28,9 @@ export default async (req: Request) => {
     if (req.method !== 'POST') return json({ error: 'method' }, 405);
     if (req.headers.get('origin') !== new URL(req.url).origin) return json({ error: 'origin' }, 403);
 
-    const user = await verifiedUser(req);
+    const { token } = await req.json().catch(() => ({}) as any);
+    if (!token || typeof token !== 'string' || token.length > 4000) return json({ error: 'missing' }, 400);
+    const user = await verifiedUser(req, token);
     if (!user) return json({ error: 'invalid' }, 401);
     const email = String(user.email || '').toLowerCase();
     if (!isWorkEmail(email)) return json({ error: 'domain' }, 403);
@@ -40,7 +44,6 @@ export default async (req: Request) => {
     const s = await createSession(email);
     const res = json({ ok: true, status: p.status });
     res.headers.append('set-cookie', sessionCookieHeader(s.value, s.maxAge));
-    res.headers.append('set-cookie', 'nf_jwt=; Path=/; Secure; SameSite=Lax; Max-Age=0');
     return res;
   } catch (e: any) {
     console.error('staff-session failed', e);
