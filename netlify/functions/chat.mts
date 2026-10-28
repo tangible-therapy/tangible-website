@@ -111,7 +111,6 @@ export default async (req: Request) => {
       body: JSON.stringify({
         model: MODEL,
         max_tokens: MAX_TOKENS,
-        temperature: 0.3,
         system: [
           { type: 'text', text: RULES },
           // The long briefing is the same for every visitor, so it is cached (much cheaper to re-read).
