@@ -41,7 +41,12 @@ let cache: { origin: string; at: number; text: string } | null = null;
 
 async function knowledge(origin: string): Promise<string> {
   if (cache && cache.origin === origin && Date.now() - cache.at < 5 * 60 * 1000) return cache.text;
-  const res = await fetch(`${origin}/chat-knowledge.json`);
+  let res: Response;
+  try {
+    res = await fetch(`${origin}/chat-knowledge.json`);
+  } catch (e) {
+    throw new Error(`knowledge fetch from ${origin}: ${(e as Error).message}`);
+  }
   if (!res.ok) throw new Error(`knowledge ${res.status}`);
   const data = (await res.json()) as { text?: string };
   if (!data.text) throw new Error('knowledge empty');
@@ -118,8 +123,9 @@ export default async (req: Request) => {
     }
     return json({ reply: reply || fallback });
   } catch (err) {
-    console.error(`[chat] ${(err as Error).message}`);
-    return json({ reply: fallback, error: 'failed' }, 500);
+    const msg = (err as Error).message || 'unknown';
+    console.error(`[chat] ${msg}`);
+    return json({ reply: fallback, error: `failed: ${msg.slice(0, 120)}` }, 500);
   }
 };
 
