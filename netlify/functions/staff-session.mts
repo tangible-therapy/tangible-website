@@ -1,4 +1,4 @@
-// POST /api/staff-session  (Authorization: Bearer <Identity token>)
+// POST /api/staff-session  (Identity token in the nf_jwt cookie, set by /staff-login)
 // Called by /staff-login after "Sign in with Google". Netlify verifies the Identity token before this runs
 // and exposes the result as globalThis.netlifyIdentityContext (same mechanism @netlify/identity uses).
 // Only @tangiblementalhealth.com Google accounts are accepted; unknown work accounts are added as "pending".
@@ -10,7 +10,7 @@ const json = (body: unknown, status = 200, headers: Record<string, string> = {})
 
 async function verifiedUser(req: Request): Promise<any | null> {
   const ctx = (globalThis as any).netlifyIdentityContext;
-  const token = ctx?.token || (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
+  const token = ctx?.token || (req.headers.get('cookie') || '').match(/(?:^|;\s*)nf_jwt=([^;]+)/)?.[1] || '';
   // Prefer the full user record from Identity (internal URL from Netlify), fall back to the verified token claims.
   if (ctx?.url && token) {
     try {
@@ -38,7 +38,10 @@ export default async (req: Request) => {
     await savePerson({ ...p, name: p.name || name, lastSignIn: new Date().toISOString() });
 
     const s = await createSession(email);
-    return json({ ok: true, status: p.status }, 200, { 'set-cookie': sessionCookieHeader(s.value, s.maxAge) });
+    const res = json({ ok: true, status: p.status });
+    res.headers.append('set-cookie', sessionCookieHeader(s.value, s.maxAge));
+    res.headers.append('set-cookie', 'nf_jwt=; Path=/; Secure; SameSite=Lax; Max-Age=0');
+    return res;
   } catch (e: any) {
     console.error('staff-session failed', e);
     return json({ error: 'server: ' + String(e?.message || e).slice(0, 120) }, 500);
