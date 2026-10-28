@@ -15,7 +15,7 @@ A "Questions?" chat bubble in the bottom-right corner of every public page. Visi
 - The panel tells visitors not to share personal or health details. Before treating this as more than a test, the owner should confirm whether a BAA is needed/available with Netlify and the model provider.
 
 ## Cost controls
-- Small model, replies capped at 450 tokens, 600 characters per visitor message, last 12 messages only.
+- Small model, replies capped at 600 tokens with the model's extended thinking turned off, 600 characters per visitor message, last 12 messages only.
 - The long information block is marked for prompt caching (re-reads cost about a tenth).
 - Netlify rate limit: 12 messages per minute per visitor (config in chat.mts); only requests from the site's own pages are accepted.
 - Rough cost: about 1-3 credits per question (a few cents at most). Check Netlify > Usage; consider turning off credit auto-recharge or setting a budget.

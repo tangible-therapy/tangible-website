@@ -14,7 +14,7 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const MODEL = 'claude-haiku-5-5';
-const MAX_TOKENS = 450;
+const MAX_TOKENS = 600;
 const MAX_MESSAGES = 12;
 const MAX_CHARS = 600;
 const PHONE = '435-260-5406';
@@ -111,6 +111,7 @@ export default async (req: Request) => {
       body: JSON.stringify({
         model: MODEL,
         max_tokens: MAX_TOKENS,
+        thinking: { type: 'disabled' }, // quick front-desk answers; thinking would use the reply budget and cost more
         system: [
           { type: 'text', text: RULES },
           // The long briefing is the same for every visitor, so it is cached (much cheaper to re-read).
