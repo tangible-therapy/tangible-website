@@ -124,14 +124,19 @@ export default async (req: Request) => {
       console.error(`[chat] AI Gateway returned ${res.status}: ${detail}`);
       return json({ reply: fallback, error: `gateway-${res.status}`, detail }, 502);
     }
-    const data = (await res.json()) as { content?: { type: string; text?: string }[]; usage?: Record<string, number> };
+    const data = (await res.json()) as { content?: { type: string; text?: string }[]; usage?: Record<string, number>; stop_reason?: string };
     const reply = (data.content ?? []).filter((c) => c.type === 'text').map((c) => c.text ?? '').join('').trim();
     if (data.usage) {
       // Token counts only (never the conversation), to keep an eye on cost in the function log.
       const u = data.usage;
       console.log(`[chat] tokens in=${u.input_tokens ?? 0} cached=${u.cache_read_input_tokens ?? 0} cache_write=${u.cache_creation_input_tokens ?? 0} out=${u.output_tokens ?? 0}`);
     }
-    return json({ reply: reply || fallback });
+    if (!reply) {
+      const why = `${data.stop_reason ?? '?'} [${(data.content ?? []).map((c) => c.type).join(',')}]`;
+      console.error(`[chat] empty reply: ${why}`);
+      return json({ reply: fallback, error: 'empty', detail: why });
+    }
+    return json({ reply });
   } catch (err) {
     const msg = (err as Error).message || 'unknown';
     console.error(`[chat] ${msg}`);
