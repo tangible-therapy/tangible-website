@@ -64,7 +64,7 @@ Do not: run netlify deploy, upload to Netlify by hand, commit directly to main (
 Notes: staff pages need the staff password on previews (Claude won't have it) - check them locally with npm run build. Team members get access by being added as collaborators on the GitHub repo and starting chats with the repo attached. No CMS is installed; the owner prefers changes go through Claude.
 
 # 3. Security and passwords
-Staff-only paths behind the "Staff Only" password screen (staff-gate.ts): /orientation, /orientation/*, /employeeportal, /employeeportal/*, /digital-products-2, /onboarding, /files/*, /reception-portal, /reception-onboarding, /reception-onboarding-1 (Payroll), /scheduling-new-client, /scheduling-new-client-1 (Start of Day Check-in), /crisis-call, plus /staff-logout (signs out).
+Staff-only paths behind the staff gate (staff-gate.ts; shared password or Google sign-in, see "Staff accounts" below): /orientation, /orientation/*, /employeeportal, /employeeportal/*, /digital-products-2, /onboarding, /files/*, /reception-portal, /reception-onboarding, /reception-onboarding-1 (Payroll), /scheduling-new-client, /scheduling-new-client-1 (Start of Day Check-in), /crisis-call, /staff-admin, plus /staff-logout (signs out). /staff-login is the Google sign-in page (not gated).
 - The password is the Netlify environment variable STAFF_PASSWORD (Netlify > Project configuration > Environment variables), set by the owner. Never write it in the repo, docs or chat, and never ask for it.
 - A correct password sets an httpOnly cookie tt_staff for 30 days. Changing STAFF_PASSWORD signs everyone out (needs a new deploy).
 - Staff pages are noindex and excluded from the sitemap.
@@ -73,6 +73,20 @@ Staff-only paths behind the "Staff Only" password screen (staff-gate.ts): /orien
 - Never store logins/passwords for third-party systems (SimplePractice, Gmail, insurance portals, payroll...) on any page. The old Squarespace reception portal showed plaintext logins; they were removed on purpose. Pages say "(see the team password manager)".
 - The domain moved to Netlify in Oct 2026 (site is live). The staff gate stays; any site-wide visitor protection should be off for production.
 - Onboarding uploads (W-4, direct deposit, license) go to Google Forms / the owner's Google Drive, not the website.
+
+## Staff accounts (Google sign-in) — built Oct 2026, being switched on in stages
+The staff gate has two modes, chosen by the Netlify environment variable STAFF_AUTH:
+- STAFF_AUTH=google: staff sign in at /staff-login with their Google @tangiblementalhealth.com account (Netlify Identity, Google provider). Each staff page then checks the person's role from the staff list. Planned to be set for Deploy Previews first, then Production at launch (which retires the shared password).
+- Not set / anything else: the old shared password (below). This is what production uses until launch.
+How it works:
+- /staff-login sends people to Netlify Identity -> Google. Identity returns a token; /api/staff-session (netlify/functions/staff-session.mts) checks it with Identity, accepts only @tangiblementalhealth.com Google accounts, and sets a signed httpOnly cookie tt_session for 7 days (SESSION_DAYS in netlify/lib/staff-session.ts). After 7 days people sign in with Google again, so a suspended work email loses access within 7 days at most; clicking Remove at /staff-admin cuts access within about a minute.
+- netlify/functions/identity-validate/-signup/-login.mts make Identity itself refuse non-work emails.
+- The staff list (name, email, roles, home office, approved/pending, orientationComplete, last sign-in) lives in Netlify Blobs store "staff-accounts" (keys people/<email>), NOT in the repo. The cookie signing key is generated automatically in the same store (config/session-key). Blobs are shared by previews and production.
+- Roles: therapist, supervisor (clinical supervisor), director, frontdesk (admin / front desk), billing (new role; same access as therapist for now). Every person has a home office: orem (also telehealth-only staff), provo, sandy. Offices, directors' alert emails, the owner email and which roles open which pages are in src/data/staff-access.ts (canOpen()). Reception pages: frontdesk + director. /staff-admin: director. Everything else: any approved staff. Owners (OWNER_EMAILS: brady@) can open everything and can't be edited or removed by directors.
+- Someone who signs in with a work account but isn't on the list is added as "pending" and sees a "waiting for approval" page until a director approves them at /staff-admin.
+- /staff-admin (owners + directors): approve pending people, add one person or paste a list ("Name, email, role(s), office", roles joined with +), edit roles/office, mark current staff as having completed orientation, remove people. API: /api/staff-admin (netlify/functions/staff-admin.mts).
+- If Netlify Identity's Google sign-in comes back to another page, Base.astro forwards it to /staff-login.
+- Owner setup steps (Claude can't do these): Netlify > Project configuration > Identity > Enable; Registration > External providers > Add provider > Google (default settings); add environment variable STAFF_AUTH=google scoped to Deploy Previews (and Production at launch), then trigger a new deploy.
 
 # 4. Forms and email alerts (Google Forms)
 All website forms are Google Forms owned by brady@tangiblementalhealth.com; there are no Netlify Forms.

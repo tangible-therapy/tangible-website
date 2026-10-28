@@ -1,0 +1,88 @@
+---
+// Staff sign-in (Google work accounts only). Not behind the gate itself.
+// Flow: button → Netlify Identity → Google → back here with a token → /api/staff-session sets the staff cookie.
+import { site } from '../data/site';
+---
+<!doctype html>
+<html lang="en-US">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Staff Sign In | Tangible Therapy</title>
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root { --charcoal: #3b3f3c; --sage: #acb9ac; --slate: #565d57; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; background: var(--sage); font-family: Poppins, sans-serif; font-weight: 300; color: var(--charcoal); }
+    main { background: #fff; border-radius: 28px; padding: 2.75rem 2.5rem; width: min(100%, 440px); text-align: center; box-shadow: 0 12px 40px rgba(59, 63, 60, .12); }
+    img.logo { width: 190px; height: auto; margin-bottom: 1.25rem; }
+    .badge { display: inline-block; font-size: .68rem; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; background: var(--slate); color: #fff; padding: .45em 1em; border-radius: 300px; margin-bottom: 1.25rem; }
+    h1 { font-weight: 500; font-size: 1.6rem; margin: 0 0 .6rem; }
+    p { margin: 0 0 1.5rem; font-size: .95rem; line-height: 1.6; }
+    .google { display: inline-flex; align-items: center; justify-content: center; gap: .75rem; width: 100%; padding: .9rem 1.2rem; border: 1px solid #c9cfca; border-radius: 300px; background: #fff; color: var(--charcoal); font: inherit; font-weight: 500; font-size: 1rem; cursor: pointer; text-decoration: none; transition: background .2s, border-color .2s; }
+    .google:hover { background: #f4f6f4; border-color: var(--charcoal); }
+    .google svg { width: 20px; height: 20px; flex: none; }
+    .msg { border-radius: 12px; padding: .8rem 1rem; font-size: .88rem; line-height: 1.5; margin: 0 0 1.25rem; text-align: left; }
+    .msg.err { background: #fbeceb; color: #8a1c14; }
+    .msg.ok { background: #eef2ee; color: var(--charcoal); }
+    .small { font-size: .8rem; color: #6b716c; margin: 1.5rem 0 0; }
+    .small a { color: inherit; }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <main>
+    <img class="logo" src={site.logo} alt="Tangible Therapy" width="290" height="84" />
+    <div><span class="badge">Employee Portal</span></div>
+    <h1>Staff sign in</h1>
+    <p id="intro">Use your Tangible Google account (@tangiblementalhealth.com).</p>
+    <div id="msg" class="msg" role="status" hidden></div>
+    <a id="go" class="google" href="/.netlify/identity/authorize?provider=google">
+      <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>
+      <span>Sign in with Google</span>
+    </a>
+    <p class="small">Trouble signing in? Ask your office director. <br /><a href="/">Back to tangiblementalhealth.com</a></p>
+  </main>
+
+  <script is:inline>
+    (function () {
+      var msg = document.getElementById('msg');
+      var go = document.getElementById('go');
+      var q = new URLSearchParams(location.search);
+      function show(text, kind) { msg.textContent = text; msg.className = 'msg ' + (kind || 'err'); msg.hidden = false; }
+      var next = q.get('next') || '';
+      if (!/^\/[^/\\]/.test(next)) next = '/employeeportal';
+      try { if (q.get('next')) sessionStorage.setItem('tt_next', next); else next = sessionStorage.getItem('tt_next') || next; } catch (e) {}
+
+      if (q.get('out')) show('You have been signed out.', 'ok');
+      if (q.get('error') === 'removed') show('Your account is no longer on the staff list. Ask your office director if this is a mistake.');
+
+      var h = new URLSearchParams(location.hash.slice(1));
+      history.replaceState(null, '', location.pathname + location.search);
+      if (h.get('error')) {
+        show((h.get('error_description') || '').replace(/\+/g, ' ') || 'Google sign-in was cancelled. Please use your @tangiblementalhealth.com account.');
+        return;
+      }
+      var token = h.get('access_token');
+      if (!token) return;
+
+      go.hidden = true;
+      show('Signing you in…', 'ok');
+      fetch('/api/staff-session', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ token: token }), credentials: 'same-origin' })
+        .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, b: b }; }); })
+        .then(function (res) {
+          if (res.ok) { try { sessionStorage.removeItem('tt_next'); } catch (e) {} location.replace(next); return; }
+          go.hidden = false;
+          var e = res.b && res.b.error;
+          show(e === 'domain' || e === 'provider'
+            ? 'Please sign in with your Tangible work Google account (@tangiblementalhealth.com), not a personal account.'
+            : 'Sign-in didn’t work. Please try again.');
+        })
+        .catch(function () { go.hidden = false; show('Sign-in didn’t work. Please check your connection and try again.'); });
+    })();
+  </script>
+</body>
+</html>

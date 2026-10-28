@@ -37,12 +37,12 @@ export const learningSites = [
 
 // Header menu shown on every staff page instead of the public menu.
 // Pages listed in staffPaths get this header automatically.
-export const staffPaths = ['/orientation', '/employeeportal', '/digital-products-2', '/onboarding', '/reception-portal', '/reception-onboarding', '/scheduling-new-client', '/scheduling-new-client-1', '/reception-onboarding-1', '/crisis-call'];
+export const staffPaths = ['/orientation', '/employeeportal', '/digital-products-2', '/onboarding', '/reception-portal', '/reception-onboarding', '/scheduling-new-client', '/scheduling-new-client-1', '/reception-onboarding-1', '/crisis-call', '/staff-admin'];
 
 export const staffNav = [
   // Pulls from the Employee Links list above (blank links are skipped)
   { label: 'Employees', children: [{ label: 'Orientation', href: '/orientation' }, ...employeeLinks.filter((l) => l.href)] },
-  { label: 'Directors', children: managementLinks.filter((l) => l.href) },
+  { label: 'Directors', children: [...managementLinks.filter((l) => l.href), { label: 'Staff Accounts', href: '/staff-admin' }] },
   { label: 'Reception', children: [
     { label: 'Reception Portal', href: '/reception-portal' },
     { label: 'Reception Onboarding', href: '/reception-onboarding' },
