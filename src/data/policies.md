@@ -64,7 +64,7 @@ This section deals with all things digital at work. We want to set some guidelin
 
 ### Internet usage
 
-Our corporate internet connection is primarily for business. But, you can occasionally use our connection for personal purposes as long as they don’t interfere with your job responsibilities. Also, we expect you to temporarily halt personal activities that slow down our internet connection (e.g. uploading photos) if you’re asked to. {+For security purposes, please do not share our wifi password with clients.+}
+Our corporate internet connection is primarily for business. But, you can occasionally use our connection for personal purposes as long as they don’t interfere with your job responsibilities. Also, we expect you to temporarily halt personal activities that slow down our internet connection (e.g. uploading photos) if you’re asked to. For security purposes, please do not share our wifi password with clients.
 
 You must not use our internet connection to:
 
@@ -103,7 +103,6 @@ Remember that you are a professional and your online presence should be reflecti
 
 ## Slack
 
-:::new
 We use Slack to communicate within our team. It makes it easy to reach out to one another, ask questions, and keep everyone in the loop. You are encouraged to use it to stay connected to coworkers as much as to ask professional questions.
 
 - This is a professional space. Jokes and connection are encouraged, but keep content appropriate for the workplace.
@@ -111,7 +110,6 @@ We use Slack to communicate within our team. It makes it easy to reach out to on
 - Be respectful.
 - Be a courteous communicator: reply in the thread instead of the channel, and ask questions in the right channel to avoid excessive notifications.
 - **Slack is not HIPAA compliant.** Never use a client’s identifying information. To refer to a specific client, use the first two letters of their first and last name (for example, “Client Gr Sc”).
-:::
 
 ## Employee relationships
 
@@ -131,9 +129,9 @@ Conflicts of interest occur when your interests are placed at odds with the clie
 
 ## Payroll
 
-Payroll is processed bi-weekly{+, meaning you get paid every two weeks+}. Pay periods close one week before payroll is processed{+ on Friday. Pay is sent by direct deposit to your bank account+}. Our calendar is our time card. Ensure that your calendar is an accurate reflection of your hours at the end of the day. Cancellations, reschedules and any other adjustments to a calendar should be changed within the same (business) day that the request is made in order to ensure accuracy.
+Payroll is processed bi-weekly, meaning you get paid every two weeks. Pay periods close one week before payroll is processed on Friday. Pay is sent by direct deposit to your bank account. Our calendar is our time card. Ensure that your calendar is an accurate reflection of your hours at the end of the day. Cancellations, reschedules and any other adjustments to a calendar should be changed within the same (business) day that the request is made in order to ensure accuracy.
 
-Pay is calculated off of billable hours (sessions) and required meetings, including supervision if supervised in-house. Outside supervision costs will be covered but do not count towards billable hours. {+Notes, CEUs and other learning outside of sessions do not count towards your hours.+}
+Pay is calculated off of billable hours (sessions) and required meetings, including supervision if supervised in-house. Outside supervision costs will be covered but do not count towards billable hours. Notes, CEUs and other learning outside of sessions do not count towards your hours.
 
 Billable hours include all sessions completed with a client, no-shows, and late-cancellations. We have a 24-hour cancellation policy that is communicated thoroughly with our clients. You as the therapist decide whether a client is charged for a no-show or a late cancellation. You will only be paid for sessions for which the fee is charged. Sessions canceled in advance or sessions that are rescheduled do not count as billable hours.
 
@@ -141,9 +139,7 @@ If you have a concern or question about payroll, please direct those questions t
 
 ## Submitting hours
 
-:::new
 At the end of each pay period, you are responsible for submitting your hours. Submit them through the **Submit Hours** link in the Employee Portal or through the Slack reminder. If hours are not submitted before payroll is processed, they will be paid in the following pay period. We want you to get paid, so please submit your hours on time!
-:::
 
 ## Part-time vs. full-time employment status
 
@@ -155,19 +151,19 @@ Due to the nature of our work, employee work schedules are highly individualized
 
 ## Time off
 
-{-Employees do not receive paid time off.-} {+Paid time off (PTO) is offered to all full-time employees. PTO accrues at a rate of 80 hours per year, based on a 27-hour work week, so working more hours than that accrues PTO faster. PTO does not reset and rolls over into the new year. PTO is capped at 80 hours, and accrual stops once you reach the cap. PTO must be used to be paid; it is not paid out upon termination. If you are taking PTO, submit it on your time card. Time off that is not submitted as PTO is treated as unpaid voluntary time off (VTO).+}
+Paid time off (PTO) is offered to all full-time employees. PTO accrues at a rate of 80 hours per year, based on a 27-hour work week, so working more hours than that accrues PTO faster. PTO does not reset and rolls over into the new year. PTO is capped at 80 hours, and accrual stops once you reach the cap. PTO must be used to be paid; it is not paid out upon termination. If you are taking PTO, submit it on your time card. Time off that is not submitted as PTO is treated as unpaid voluntary time off (VTO).
 
-{+Unpaid time off (VTO) is available to all employees at any time. Employees may take VTO when PTO is not available, or may choose to take VTO instead of PTO.+}
+Unpaid time off (VTO) is available to all employees at any time. Employees may take VTO when PTO is not available, or may choose to take VTO instead of PTO.
 
-All scheduled time off should be approved by your direct supervisor{+ with at least two weeks’ notice so clients can be cared for appropriately+}. {+There is no limit on time off, but excessive time off can affect clients. Excessive time off includes time off that is longer than two consecutive weeks or that is too frequent. Plan time off in a way that makes sense for both you and your clients. Time off that affects the quality of care may result in disciplinary action.+}
+All scheduled time off should be approved by your direct supervisor with at least two weeks’ notice so clients can be cared for appropriately. There is no limit on time off, but excessive time off can affect clients. Excessive time off includes time off that is longer than two consecutive weeks or that is too frequent. Plan time off in a way that makes sense for both you and your clients. Time off that affects the quality of care may result in disciplinary action.
 
 ## Holidays
 
-Employees are welcome to arrange their schedule to take unpaid time off on all federal holidays{+, or to use PTO for the day if they have it+}. If an employee does choose to work on a holiday, compensation remains the same as a regular work day.
+Employees are welcome to arrange their schedule to take unpaid time off on all federal holidays, or to use PTO for the day if they have it. If an employee does choose to work on a holiday, compensation remains the same as a regular work day.
 
 ## Sick or bereavement leave
 
-Employees do not receive paid {-leave of any kind-}{+sick or bereavement leave (full-time employees may use their PTO)+}, however, we hope to support you in taking needed time off when you are unwell or grieving. You can take sick leave to recover from short-term illness, injuries, mental issues, and other indisposition. If you have the flu or other contagious disease, please avoid coming into the office.{+ You can take the time off, or you may choose to see your clients by telehealth instead. Telehealth is an option, not a requirement.+}
+Employees do not receive paid sick or bereavement leave (full-time employees may use their PTO), however, we hope to support you in taking needed time off when you are unwell or grieving. You can take sick leave to recover from short-term illness, injuries, mental issues, and other indisposition. If you have the flu or other contagious disease, please avoid coming into the office. You can take the time off, or you may choose to see your clients by telehealth instead. Telehealth is an option, not a requirement.
 
 ## Parental leave
 
@@ -177,25 +173,21 @@ Our company offers three months of unpaid parental leave. If you are about to be
 
 ## Employee wellness and health insurance
 
-Employee wellness is important to us, and critical for creating a trauma-informed environment. We encourage all employees to create a healthy work-life balance, and to build wellness activities into their work day. Tangible does not provide insurance for employees. We provide reimbursement (up to $500{+ a month+}) for full-time employees to find a suitable health plan through the marketplace. Employees must be meeting and maintaining full-time employment status to qualify for reimbursement.
+Employee wellness is important to us, and critical for creating a trauma-informed environment. We encourage all employees to create a healthy work-life balance, and to build wellness activities into their work day. Tangible does not provide insurance for employees. We provide reimbursement (up to $500 a month) for full-time employees to find a suitable health plan through the marketplace. Employees must be meeting and maintaining full-time employment status to qualify for reimbursement.
 
-{+If you get health insurance through a parent or spouse, that premium can also be reimbursed. Once you’ve reached full-time hours, send a picture of a health insurance premium receipt to your supervisor and the reimbursement will be added to your paychecks.+}
+If you get health insurance through a parent or spouse, that premium can also be reimbursed. Once you’ve reached full-time hours, send a picture of a health insurance premium receipt to your supervisor and the reimbursement will be added to your paychecks.
 
 ## Malpractice insurance
 
-:::new
 **All employees.** Tangible provides malpractice insurance as a core benefit at no cost to you, so you are protected legally and professionally and can focus fully on supporting your clients.
-:::
 
 ## 401(k) retirement plan
 
-:::new
 **All employees.** Our 401(k) plan helps you build long-term financial security, with employer contributions and flexible investment options.
 
 Tangible matches 100% of the first 3% you contribute and 50% of the next 2%. In other words, if you contribute 5% of your paycheck, Tangible adds 4%.
 
 You may start contributing after you have worked at Tangible for three months.
-:::
 
 ## Workers’ compensation
 
@@ -203,8 +195,7 @@ We strive to keep our workplace safe, but accidents may happen occasionally. Emp
 
 ## Company-issued equipment
 
-Unless otherwise mentioned in your contract, any equipment we offer belongs to our company and you may not sell it or give it away. You are also responsible for keeping our equipment safe and in good working condition. If your equipment breaks or malfunctions, let us know so we can arrange to get it repaired. {-If you are part of our corporate cell phone plan, please use your phone within our plan’s restraints. You will be responsible for any additional charges you incur.-}
-
+Unless otherwise mentioned in your contract, any equipment we offer belongs to our company and you may not sell it or give it away. You are also responsible for keeping our equipment safe and in good working condition. If your equipment breaks or malfunctions, let us know so we can arrange to get it repaired. 
 ## Theft and damage of company equipment
 
 Our equipment is insured for theft and damage. We ask you to inform us within 24 hours if your equipment is stolen or damaged. We might be able to trace stolen laptops and cell phones. Please also file a theft statement (affidavit) with the police and submit a copy to us.
@@ -222,63 +213,54 @@ We advise you to keep your company-issued computer, tablet and cell phone secure
 
 ## New clients and consultation calls
 
-Reception handles all incoming appointment calls. There will be times that a client requests a 15-minute consultation call to determine if a therapist is the right fit. If this happens, reception will {-reach out to you with the client's contact info and set a time for that call. Proceed with the following:-}{+schedule the call on your calendar with the client’s name and phone number. The client will be waiting for your call at the scheduled time.+}
+Reception handles all incoming appointment calls. There will be times that a client requests a 15-minute consultation call to determine if a therapist is the right fit. If this happens, reception will schedule the call on your calendar with the client’s name and phone number. The client will be waiting for your call at the scheduled time.
 
-{-Reach out at the time of the call. During the call, conduct a short assessment of the client and then create a brief overview of your work together. If the client decides to schedule a time to meet, then: create client (include phone & email), schedule them in Simple Practice, send intake forms, make sure clients have filled out all documents before 1st session.-}
 
-:::new
 **What a consult call is.** Consultation calls are free, 15 minutes or less, and help the client decide whether you are a good fit. Use the call to assess fit for you too: do they struggle with things you can help with, is outpatient care appropriate, and will your styles work together?
 
 **Treat it like a mini session.** A consult isn’t a sales pitch or a Q&A. Ask questions, validate, and form a basic plan for how working with you will help them reach their goals, so the client leaves with a feel for what working with you will be like.
 
 **Booking.** If it’s a good fit and the client is ready, offer them open times on your calendar and set the appointment. You don’t need to set them up in SimplePractice: get their name, phone number and email address and send them to reception, who will take care of the rest. If it isn’t the right fit, that’s ok. Ask whether they’d like reception to reach back out to help them find a better match.
-:::
 
 ## Client portal and intake paperwork
 
-Clients are sent a link via email to their client portal when they {-are sent all of their initial intake documents-}{+schedule their first appointment+}. Clients can access their client portal at any time at tangiblementalhealth.com. They can access {+onboarding documents, +}practice policies, billing docs and pay invoices through their portal.
+Clients are sent a link via email to their client portal when they schedule their first appointment. Clients can access their client portal at any time at tangiblementalhealth.com. They can access onboarding documents, practice policies, billing docs and pay invoices through their portal.
 
-{+Clients must have **all** of their documents filled out before the first session. Reception will remind them, but you are responsible for checking that the documents are complete before your first session. You can see this in SimplePractice under the client’s **Files** section. If documents are missing, ask the client to complete them before you meet, even if they are already at the practice.+}
+Clients must have **all** of their documents filled out before the first session. Reception will remind them, but you are responsible for checking that the documents are complete before your first session. You can see this in SimplePractice under the client’s **Files** section. If documents are missing, ask the client to complete them before you meet, even if they are already at the practice.
 
 *The most common thing clients forget to fill out are insurance info and credit card info, this is why we ask them to fill it out before the first session.
 
 ## Scheduling future sessions
 
-{+After the first session, you are responsible for the ongoing maintenance of your schedule with clients. You can ask reception for help canceling appointments or reaching a client, but your schedule is yours to own.+}
+After the first session, you are responsible for the ongoing maintenance of your schedule with clients. You can ask reception for help canceling appointments or reaching a client, but your schedule is yours to own.
 
-The best practice is to schedule out {-6-8-}{+8-10+} sessions (using the repeat feature){+, which also makes it easy for reception to see future openings+}. As much as possible we should have a slot mindset rather than a week-to-week mindset, meaning we try to see the same client at the same time each week. Scheduling week to week will happen at times due to unforeseen circumstances but it’s best to be avoided when possible.
+The best practice is to schedule out 8-10 sessions (using the repeat feature), which also makes it easy for reception to see future openings. As much as possible we should have a slot mindset rather than a week-to-week mindset, meaning we try to see the same client at the same time each week. Scheduling week to week will happen at times due to unforeseen circumstances but it’s best to be avoided when possible.
 
 ## Availability in SimplePractice
 
-:::new
 Keep your availability in SimplePractice up to date. On the calendar screen, click the gear icon in the top right, then **Availability**, and set blocks for the hours you are available to work. Reception schedules appointments based on the availability shown, so if you don’t want appointments at a certain time, make sure your availability reflects that.
-:::
 
 ## Working with reception
 
-:::new
 Reception is often the first point of contact for your clients. Clear, prompt communication with them prevents scheduling mishaps, billing confusion and delays. Keep your calendar accurate and let reception know about:
 
 - Changes to your schedule (cancellations, time off, reschedules, etc.)
 - When you confirm an online booking request
 - Your availability and new openings
 - Client preferences (which clients, modalities or personalities you want to work with)
-:::
 
 ## Cancellation policy
 
-In the client intake docs, the cancellation policy requires clients to give 24 hours' notice of cancellation or they will be charged the $75 cancellation fee. Insurance will not cover this bill. {+The only exception is illness: we don’t charge clients who cancel because they’re sick, because we don’t want them coming in sick.+} No shows fall under this same category as we have not received adequate notice of their absence.
+In the client intake docs, the cancellation policy requires clients to give 24 hours' notice of cancellation or they will be charged the $75 cancellation fee. Insurance will not cover this bill. The only exception is illness: we don’t charge clients who cancel because they’re sick, because we don’t want them coming in sick. No shows fall under this same category as we have not received adequate notice of their absence.
 
-{+To count a no-show, you must wait for the client for at least 15 minutes, in the office or in the virtual office. During those 15 minutes you must also reach out to the client to confirm they will not be attending. You can reach out directly or have reception reach out.+}
+To count a no-show, you must wait for the client for at least 15 minutes, in the office or in the virtual office. During those 15 minutes you must also reach out to the client to confirm they will not be attending. You can reach out directly or have reception reach out.
 
-You ultimately get to decide if you charge them for No Show/Late Cancellation but you will not be paid for sessions that you do not charge for. {-If you change a client in your account to late canceled or no-show, our billing department will charge according to what is reflected on the calendar.-}{+Our billing department charges exactly what you set in SimplePractice:+}
+You ultimately get to decide if you charge them for No Show/Late Cancellation but you will not be paid for sessions that you do not charge for. Our billing department charges exactly what you set in SimplePractice:
 
-:::new
 - **To charge the fee:** set the status to **No show** or **Late canceled**, then change the **Appointment Fee** to **$75**. The fee does not change on its own when you change the status.
 - **To not charge** (including when a client cancels because they’re sick): set the status to **Canceled**, not Late canceled.
 
 If you charge a no-show or late cancel fee, please let the client know.
-:::
 
 Billing/payroll is determined by the clients' attendance status on your Simple Practice calendar. You can adjust the clients' attendance status with the green drop-down menu that appears just below their name when their appointment is selected. Please ensure all attendance changes are noted on Simple Practice the day of the session so that billing can be made accurately.
 
@@ -286,36 +268,34 @@ Note: Billing insurance for sessions where the client is not present is consider
 
 ## Billing
 
-Billing is handled by our billing department but therapists play an important role in informing our clients about our billing policies{- and answering questions. Below is a list of our policies that you will be responsible for making our clients aware of during the first session.-}{+. Below is how billing works, so you can explain it in general terms. Questions about a client’s costs or payments go to the billing department.+}
+Billing is handled by our billing department but therapists play an important role in informing our clients about our billing policies. Below is how billing works, so you can explain it in general terms. Questions about a client’s costs or payments go to the billing department.
 
 - All cash-pay clients will be placed on autopay and charged within 24 hours of sessions.
-- All insurance paid claims will be sent to the client's insurance, we will then charge them when the insurance returns the claim (usually {-2-3-}{+2-4+} weeks). If they have a copay it will be established at that time and be charged in tandem via autopay with sessions going forward.
+- All insurance paid claims will be sent to the client's insurance, we will then charge them when the insurance returns the claim (usually 2-4 weeks). If they have a copay it will be established at that time and be charged in tandem via autopay with sessions going forward.
 - Invoices the client receives will be via the email they used to create their account and payments can be made through their client portal at tangiblementalhealth.com.
 - Some clients (rare exceptions) may ask to be informed before being charged. Usually, this will happen during the first session or two and then they know what to expect. If so, please inform our billing manager.
-- If a client has any billing concerns please direct them to {-Brady-}{+our billing department, which they can reach by calling our main number+}.
+- If a client has any billing concerns please direct them to our billing department, which they can reach by calling our main number.
 
 ### Submitting insurance claims
 
-Our billing manager will be responsible for submitting all insurance claims. In order to submit claims, the client will need a diagnosis. If you feel uncertain about giving one to the client, utilize unspecified modifier with the diagnosis that is the closest fit. Once you feel more certain then change the diagnosis. The unfortunate truth is that insurance will not pay for an adjustment {-order-}{+disorder+} diagnosis. {+Every client’s diagnosis must be entered in SimplePractice the same day you see them for their first session.+} Our billing manager may reach out to you if the client is missing a diagnosis.
+Our billing manager will be responsible for submitting all insurance claims. In order to submit claims, the client will need a diagnosis. If you feel uncertain about giving one to the client, utilize unspecified modifier with the diagnosis that is the closest fit. Once you feel more certain then change the diagnosis. The unfortunate truth is that insurance will not pay for an adjustment disorder diagnosis. Every client’s diagnosis must be entered in SimplePractice the same day you see them for their first session. Our billing manager may reach out to you if the client is missing a diagnosis.
 
 ### CPT (appointment) codes
 
 - 1st session - 90791 Psychiatric Diagnostic Evaluation
 - All sessions after the 1st - 90837 Psychotherapy, 60 min
-- {+Group therapy sessions - 90853 Group Therapy+}
-- {+90785 Psytx Complex Interactive - an add-on code used with 90837 when additional work is done to coordinate the client’s care outside of the session or with a third party, such as talking with parents, filling out documentation or speaking with other providers+}
+- Group therapy sessions - 90853 Group Therapy
+- 90785 Psytx Complex Interactive - an add-on code used with 90837 when additional work is done to coordinate the client’s care outside of the session or with a third party, such as talking with parents, filling out documentation or speaking with other providers
 
 ### Our rates
 
-:::new
 - **$175** per session (insurance rates are set by the insurance company and are typically closer to $110)
 - **$30** per group therapy session
 - **$25** per page documentation fee. If you complete documentation for a client, such as accommodation forms, professional letters or ESA letters, let the billing department know so they can charge this fee.
-:::
 
 ### Cash pay scale
 
-If a client is not using insurance and asks if there is a discount for cash pay, generally the answer is “no”. If you are aware of extreme circumstances for the client or if this is a client whose insurance has changed and they would like to keep meeting with you, you can slide down to as low as {-$125-}{+$115+} per session.
+If a client is not using insurance and asks if there is a discount for cash pay, generally the answer is “no”. If you are aware of extreme circumstances for the client or if this is a client whose insurance has changed and they would like to keep meeting with you, you can slide down to as low as $115 per session.
 
 ## Documentation
 
@@ -323,15 +303,13 @@ If a client is not using insurance and asks if there is a discount for cash pay,
 
 There are two types of notes in Simple Practice, the progress note and the psychotherapy note. The progress note is important for ensuring proper procedure was followed and to provide justification of care to insurance when requested. The psychotherapy note is a separate note that allows you to note important things to yourself before the next session. This is not included in requests by insurance companies or legal teams.
 
-The progress note should be kept as accurate as possible. All notes should be completed within 72 hours of meeting with the client. If safety concerns arise in session such as suicidal or homicidal ideation, {+self-harm, +}abuse, neglect, etc., {-ensure that the concern is documented-}{+the note must be completed within **24 hours**, and it should document the concern+} as well as any steps you took to address that issue. In the case of mandatory reporting, return to the note after making your report to document who you spoke with and the case number if applicable.
+The progress note should be kept as accurate as possible. All notes should be completed within 72 hours of meeting with the client. If safety concerns arise in session such as suicidal or homicidal ideation, self-harm, abuse, neglect, etc., the note must be completed within **24 hours**, and it should document the concern as well as any steps you took to address that issue. In the case of mandatory reporting, return to the note after making your report to document who you spoke with and the case number if applicable.
 
 When filling out notes select the Tangible Progress Note in the drop-down menu. Fill in the prompts on the page. The first note will take the longest. Going forward you can reload the previous note and change the information as needed.
 
 ### Treatment plans
 
-:::new
 Each client is required to have a treatment plan within a week of their second session. Use the **Basic** treatment plan template in SimplePractice (under SimplePractice templates) for every client. Each plan should include clear, measurable goals for what the client should get out of their time at Tangible, and should clearly outline the interventions you plan to use to help the client reach those goals.
-:::
 
 ## Crisis: risk of harm
 
@@ -349,7 +327,7 @@ Regardless of scores shown on the Columbia Suicide Scale or other reported facto
 
 - Passive suicidality
 - Thoughts of death without any plans to act on these thoughts.
-- {-ory-}{+No history+} of suicide attempts.
+- No history of suicide attempts.
 - Low risk factors for suicide.
 
 If the client reports frequent suicidal ideation regardless of the level of risk, complete a suicide safety plan with the client. The safety plan can be found in Simple Practice and it is recommended you have the client download the ‘Suicide Safety Plan’ app onto their phone to have the plan readily available. Following completing the plan with the client on their phone, add it to Simple Practice to document completion.
@@ -416,7 +394,7 @@ Begin by ensuring personal safety, excuse yourself from the client and the room,
 
 Whenever any Tangible employee has reason to suspect that a child may have been subjected to abuse or neglect, a report will be made immediately by the employee to your direct supervisor and the Division of Child and Family Services. However, if a child is in immediate danger or if you witness the abuse, call 911. Otherwise, Utah’s child abuse reporting hotline is 1 (855) 323-3237. Remember that evidence of abuse is not necessary, any reasonable suspicion of abuse should be reported.
 
-A report to a supervisor or colleague does not satisfy the employee’s personal duty to report to law enforcement or DCFS. If a child reports something to you, then YOU must make the report to the Division of Child and Family Services (DCFS). {-You cannot report to a supervisor and allow the supervisor to determine whether a report should be made.-}{+Your supervisor can guide you through the process, but you make the report yourself. You cannot hand the report off to a supervisor or let them decide whether a report should be made.+}
+A report to a supervisor or colleague does not satisfy the employee’s personal duty to report to law enforcement or DCFS. If a child reports something to you, then YOU must make the report to the Division of Child and Family Services (DCFS). Your supervisor can guide you through the process, but you make the report yourself. You cannot hand the report off to a supervisor or let them decide whether a report should be made.
 
 When making the verbal report, always have the person you notify identify himself/herself. The notified person’s name should be noted for documentation purposes.
 
@@ -467,9 +445,9 @@ The purpose of the first session is to inspire hope and instill confidence in ou
 Things to be covered during the first session are:
 
 - Confidentiality agreement and what constitutes the need for breaking confidentiality
-- Billing{- practices: all cash-pay clients will be charged within 24 hours; all bills will be sent to the client's insurance and then we will charge them when the insurance returns the billing (usually 2-3 weeks), and any copay will be charged in tandem with sessions going forward; they can choose to set up autopay or pay the bills they receive through the client portal at tangiblementalhealth.com-}{+: check whether the client knows what their sessions will cost. If they don’t, recommend they call our billing team. All questions about billing, payments or cost go to the billing team, who can be reached through our main number.+}
-- {+Late cancel fee: if the client cancels within 24 hours of the session or doesn’t show up, we charge a $75 fee, which insurance cannot cover. The only exception is illness, because we don’t want clients coming in sick.+}
-- Session times are {-50-}{+53+} minutes{+, which gives clients time to leave before the next clients arrive and helps protect confidentiality+}
+- Billing: check whether the client knows what their sessions will cost. If they don’t, recommend they call our billing team. All questions about billing, payments or cost go to the billing team, who can be reached through our main number.
+- Late cancel fee: if the client cancels within 24 hours of the session or doesn’t show up, we charge a $75 fee, which insurance cannot cover. The only exception is illness, because we don’t want clients coming in sick.
+- Session times are 53 minutes, which gives clients time to leave before the next clients arrive and helps protect confidentiality
 
 ## Boundaries
 
