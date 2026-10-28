@@ -913,7 +913,7 @@ function render() {
 
 /* ---------- skills-check questions ---------- */
 // Google Form shown when the whole check is passed. Paste the form's responder link (…/viewform) here.
-const COMPLETION_FORM = 'https://docs.google.com/forms/d/e/1FAIpQLSdO8QkqiuDphB48PFw6FVq66cws8nzqiCDvqrKgUMVU8VlFHA/viewform';
+const COMPLETION_FORM = 'https://docs.google.com/forms/d/e/1FAIpQLSc0-rIuhB0r_RrvXP-qcFLxKkTiBMDY2UNoPNAqzD00tRNPkQ/viewform';
 const PARKER = 'c9', TAYLOR = 'c7', DREW = 'c8';
 const NK = dayKey(addDays(NOW, 7));
 const drewLast = () => S.appts.filter(a => a.clientId === DREW && isPast(a) && a.noteId).sort((a, b) => (b.date + pad(b.start)).localeCompare(a.date + pad(a.start)))[0];
