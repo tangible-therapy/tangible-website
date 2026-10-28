@@ -7,15 +7,16 @@ import { site } from '../data/site';
 const starters = ['Who has openings near me?', 'What insurance do you take?', 'How much does a session cost?', 'How do I book?'];
 ---
 <div class="tc" data-tc>
-  <button type="button" class="tc-launch" aria-expanded="false" aria-controls="tc-panel" data-tc-toggle>
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.2 3.6c-.5.4-1.3.1-1.3-.6V16A2.5 2.5 0 0 1 4 13.5z" /></svg>
-    <span>Questions?</span>
+  <button type="button" class="tc-launch" aria-expanded="false" aria-controls="tc-panel" aria-label="Chat with Tangie, our website assistant" data-tc-toggle>
+    <img class="tc-launch-av" src="/images/tangie-avatar.webp" alt="" width="64" height="64" />
+    <span class="tc-launch-name">Tangie</span>
   </button>
 
-  <section class="tc-panel" id="tc-panel" role="dialog" aria-label="Chat with Tangible Therapy" hidden>
+  <section class="tc-panel" id="tc-panel" role="dialog" aria-label="Chat with Tangie" hidden>
     <header class="tc-head">
-      <div>
-        <strong>Tangible Assistant <em>Beta</em></strong>
+      <img class="tc-head-av" src="/images/tangie-avatar.webp" alt="Tangie, Tangible Therapy's toucan assistant" width="44" height="44" />
+      <div class="tc-head-text">
+        <strong>Tangie <em>Beta</em></strong>
         <span>Automated helper · answers from our website</span>
       </div>
       <button type="button" class="tc-close" aria-label="Close chat" data-tc-close>
@@ -24,7 +25,7 @@ const starters = ['Who has openings near me?', 'What insurance do you take?', 'H
     </header>
 
     <div class="tc-log" data-tc-log aria-live="polite">
-      <div class="tc-msg tc-bot">Hi! I can help you find a therapist, check insurance and costs, or figure out how to book. What can I help with?</div>
+      <div class="tc-msg tc-bot">Hi, I'm Tangie! I can help you find a therapist, check insurance and costs, or figure out how to book. What can I help with?</div>
     </div>
 
     <div class="tc-starters" data-tc-starters>
@@ -131,7 +132,7 @@ const starters = ['Who has openings near me?', 'What insurance do you take?', 'H
       const wait = document.createElement('div');
       wait.className = 'tc-msg tc-bot tc-typing';
       wait.innerHTML = '<span></span><span></span><span></span>';
-      wait.setAttribute('aria-label', 'Assistant is typing');
+      wait.setAttribute('aria-label', 'Tangie is typing');
       log.appendChild(wait);
       scroll();
       let reply = '';
@@ -178,15 +179,18 @@ const starters = ['Who has openings near me?', 'What insurance do you take?', 'H
 
 <style is:global>
   .tc { --tc-ink: #2f3530; --tc-dark: var(--charcoal, #3b3f3c); --tc-soft: #eef2ed; --tc-line: #e1e6e0; font-family: Poppins, system-ui, sans-serif; }
-  .tc-launch { position: fixed; right: 20px; bottom: 20px; z-index: 9000; display: inline-flex; align-items: center; gap: 8px; height: 52px; padding: 0 20px 0 16px; border: 0; border-radius: 300px; background: var(--tc-dark); color: #fff; font: inherit; font-size: 15px; font-weight: 500; cursor: pointer; box-shadow: 0 10px 28px rgba(30, 36, 31, .28); transition: transform .15s, box-shadow .15s; }
-  .tc-launch:hover { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(30, 36, 31, .32); }
-  .tc-launch:focus-visible { outline: 3px solid var(--sage, #acb9ac); outline-offset: 3px; }
-  .tc-launch svg { width: 22px; height: 22px; fill: currentColor; }
+  .tc-launch { position: fixed; right: 20px; bottom: 20px; z-index: 9000; display: flex; flex-direction: column; align-items: center; padding: 0; border: 0; background: none; font: inherit; cursor: pointer; transition: transform .15s; }
+  .tc-launch:hover { transform: translateY(-2px); }
+  .tc-launch:focus-visible { outline: 3px solid var(--charcoal, #3b3f3c); outline-offset: 4px; border-radius: 20px; }
+  .tc-launch-av { display: block; width: 64px; height: 64px; border-radius: 50%; background: #fff; border: 3px solid #fff; box-shadow: 0 8px 22px rgba(30, 36, 31, .28); }
+  .tc-launch-name { position: relative; margin-top: -14px; padding: 6px 16px 5px; border-radius: 300px; background: var(--tc-dark); color: #fff; font-size: 14px; font-weight: 500; line-height: 1.2; box-shadow: 0 6px 16px rgba(30, 36, 31, .25); }
   .tc.is-open .tc-launch { display: none; }
 
   .tc-panel { position: fixed; right: 20px; bottom: 20px; z-index: 9001; width: 380px; height: min(620px, calc(100vh - 40px)); display: flex; flex-direction: column; background: #fff; color: var(--tc-ink); border-radius: 18px; box-shadow: 0 24px 60px rgba(30, 36, 31, .28); overflow: hidden; }
   .tc-panel[hidden] { display: none; }
-  .tc-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 14px 14px 18px; background: var(--sage, #acb9ac); color: var(--tc-ink); }
+  .tc-head { display: flex; align-items: center; gap: 12px; padding: 12px 14px 12px 14px; background: var(--sage, #acb9ac); color: var(--tc-ink); }
+  .tc-head-av { flex: 0 0 auto; width: 44px; height: 44px; border-radius: 50%; background: #fff; border: 2px solid #fff; }
+  .tc-head-text { flex: 1 1 auto; min-width: 0; }
   .tc-head strong { display: block; font-size: 15.5px; font-weight: 600; }
   .tc-head em { margin-left: 6px; padding: 2px 7px 1px; border-radius: 300px; background: rgba(255, 255, 255, .75); font-size: 10.5px; font-style: normal; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; vertical-align: 2px; }
   .tc-head span { display: block; margin-top: 2px; font-size: 12px; }
@@ -227,7 +231,9 @@ const starters = ['Who has openings near me?', 'What insurance do you take?', 'H
   .tc-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
   @media (max-width: 560px) {
-    .tc-launch { right: 14px; bottom: 14px; height: 48px; padding: 0 16px 0 14px; font-size: 14px; }
+    .tc-launch { right: 14px; bottom: 14px; }
+    .tc-launch-av { width: 56px; height: 56px; }
+    .tc-launch-name { margin-top: -12px; padding: 5px 13px 4px; font-size: 13px; }
     /* Therapist profiles: sit above the sticky Book / Call bar */
     body:has(.tp-sticky:not([hidden])) .tc-launch { bottom: calc(80px + env(safe-area-inset-bottom)); }
     .tc-panel { inset: 0; width: auto; height: 100%; height: 100dvh; border-radius: 0; }

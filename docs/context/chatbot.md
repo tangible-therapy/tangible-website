@@ -1,6 +1,6 @@
 # Website chatbot (test version, added 28 Oct 2026)
 
-A "Questions?" chat bubble in the bottom-right corner of every public page. Visitors ask practical questions (who has openings, insurance, cost, offices, booking) and an AI model answers from the website's own information.
+"Tangie", a chat assistant with a toucan avatar (public/images/tangie-avatar.webp), in the bottom-right corner of every public page. Visitors ask practical questions (who has openings, insurance, cost, offices, booking) and an AI model answers from the website's own information.
 
 ## How it works
 - **Bubble:** src/components/ChatWidget.astro, added in src/layouts/Base.astro on every page that isn't noindex (so not on staff pages). Turn it off everywhere with `chatbot: false` in src/data/site.ts.
