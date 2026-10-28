@@ -10,8 +10,15 @@ import sp from '../data/simplepractice.json';
 
 const clinicians = sp.clinicians as Record<string, { name: string; clinicianId: string }>;
 
+// IDs typed into the sheet's "website profiles" tab (registered by getFinderData() in
+// src/lib/therapist-sheet.ts) win over simplepractice.json.
+const fromSheet = new Map<string, string>();
+export function registerClinician(slug: string, id: string) {
+  if (slug && id) fromSheet.set(slug, id);
+}
+
 export function clinicianId(slug?: string): string | undefined {
-  return slug ? clinicians[slug]?.clinicianId : undefined;
+  return slug ? fromSheet.get(slug) || clinicians[slug]?.clinicianId : undefined;
 }
 
 export function bookingAttrs(slug?: string): Record<string, string> {

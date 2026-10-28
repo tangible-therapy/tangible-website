@@ -1,9 +1,12 @@
 import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
+import { teamLoader } from './lib/team-loader';
 
-// Therapists — one Markdown file per person in src/content/team/
+// Therapists — one Markdown file per person in src/content/team/, plus the "website profiles" tab of
+// the therapist sheet (new therapists appear once their photo is in; filled cells update existing
+// profiles). See src/lib/team-loader.ts.
 const team = defineCollection({
-  loader: glob({ pattern: '**/*.md', base: './src/content/team' }),
+  loader: teamLoader(glob({ pattern: '**/*.md', base: './src/content/team' })),
   schema: z.object({
     name: z.string(),
     order: z.number().default(999),
@@ -14,6 +17,10 @@ const team = defineCollection({
     booking: z.boolean().default(true),
     categories: z.array(z.string()).default([]),
     hidden: z.boolean().default(false),
+    // SimplePractice clinician ID from the sheet (else src/data/simplepractice.json is used)
+    clinicianId: z.string().optional().default(''),
+    // 'sheet' = this profile was added or updated from the sheet's "website profiles" tab
+    source: z.string().optional().default('file'),
   }),
 });
 

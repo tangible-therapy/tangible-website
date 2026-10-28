@@ -5,3 +5,6 @@ dist/
 
 # Local Netlify folder
 .netlify
+
+# Therapist photos downloaded from the sheet at build time (src/lib/team-loader.ts)
+public/images/team-sheet/
