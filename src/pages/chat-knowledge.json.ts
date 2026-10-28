@@ -56,6 +56,18 @@ export const GET: APIRoute = async () => {
     return '- ' + parts.filter(Boolean).join(' | ');
   });
 
+  // Quick-check lists of therapists ACCEPTING new clients, so the bot can verify a match.
+  const open = therapists.filter((t) => t.status === 'open');
+  const names = (list: typeof open) => (list.length ? list.map((t) => t.name).join(', ') : 'none');
+  const groups = (label: string, values: string[], pick: (t: (typeof open)[number]) => string[]) =>
+    `${label}:\n` + values.map((v) => `- ${v}: ${names(open.filter((t) => pick(t).includes(v)))}`).join('\n');
+  const lookups = [
+    groups('By office', ['Orem', 'Provo', 'Sandy', 'Telehealth'], (t) => t.locations),
+    groups('By insurance (only these therapists take that plan)', [...new Set(therapists.flatMap((t) => t.insurance))].sort(), (t) => t.insurance),
+    groups('By age group', ['Kids', 'Teens', 'Adults', 'Older adults'], (t) => t.ages),
+    groups('By who they see', ['Couples', 'Families'], (t) => t.sees),
+  ].join('\n\n');
+
   // FAQs already published on the service pages (src/data/page-schema.json), without duplicates.
   const seen = new Set<string>();
   const faqs: string[] = [];
@@ -83,6 +95,8 @@ export const GET: APIRoute = async () => {
     pages.join('\n'),
     `## Therapists (from the scheduling sheet, updated ${sheetUpdated || 'at the last site build'}; accepting therapists listed first)`,
     team.join('\n'),
+    '## Quick-check lists (therapists accepting new clients only)',
+    lookups,
     '## Frequently asked questions from our pages',
     faqs.join('\n\n'),
   ].join('\n\n');
