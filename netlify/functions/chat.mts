@@ -121,8 +121,9 @@ export default async (req: Request) => {
       }),
     });
     if (!res.ok) {
-      console.error(`[chat] AI Gateway returned ${res.status}`);
-      return json({ reply: fallback, error: `gateway-${res.status}` }, 502);
+      const detail = (await res.text().catch(() => '')).slice(0, 300);
+      console.error(`[chat] AI Gateway returned ${res.status}: ${detail}`);
+      return json({ reply: fallback, error: `gateway-${res.status}`, detail }, 502);
     }
     const data = (await res.json()) as { content?: { type: string; text?: string }[]; usage?: Record<string, number> };
     const reply = (data.content ?? []).filter((c) => c.type === 'text').map((c) => c.text ?? '').join('').trim();
