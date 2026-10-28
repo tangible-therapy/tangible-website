@@ -8,7 +8,8 @@
 //     src/data/therapist-sheet-snapshot.json.
 // The feed only ever contains public columns. See docs/sheet-sync/.
 import { getCollection } from 'astro:content';
-import snapshot from '../data/therapist-sheet-snapshot.json';
+import { loadFeed, clean, norm, ALIASES } from './sheet-feed';
+import { registerClinician } from './booking';
 
 export type Status = 'open' | 'wait' | 'closed' | 'unknown';
 export type TimeOfDay = 'Mornings' | 'Afternoons' | 'Evenings';
@@ -43,26 +44,8 @@ export interface FinderData {
 // Filters switched on when a finder page loads (see TherapistFinder.astro / finderPreset()).
 export type FinderPreset = { loc?: string[]; spec?: string[]; appr?: string[]; age?: string[]; sees?: string[]; openOnly?: boolean };
 
-type Feed = { generatedAt?: string; openings: string[][]; modalities: string[][]; insurances: string[][] };
-
-// ---------- helpers ----------
-const clean = (s: unknown) => String(s ?? '').replace(/\s+/g, ' ').trim();
-const norm = (s: string) =>
-  clean(s)
-    .toLowerCase()
-    .replace(/\([^)]*\)/g, ' ')
-    .replace(/[^a-z ]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-
-// Names written differently in the sheet than on the website.
-const ALIASES: Record<string, string> = {
-  'joseph johnson': 'joe johnson',
-  'philip childs': 'phil childs',
-  'noelle barry': 'noelle berry',
-  'micheala zarbach': 'micheala zarbock',
-  'sarah applegarth': 'sarah mendez',
-};
+// Name helpers (clean, norm) and ALIASES (sheet spellings that differ from the website) live in
+// src/lib/sheet-feed.ts.
 
 export const LOCATIONS = ['Orem', 'Provo', 'Sandy', 'Telehealth'];
 export const TIMES: TimeOfDay[] = ['Mornings', 'Afternoons', 'Evenings'];
@@ -174,22 +157,11 @@ export function getFinderData() {
   return cache;
 }
 
-async function loadFeed(): Promise<{ feed: Feed; source: 'live' | 'snapshot' }> {
-  const url = process.env.THERAPIST_SHEET_FEED || import.meta.env.THERAPIST_SHEET_FEED;
-  if (!url) return { feed: snapshot as unknown as Feed, source: 'snapshot' };
-  const res = await fetch(url, { redirect: 'follow' });
-  if (!res.ok) throw new Error(`Therapist sheet feed returned HTTP ${res.status}`);
-  const feed = (await res.json()) as Feed & { error?: string };
-  if (feed.error || !Array.isArray(feed.openings) || !Array.isArray(feed.modalities)) {
-    throw new Error(`Therapist sheet feed is not in the expected format${feed.error ? ': ' + feed.error : ''}`);
-  }
-  return { feed, source: 'live' };
-}
-
 async function build(): Promise<FinderData> {
   const { feed, source } = await loadFeed();
   const warnings: string[] = [];
   const team = (await getCollection('team')).filter((t) => !t.data.hidden);
+  for (const t of team) if (t.data.clinicianId) registerClinician(t.id, t.data.clinicianId);
 
   // Name matching
   const byName = new Map<string, string>();
