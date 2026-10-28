@@ -641,6 +641,19 @@
      "t": "text",
      "md": "When adding a session note for a client use the “Tangible Progress Note” in the notes drop down menu. You can navigate to add a note by selecting the appointment on the calendar and clicking “add note” or by navigating to the client’s page."
     }
+   ],
+   [
+    {
+     "t": "text",
+     "md": "### Practice it yourself"
+    },
+    {
+     "t": "sandbox",
+     "href": "/orientation/practice-sandbox",
+     "img": "/images/orientation/practice-sandbox.webp",
+     "title": "Sample Practice: hands-on training",
+     "text": "A practice copy of SimplePractice with made-up clients. A step-by-step guide walks you through checking intake paperwork, booking a client's recurring second session, marking no-shows and late cancels, writing a Tangible Progress Note, adding a diagnosis and building a treatment plan. Nothing you do there reaches SimplePractice, insurance or billing."
+    }
    ]
   ]
  },

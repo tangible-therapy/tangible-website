@@ -49,6 +49,7 @@ const introOther = intro.filter((i) => i.t !== 'text' && i.t !== 'image');
           {sec.map((it) => (
             it.t === 'text' ? <div class="rte" set:html={md(it.md)} /> :
             it.t === 'image' ? <img class="orient-img" src={it.src} alt={it.alt} loading="lazy" /> :
+            it.t === 'sandbox' ? <a class="orient-sandbox" href={it.href} target="_blank" rel="noopener"><img src={it.img} alt="The Sample Practice training sandbox: a calendar with sample appointments and the practice guide" loading="lazy" /><span class="orient-sandbox-text"><strong>{it.title}</strong><span>{it.text}</span><span class="orient-sandbox-btn">Open the practice sandbox <span aria-hidden="true">↗</span></span><small>Opens in a new tab. Works best on a computer.</small></span></a> :
             it.t === 'form' ? <div class="orient-form"><iframe src={it.src} title={`${lesson.title} form`} loading="lazy"></iframe><p><a href={it.src.replace('?embedded=true', '')} target="_blank" rel="noopener">Open the quiz in a new tab</a></p></div> :
             <div class="orient-video"><iframe src={`https://www.youtube-nocookie.com/embed/${it.id}${it.start ? `?start=${it.start}` : ''}`} title="Video" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
           ))}
