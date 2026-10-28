@@ -3,7 +3,7 @@
 // Public information only (the same details the therapist finder and pages already show).
 // To change what the bot says about the practice, edit PRACTICE below; therapist details come from the sheet.
 import type { APIRoute } from 'astro';
-import { getFinderData } from '../lib/therapist-sheet';
+import { getFinderData, LOCATIONS, AGES, SEES, SPECIALTIES, APPROACHES, INSURERS } from '../lib/therapist-sheet';
 import { site, nav } from '../data/site';
 import pageSchema from '../data/page-schema.json';
 
@@ -56,18 +56,6 @@ export const GET: APIRoute = async () => {
     return '- ' + parts.filter(Boolean).join(' | ');
   });
 
-  // Quick-check lists of therapists ACCEPTING new clients, so the bot can verify a match.
-  const open = therapists.filter((t) => t.status === 'open');
-  const names = (list: typeof open) => (list.length ? list.map((t) => t.name).join(', ') : 'none');
-  const groups = (label: string, values: string[], pick: (t: (typeof open)[number]) => string[]) =>
-    `${label}:\n` + values.map((v) => `- ${v}: ${names(open.filter((t) => pick(t).includes(v)))}`).join('\n');
-  const lookups = [
-    groups('By office', ['Orem', 'Provo', 'Sandy', 'Telehealth'], (t) => t.locations),
-    groups('By insurance (only these therapists take that plan)', [...new Set(therapists.flatMap((t) => t.insurance))].sort(), (t) => t.insurance),
-    groups('By age group', ['Kids', 'Teens', 'Adults', 'Older adults'], (t) => t.ages),
-    groups('By who they see', ['Couples', 'Families'], (t) => t.sees),
-  ].join('\n\n');
-
   // FAQs already published on the service pages (src/data/page-schema.json), without duplicates.
   const seen = new Set<string>();
   const faqs: string[] = [];
@@ -95,13 +83,19 @@ export const GET: APIRoute = async () => {
     pages.join('\n'),
     `## Therapists (from the scheduling sheet, updated ${sheetUpdated || 'at the last site build'}; accepting therapists listed first)`,
     team.join('\n'),
-    '## Quick-check lists (therapists accepting new clients only)',
-    lookups,
     '## Frequently asked questions from our pages',
     faqs.join('\n\n'),
   ].join('\n\n');
 
-  return new Response(JSON.stringify({ updated: sheetUpdated || '', text }), {
+  // Structured copy for the bot's find_therapists search (the matching is done in code, not by the AI).
+  const people = therapists.map((t) => ({
+    name: t.name, credential: t.credential, slug: t.slug, locations: t.locations, status: t.status,
+    times: t.times, ages: t.ages, sees: t.sees, specialties: t.specialties, approaches: t.approaches,
+    insurance: t.insurance, gender: t.gender, languages: t.languages, booking: t.booking,
+  }));
+  const options = { locations: LOCATIONS, ages: AGES, sees: SEES, specialties: SPECIALTIES, approaches: APPROACHES, insurance: INSURERS };
+
+  return new Response(JSON.stringify({ updated: sheetUpdated || '', text, therapists: people, options }), {
     headers: { 'Content-Type': 'application/json; charset=utf-8' },
   });
 };
