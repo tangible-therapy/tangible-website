@@ -1,0 +1,1216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Sample Practice | Tangible Orientation</title>
+<!-- Practice copy of SimplePractice for staff training. All clients are made up; nothing is sent anywhere. Linked from the "Simple Practice" orientation lesson. Source of truth for edits: this file. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap">
+<style>
+[hidden]{display:none!important}
+
+/* Layout: practice-management app shell. Left icon rail · top bar · workspace, plus a separate practice-guide column. Light UI by design (mirrors the real tool). */
+:root{
+  --text:#444444; --text-strong:#333333; --muted:#707070; --muted-2:#bbbbbb;
+  --blue:#1371c8; --blue-dark:#1166b4; --blue-tint:#e7f1f9;
+  --line:#dddddd; --line-soft:#f2f2f2; --rail:#f8f8f8; --chip:#f8f8f8; --btn2:#f2f2f2; --panel:#ffffff; --page:#ffffff;
+  --ev-up:#accdec; --ev-up-t:#0a3864; --ev-show:#ade9cd; --ev-show-t:#0a6038; --ev-bad:#f8baae; --ev-bad-t:#751c0c; --ev-can:#ffe9ae; --ev-can-t:#80600c; --ev-other:#cdd5d9; --ev-other-t:#384349;
+  --pill-show:#e7f9f1; --pill-bad:#fdebe8; --pill-can:#fff9e8; --badge:#f1f3f4; --badge-t:#384349;
+  --guide:#fff8dc; --guide-line:#e8c95c; --focus:#f0a400; --err:#b3261e; --err-bg:#fdebe8; --ok:#0a6038; --ok-bg:#e7f9f1;
+  --font:system-ui,"Segoe UI",Roboto,Ubuntu,Cantarell,"Helvetica Neue",Helvetica,Arial,sans-serif;
+  --hour:64px; color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--page);color:var(--text);font:14px/1.45 var(--font)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--blue)}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.app{display:grid;grid-template-columns:66px minmax(0,1fr) 330px;grid-template-rows:56px minmax(0,1fr) 30px;height:100%}
+.app.nav-open{grid-template-columns:220px minmax(0,1fr) 330px}
+.app.guide-min{grid-template-columns:66px minmax(0,1fr) 44px}
+.app.nav-open.guide-min{grid-template-columns:220px minmax(0,1fr) 44px}
+/* left rail */
+.rail{grid-row:1/4;background:var(--rail);border-right:1px solid var(--line-soft);display:flex;flex-direction:column;padding:12px 12px 10px;padding-left:max(12px,env(safe-area-inset-left,0px));min-height:0;overflow:hidden auto}
+.rail .toggle{width:32px;height:32px;border:0;background:var(--rail);border-radius:4px;display:grid;place-items:center;margin-left:5px;color:#000}
+.rail .toggle:hover{background:#eee}
+.rail .brand{display:none;font-weight:700;font-size:16px;color:var(--text-strong);letter-spacing:-.01em;padding:4px 6px;white-space:nowrap}
+.rail .brand i{font-style:normal;color:var(--blue)}
+.app.nav-open .rail .top{display:flex;align-items:center;justify-content:space-between}
+.app.nav-open .rail .brand{display:block}
+.rail hr{border:0;border-top:1px solid var(--line);margin:12px 0}
+.rail nav{display:grid;gap:4px}
+.rail nav button{display:flex;align-items:center;gap:12px;height:36px;border:0;background:transparent;border-radius:3px;padding:0 12px;color:#384349;position:relative;white-space:nowrap;text-align:left}
+.rail nav button:hover{background:#eee}
+.rail nav button[aria-current="page"]{background:var(--blue-tint);color:var(--blue-dark);font-weight:600}
+.rail nav button svg{width:18px;height:18px;flex:none}
+.rail nav button .lbl{display:none}
+.app.nav-open .rail nav button .lbl{display:inline}
+.rail .cnt{position:absolute;left:24px;top:2px;background:#d93b2b;color:#fff;font-size:9.5px;font-weight:700;border-radius:8px;padding:0 4px;line-height:14px}
+.app.nav-open .rail .cnt{position:static;margin-left:auto;font-size:11px;padding:0 6px;line-height:16px}
+.rail nav button .tip{display:none}
+.app:not(.nav-open) .rail nav button:hover .tip{display:block;position:fixed;left:62px;background:#333;color:#fff;font-size:12px;padding:3px 8px;border-radius:4px;z-index:80;pointer-events:none;font-weight:500}
+/* top bar */
+.topbar{grid-column:2;display:flex;align-items:center;gap:12px;padding:0 24px 0 24px;border-bottom:1px solid var(--line-soft);background:#fff;min-width:0}
+.search{display:flex;align-items:center;gap:6px;background:var(--btn2);border-radius:4px;padding:6px 10px;width:220px;color:var(--muted);min-width:0}
+.search input{border:0;background:transparent;outline:0;width:100%;color:var(--text-strong)}
+.topbar .sp{flex:1}
+.income{border:0;background:transparent;text-align:left;line-height:1.15;color:var(--muted);font-size:12px;border-radius:20px;padding:4px 10px}
+.income b{display:block;color:var(--text-strong);font-size:14px}
+.circ{width:36px;height:34px;border-radius:20px;border:0;background:var(--blue);color:#fff;display:grid;place-items:center;font-size:20px;line-height:1}
+.msgs{height:36px;border-radius:20px;border:0;background:var(--blue);color:#fff;display:flex;align-items:center;gap:8px;padding:0 16px;font-weight:600}
+.avatar{width:36px;height:36px;border-radius:50%;border:0;background:#384349;color:#fff;font-weight:600;font-size:13px}
+/* main */
+.main{grid-column:2;grid-row:2;min-width:0;min-height:0;overflow:auto;position:relative}
+.foot{grid-column:2;grid-row:3;border-top:1px solid var(--line-soft);display:flex;align-items:center;gap:10px;padding:0 24px;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden}
+.foot b{color:var(--text-strong)}
+.foot .sp{flex:1}
+.foot button{border:0;background:none;color:var(--blue);font-weight:600;font-size:12px;padding:0}
+.foot button.armed{color:var(--err)}
+.pad{padding:16px 24px 40px}
+/* shared controls */
+.btn{border:0;border-radius:4px;height:32px;padding:0 14px;font-weight:600;background:var(--btn2);color:var(--text-strong);display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn:hover{filter:brightness(.97)}
+.btn.primary{background:var(--blue);color:#fff}
+.btn.link{background:transparent;color:var(--blue);padding:0 4px}
+.btn.chip{background:var(--chip);font-weight:600}
+.btn.chip.on{background:var(--blue-tint);color:var(--blue-dark)}
+.btn.small{height:26px;font-size:12px;padding:0 10px}
+.inp{height:32px;border:1px solid var(--line);border-radius:4px;background:#fff;padding:0 10px;width:100%;min-width:0;color:var(--text-strong)}
+textarea.inp{height:auto;min-height:64px;padding:8px 10px;resize:vertical}
+select.inp{padding-right:28px}
+.lab{display:block;color:var(--text-strong);margin-bottom:6px}
+.lab.b{font-weight:600}
+.field{margin-bottom:14px}
+.row2{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.badge{display:inline-block;background:var(--badge);color:var(--badge-t);font-size:11px;border-radius:11px;padding:0 8px;line-height:16px;font-weight:600}
+.pill{display:inline-flex;align-items:center;gap:6px;border:0;border-radius:14px;height:24px;padding:0 12px;font-weight:600;font-size:12px}
+.pill.show{background:var(--pill-show);color:var(--ev-show-t)} .pill.bad{background:var(--pill-bad);color:var(--ev-bad-t)} .pill.can{background:var(--pill-can);color:var(--ev-can-t)}
+.check{display:flex;align-items:center;gap:8px;color:var(--text-strong);margin:4px 0}
+.check input{width:16px;height:16px;accent-color:var(--blue);margin:0}
+.sep{border:0;border-top:1px solid var(--line-soft);margin:20px 0}
+.h1{font-size:28px;font-weight:600;color:var(--text-strong);margin:0;letter-spacing:-.01em}
+.crumb{font-size:14px;color:var(--muted);margin-bottom:14px}
+.crumb a,.crumb button{color:var(--blue);border:0;background:none;padding:0;font-weight:500}
+/* calendar */
+.calbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:24px 24px 0}
+.calbar h2{font-size:24px;font-weight:500;color:var(--text);margin:0 6px}
+.calbar .tod{height:32px;border:1px solid var(--line);background:#fff;border-radius:4px;padding:0 14px;color:var(--muted)}
+.calbar .arr{width:24px;height:26px;border:0;background:#fff;border-radius:4px;color:var(--muted);font-size:16px}
+.calbar .arr:hover,.calbar .tod:hover{background:var(--btn2)}
+.views{display:flex;gap:2px;margin-left:auto}
+.views button{width:60px;height:26px;border:0;background:transparent;color:var(--muted);font-weight:600;border-bottom:2px solid transparent;border-radius:4px 4px 0 0}
+.views button.on{color:var(--blue)}
+.filters{display:flex;gap:8px;flex-wrap:wrap;padding:16px 24px 16px}
+.calpage{display:flex;flex-direction:column;height:100%}
+.cal{margin:0 24px;border-top:1px solid #ccc;flex:1;min-height:0;overflow:auto}
+.calhead{display:grid;grid-template-columns:69px repeat(var(--days),minmax(0,1fr));position:sticky;top:0;background:#fff;z-index:4}
+.calhead div{height:26px;line-height:26px;font-weight:600;font-size:14px;padding-left:8px;border-left:1px solid #ccc;white-space:nowrap;overflow:hidden}
+.calhead div:first-child{border-left:0}
+.calhead .today{color:var(--blue)}
+.allday{display:grid;grid-template-columns:69px repeat(var(--days),minmax(0,1fr));height:34px;border-top:1px solid #ccc;border-bottom:1px solid #ccc}
+.allday div{border-left:1px solid #ccc;font-size:12px;color:var(--muted);padding:9px 6px}
+.allday div:first-child{border-left:0;text-align:right}
+.tgrid{display:grid;grid-template-columns:69px repeat(var(--days),minmax(0,1fr))}
+.tlabels div{height:var(--hour);font-size:12px;color:var(--muted);text-align:right;padding-right:6px;transform:translateY(-8px)}
+.tlabels div:first-child{visibility:hidden}
+.dcol{position:relative;border-left:1px solid #ccc}
+.dcol .slot{display:block;width:100%;height:calc(var(--hour) / 4);border:0;background:transparent;padding:0;border-top:1px solid transparent}
+.dcol .slot:nth-child(4n+1){border-top-color:#ddd}
+.dcol .slot:nth-child(4n+3){border-top:1px dotted #eee}
+.dcol .slot:hover{background:#f6f9fc}
+.dcol.today{background:#fcfdff}
+.ev{position:absolute;left:1px;right:2px;border:0;border-radius:4px;box-shadow:0 0 0 1px #fff;padding:3px 4px 0 9px;text-align:left;font-size:11px;line-height:1.25;overflow:hidden;z-index:2;color:var(--ev-up-t);background:var(--ev-up)}
+.ev .t{display:block}
+.ev .n{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev.show{background:var(--ev-show);color:var(--ev-show-t)} .ev.bad{background:var(--ev-bad);color:var(--ev-bad-t)} .ev.can{background:var(--ev-can);color:var(--ev-can-t)}
+.ev .ic{position:absolute;right:4px;top:3px;width:12px;height:12px}
+.nowl{position:absolute;left:0;right:0;border-top:1px solid var(--blue);z-index:3}
+.nowl::before{content:"";position:absolute;left:-4px;top:-4px;width:7px;height:7px;border-radius:50%;background:var(--blue)}
+.daytabs{display:none;gap:4px;padding:0 24px 10px;overflow-x:auto}
+.daytabs button{border:1px solid var(--line);background:#fff;border-radius:4px;padding:3px 8px;font-size:12px;min-width:46px}
+.daytabs button.on{border-color:var(--blue);color:var(--blue);font-weight:600}
+/* popover */
+.pop{position:fixed;z-index:50;width:432px;max-width:calc(100vw - 16px);background:#fff;border:1px solid var(--line);border-radius:4px;box-shadow:0 6px 24px rgb(0 0 0 / .14);display:flex;flex-direction:column}
+.pop .body{padding:24px;overflow:auto}
+.pop .x{position:absolute;right:12px;top:14px;border:0;background:none;font-size:20px;color:var(--muted);width:28px;height:28px;border-radius:4px}
+.pop .x:hover{background:var(--btn2)}
+.pop .foot2{display:flex;align-items:center;gap:8px;padding:12px 24px;border-top:1px solid var(--line-soft)}
+.pop .foot2 .sp{flex:1}
+.ctitle{font-size:20px;font-weight:600;color:var(--blue);border:0;background:none;padding:0;text-align:left}
+.ptabs{display:flex;gap:18px;border-bottom:1px solid var(--line-soft);margin:-4px 0 18px}
+.ptabs button{border:0;background:none;padding:0 0 10px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent}
+.ptabs button.on{color:var(--blue);border-bottom-color:var(--blue)}
+.seg2{display:flex;gap:8px;margin-bottom:18px}
+.seg2 button{height:28px;padding:0 12px;font-size:12px;border-radius:4px;border:1px solid var(--line);background:#fff}
+.seg2 button.on{background:var(--blue-tint);color:var(--blue);font-weight:600;border-color:transparent}
+.ddwrap{position:relative}
+.ddbtn{width:100%;height:32px;border:1px solid var(--line);border-radius:4px;background:#fff;text-align:left;padding:0 10px;display:flex;align-items:center;gap:8px;color:var(--text-strong)}
+.ddbtn.ph{color:var(--muted-2)}
+.ddbtn::after{content:"";margin-left:auto;border:4px solid transparent;border-top:5px solid var(--muted);transform:translateY(3px)}
+.ddlist{position:absolute;left:0;right:0;top:34px;background:#fff;border:1px solid var(--line);border-radius:4px;box-shadow:0 6px 18px rgb(0 0 0 / .12);z-index:60;max-height:300px;overflow:auto;padding:4px 0}
+.ddlist .srch{padding:6px 8px;border-bottom:1px solid var(--line-soft)}
+.ddlist button{display:block;width:100%;border:0;background:#fff;text-align:left;padding:7px 14px;color:var(--text-strong)}
+.ddlist button:hover{background:var(--blue-tint)}
+.ddlist .grp{font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--muted);padding:10px 14px 4px}
+.ddlist small{display:block;color:var(--muted);font-size:12px}
+.nonedit{background:var(--chip);border-radius:4px;height:30px;display:flex;align-items:center;gap:8px;padding:0 12px;color:var(--text)}
+.dot{width:16px;height:16px;border-radius:50%;background:#384349;color:#fff;font-size:8px;display:grid;place-items:center;font-weight:700}
+.memo{background:var(--chip);border-radius:4px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;height:32px;font-weight:600}
+.memo button{border:0;background:none;color:var(--blue);font-weight:600;font-size:12px}
+.lrow{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.dows{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0}
+.dows label{display:grid;justify-items:center;gap:2px;font-size:12px;color:var(--text-strong)}
+.dows input{accent-color:var(--blue)}
+.menu{position:fixed;z-index:70;background:#fff;border:1px solid var(--line);border-radius:4px;box-shadow:0 6px 18px rgb(0 0 0 / .14);padding:4px 0;min-width:190px}
+.menu button{display:block;width:100%;border:0;background:#fff;text-align:left;padding:8px 16px;color:var(--text)}
+.menu button:hover{background:var(--blue-tint)}
+.menu .h{font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--muted);padding:8px 16px 4px}
+.err{background:var(--err-bg);color:var(--err);border-radius:4px;padding:8px 10px;font-size:13px;margin-top:10px}
+/* clients list */
+.pagehead{display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap;padding:16px 24px 0}
+.pagehead .sub{color:var(--muted);font-size:12px;margin-top:4px}
+.pagehead .sp{flex:1}
+.notice{background:var(--badge);margin:16px 24px 0;border-radius:4px;padding:16px 52px;color:var(--text-strong)}
+.util{display:flex;gap:8px;flex-wrap:wrap;padding:16px 24px;align-items:center}
+.util .inp{width:264px}
+.util .sp{flex:1}
+.clist{margin:0 24px}
+.chead,.crow{display:grid;grid-template-columns:minmax(0,2.3fr) minmax(0,1.5fr) minmax(0,1.3fr) minmax(64px,.6fr);gap:0 16px}
+.crow > div{min-width:0;overflow-wrap:anywhere}
+.chead{border-bottom:1px solid var(--line);font-size:12px;font-weight:600;color:var(--text-strong);padding:6px 0}
+.crow{border-bottom:1px solid var(--line-soft);padding:20px 0;min-height:110px}
+.crow .nm{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.crow .nm button{border:0;background:none;padding:0;color:var(--blue);font-weight:500;font-size:14px}
+.crow .ct{font-size:12px;color:var(--text-strong);margin-top:10px;display:grid;gap:8px}
+.crow .ct span{color:#708693;margin-left:6px;white-space:nowrap;overflow-wrap:normal}
+.crow .bill b{font-weight:600}
+.crow .bill div{margin-top:6px;color:var(--text)}
+.crow .cl{font-size:12px;color:var(--text-strong)}
+/* chart */
+.chart-h{padding:16px 24px 0}
+.chart-h .nm{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.chart-h .meta{display:flex;gap:16px;align-items:center;color:var(--text);margin-top:10px;flex-wrap:wrap}
+.chart-h .meta a,.chart-h .meta button{border:0;background:none;padding:0;color:var(--blue);font-weight:600}
+.chart-h .acts{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}
+.nextline{margin-top:12px;color:var(--text);font-size:13px}
+.nextline button{border:0;background:none;padding:0;color:var(--blue);font-weight:600}
+.ctabs{display:flex;gap:28px;border-bottom:1px solid var(--line);margin:22px 24px 0;overflow-x:auto}
+.ctabs button{border:0;background:none;padding:10px 0;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap}
+.ctabs button.on{color:var(--blue);border-bottom-color:var(--blue)}
+.ctabs .n{background:var(--badge);border-radius:10px;padding:0 6px;font-size:11px;margin-left:4px;color:var(--text)}
+.chartgrid{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:32px;padding:20px 24px 40px}
+.chartnote{border:1px solid var(--line);border-radius:4px;padding:10px 12px;color:var(--muted-2);min-height:64px}
+.tl-filters{display:flex;gap:8px;align-items:center;margin:20px 0 6px;flex-wrap:wrap}
+.tl-filters .sp{flex:1}
+.yr{text-align:center;color:var(--muted);font-size:12px;margin:18px 0 10px}
+.tli{display:grid;grid-template-columns:62px minmax(0,1fr) auto;gap:6px 12px;padding:14px 0;border-bottom:1px solid var(--line-soft)}
+.tli .d{font-weight:600;color:var(--text-strong);font-size:13px}
+.tli .w{color:var(--muted);font-size:13px}
+.tli .ttl{font-weight:600;color:var(--text-strong)}
+.tli button.lnk{border:0;background:none;padding:0;color:var(--blue);font-weight:600;text-align:left}
+.side h3{font-size:16px;font-weight:600;color:var(--text-strong);margin:0 0 10px;display:flex;justify-content:space-between;align-items:center}
+.side h3 button{border:0;background:none;color:var(--blue);font-weight:600;font-size:13px;padding:0}
+.side section{padding-bottom:18px;margin-bottom:18px;border-bottom:1px solid var(--line-soft)}
+.side .kv{display:flex;justify-content:space-between;padding:4px 0}
+.side .lnk{border:0;background:none;padding:0;color:var(--blue);font-weight:600}
+.doc{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--line-soft)}
+.doc .sp{flex:1;min-width:0}
+.st-done{color:var(--ok);font-weight:600;font-size:12px}
+.st-todo{color:var(--err);font-weight:600;font-size:12px}
+.placeholder{padding:60px 24px;text-align:center;color:var(--muted)}
+.placeholder h2{color:var(--text-strong);font-size:20px;font-weight:600;margin:0 0 8px}
+/* dx/tx page + note page */
+.form-w{max-width:725px}
+.sect{font-size:16px;font-weight:600;color:var(--text-strong);margin:26px 0 12px}
+.dxsel{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.dxsel span{background:var(--blue-tint);color:var(--blue-dark);border-radius:4px;padding:3px 8px;font-weight:600;font-size:13px;display:inline-flex;gap:8px;align-items:center}
+.dxsel span button{border:0;background:none;color:inherit;padding:0;font-size:15px;line-height:1}
+.rte{border:1px solid var(--line);border-radius:4px;background:#fff}
+.rtebar{display:flex;gap:2px;padding:4px 6px;border-bottom:1px solid var(--line-soft)}
+.rtebar button{width:26px;height:24px;border:0;background:transparent;border-radius:3px;color:var(--muted);font-weight:700;font-size:12.5px}
+.rtebar button:hover{background:var(--btn2);color:var(--text-strong)}
+.rtebar .rb-italic{font-style:italic;font-family:Georgia,serif}
+.rtebar .rb-strikeThrough{text-decoration:line-through}
+.rtein{min-height:64px;padding:8px 10px;outline:0;color:var(--text-strong);white-space:pre-wrap}
+.rtein:focus{box-shadow:inset 0 0 0 2px var(--blue-tint)}
+.rtein ul,.rtein ol{margin:0;padding-left:20px}
+.formbtns{display:flex;gap:8px;align-items:center;margin:24px 0}
+.formbtns .sp{flex:1}
+.notepage{display:grid;grid-template-columns:minmax(0,923px) 376px;gap:24px;padding:0 24px 40px}
+.nhead{display:flex;align-items:flex-start;gap:12px;padding:16px 24px 0}
+.nhead .who{font-size:20px;font-weight:600;color:var(--text-strong)}
+.nhead .sp{flex:1}
+.nhead .ic{width:32px;height:32px;border-radius:4px;border:0;background:var(--btn2)}
+.ntabs{display:flex;gap:24px;margin:16px 24px 20px;border-bottom:1px solid var(--line-soft)}
+.ntabs button{border:0;background:#fff;padding:10px 0;color:var(--muted);border-bottom:1px solid var(--muted)}
+.ntabs button.on{color:var(--blue);font-weight:600;border-bottom:2px solid var(--blue)}
+.card{border:1px solid var(--line);border-radius:4px;padding:24px;margin-bottom:24px}
+.card h3{font-size:18px;font-weight:600;color:var(--text-strong);margin:0 0 16px}
+.tplrow{display:flex;gap:16px}
+.tplrow .ddwrap{flex:1}
+.cbgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:2px 16px}
+.signrow{display:flex;justify-content:flex-end;margin-top:20px}
+.signrow .btn.primary{border-radius:4px 0 0 4px}
+.signrow .caret{border-radius:0 4px 4px 0;background:var(--blue-dark);color:#fff;width:28px;padding:0;justify-content:center}
+.appt-side{border:1px solid var(--line);border-radius:4px;padding:24px;align-self:start}
+.appt-side h4{font-size:14px;font-weight:600;margin:0 0 10px;color:var(--text)}
+.appt-side .kv{display:flex;justify-content:space-between;padding:4px 0}
+.signed{background:var(--ok-bg);color:var(--ok);border-radius:4px;padding:10px 12px;font-weight:600;margin-bottom:14px}
+/* guide column: Tangible's own look (sage + forest, Poppins), deliberately distinct from the app it teaches */
+.guide{--g-forest:#4f6950;--g-forest-2:#3f5640;--g-sage:#acb9ac;--g-mist:#eef2ec;--g-wash:#f6f8f4;--g-ink:#2c312d;--g-muted:#6a746b;--g-line:#dfe5dc;--g-rose:#b4483a;--g-rose-bg:#fbeeeb;--g-ok:#3d7a4c;--g-ok-bg:#e6f1e6;
+  grid-column:3;grid-row:1/4;background:var(--g-wash);border-left:1px solid var(--g-line);display:flex;flex-direction:column;min-height:0;font-family:"Poppins",var(--font);color:var(--g-ink);font-size:13px}
+.ghead{background:var(--g-forest);color:#fff;padding:14px 16px;padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;align-items:center;gap:12px}
+.gmark{width:30px;height:30px;border-radius:9px;background:rgb(255 255 255 / .14);display:grid;place-items:center;font-weight:600;font-size:14px;flex:none}
+.gtitle{flex:1;min-width:0;line-height:1.2}
+.gtitle b{display:block;font-size:14.5px;font-weight:600;letter-spacing:.005em}
+.gtitle span{font-size:11.5px;opacity:.75}
+.ring{width:38px;height:38px;flex:none;position:relative}
+.ring svg{width:38px;height:38px;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:3.5}
+.ring .bg{stroke:rgb(255 255 255 / .2)} .ring .fg{stroke:#fff;stroke-linecap:round;transition:stroke-dashoffset .5s}
+.ring em{position:absolute;inset:0;display:grid;place-items:center;font-style:normal;font-size:10.5px;font-weight:600;font-variant-numeric:tabular-nums}
+.ghead .gbtn{border:1px solid rgb(255 255 255 / .35);background:transparent;color:#fff;border-radius:999px;height:28px;padding:0 12px;font:500 12px "Poppins",var(--font)}
+.ghead .gbtn:hover{background:rgb(255 255 255 / .12)}
+.gbody{flex:1;padding:18px 16px 24px;padding-right:max(16px,env(safe-area-inset-right,0px));overflow:auto;display:flex;flex-direction:column;gap:16px;min-height:0}
+.app.guide-min .gtitle,.app.guide-min .ring,.app.guide-min .gmark,.app.guide-min .gbody{display:none}
+.app.guide-min .ghead{writing-mode:vertical-rl;justify-content:flex-start;height:100%;padding:16px 7px}
+.app.guide-min .ghead .gbtn{writing-mode:vertical-rl;height:auto;padding:12px 4px;border-radius:999px}
+.gintro{margin:0;color:var(--g-muted);line-height:1.55}
+.ggroup{display:grid;gap:8px}
+.ggroup h4{margin:0;font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--g-muted)}
+.lesson{display:flex;align-items:center;gap:12px;border:1px solid var(--g-line);border-radius:12px;background:#fff;padding:10px 12px;text-align:left;font-family:inherit;color:inherit;transition:border-color .15s,box-shadow .15s,transform .15s}
+.lesson:hover{border-color:var(--g-sage);box-shadow:0 4px 14px rgb(63 86 64 / .10);transform:translateY(-1px)}
+.lesson .k{width:28px;height:28px;border-radius:50%;background:var(--g-mist);color:var(--g-forest);display:grid;place-items:center;font-size:12px;font-weight:600;flex:none}
+.lesson.done .k{background:var(--g-forest);color:#fff}
+.lesson .tx{flex:1;min-width:0}
+.lesson b{display:block;font-size:13.5px;font-weight:600;color:var(--g-ink)}
+.lesson .tx span{font-size:11.5px;color:var(--g-muted)}
+.lesson .go{color:var(--g-sage);font-size:18px;line-height:1}
+.gcard{background:#fff;border:1px solid var(--g-line);border-radius:14px;padding:16px}
+.gcard h4{margin:0 0 10px;font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--g-muted)}
+.codes{display:grid;gap:0}
+.codes div{display:flex;align-items:baseline;gap:12px;padding:7px 0;border-top:1px solid var(--g-mist);font-size:12.5px;line-height:1.4}
+.codes div:first-child{border-top:0;padding-top:0}
+.codes b{min-width:52px;font-weight:600;color:var(--g-forest);font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.gback{border:0;background:none;padding:0;color:var(--g-forest);font:500 12.5px "Poppins",var(--font);align-self:flex-start}
+.gback:hover{text-decoration:underline}
+.glesson{display:grid;gap:10px}
+.glesson h2{margin:0;font-size:18px;font-weight:600;line-height:1.25;color:var(--g-ink);text-wrap:balance}
+.segs{display:flex;gap:4px}
+.segs i{flex:1;height:5px;border-radius:999px;background:var(--g-line)}
+.segs i.dn{background:var(--g-forest)} .segs i.cur{background:var(--g-sage)}
+.step{background:#fff;border:1px solid var(--g-line);border-radius:14px;padding:18px;display:grid;gap:12px;box-shadow:0 6px 20px rgb(63 86 64 / .08)}
+.step .eye{font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--g-forest)}
+.step h3{margin:-4px 0 0;font-size:16px;font-weight:600;color:var(--g-ink);line-height:1.3}
+.step .tx{line-height:1.6;color:#3d443e}
+.step .tx b{font-weight:600;color:var(--g-ink)}
+.step p,.step ul{margin:0}
+.step ul{padding-left:0;list-style:none;display:grid;gap:6px;margin-top:4px}
+.step ul li{position:relative;padding-left:16px}
+.step ul li::before{content:"";position:absolute;left:2px;top:.6em;width:6px;height:6px;border-radius:50%;background:var(--g-sage)}
+.why{display:flex;gap:10px;background:var(--g-mist);border-radius:10px;padding:10px 12px;font-size:12px;line-height:1.55;color:#4a524b}
+.why::before{content:"i";flex:none;width:18px;height:18px;border-radius:50%;background:var(--g-forest);color:#fff;font:600 11px/18px Georgia,serif;text-align:center;font-style:italic;margin-top:1px}
+.why b{color:var(--g-ink);font-weight:600}
+.fb{display:flex;gap:8px;border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.5;background:var(--g-rose-bg);color:var(--g-rose)}
+.fb::before{content:"!";flex:none;width:18px;height:18px;border-radius:50%;background:var(--g-rose);color:#fff;font-weight:700;font-size:11px;display:grid;place-items:center;margin-top:1px}
+.fb.good{background:var(--g-ok-bg);color:var(--g-ok)}
+.fb.good::before{content:"✓";background:var(--g-ok)}
+.gbtns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.gp{border:0;border-radius:999px;height:34px;padding:0 16px;background:var(--g-forest);color:#fff;font:500 12.5px "Poppins",var(--font);display:inline-flex;align-items:center;gap:6px}
+.gp:hover{background:var(--g-forest-2)}
+.gs{border:1px solid var(--g-line);border-radius:999px;height:34px;padding:0 14px;background:#fff;color:var(--g-ink);font:500 12.5px "Poppins",var(--font)}
+.gs:hover{border-color:var(--g-sage)}
+.gt{border:0;background:none;color:var(--g-muted);font:500 12.5px "Poppins",var(--font);padding:0 6px;height:34px}
+.gt:hover{color:var(--g-ink)}
+.slist{list-style:none;margin:0;padding:0 0 0 2px;display:grid;font-size:12.5px}
+.slist li{display:flex;gap:10px;align-items:flex-start;color:var(--g-muted);position:relative;padding-bottom:12px}
+.slist li:last-child{padding-bottom:0}
+.slist li::after{content:"";position:absolute;left:9px;top:22px;bottom:2px;width:1.5px;background:var(--g-line)}
+.slist li:last-child::after{display:none}
+.slist .d{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--g-line);background:#fff;display:grid;place-items:center;font-size:10px;font-weight:600;flex:none}
+.slist li.cur{color:var(--g-ink);font-weight:600}
+.slist li.cur .d{border-color:var(--g-forest);color:var(--g-forest);box-shadow:0 0 0 3px var(--g-mist)}
+.slist li.dn .d{background:var(--g-forest);border-color:var(--g-forest);color:#fff}
+.slist li.dn::after{background:var(--g-forest)}
+.slist li span:last-child{padding-top:1px}
+.qz{display:grid;gap:14px}
+.qz .q{border-top:1px solid var(--g-mist);padding-top:12px;line-height:1.5}
+.qz .q:first-child{border-top:0;padding-top:0}
+.qz .q > b{color:var(--g-forest);margin-right:4px}
+.qz .opts{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 2px}
+.qz .opts button{border:1px solid var(--g-line);background:#fff;border-radius:999px;padding:5px 12px;font:600 12px "Poppins",var(--font);font-variant-numeric:tabular-nums;color:var(--g-ink)}
+.qz .opts button:hover:not(:disabled){border-color:var(--g-sage)}
+.qz .opts button.r{background:var(--g-forest);border-color:var(--g-forest);color:#fff}
+.qz .opts button.w{background:var(--g-rose-bg);border-color:var(--g-rose);color:var(--g-rose)}
+.qz .opts button:disabled{cursor:default}
+.galert{margin-top:auto;display:flex;gap:12px;background:#fff4e5;border:1.5px solid #e08a1e;border-left-width:6px;border-radius:12px;padding:14px 14px 14px 12px;color:#4a2f0c;box-shadow:0 6px 18px rgb(224 138 30 / .18)}
+.galert .ic{flex:none;width:30px;height:30px;border-radius:50%;background:#d9731a;color:#fff;display:grid;place-items:center;font-weight:700;font-size:17px;box-shadow:0 0 0 4px #fde3c2}
+.galert .lbl{display:inline-block;background:#d9731a;color:#fff;font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;border-radius:999px;padding:2px 9px;margin-bottom:6px}
+.galert b{display:block;font-size:15px;font-weight:600;color:#7a3d06;margin-bottom:4px}
+.galert p{margin:0 0 6px;font-size:12.5px;line-height:1.55}
+.galert p:last-child{margin-bottom:0}
+.galert p b{display:inline;font-size:inherit;color:inherit;margin:0}
+.gdone{text-align:center;display:grid;justify-items:center;gap:10px;padding:26px 18px}
+.gdone .big{width:56px;height:56px;border-radius:50%;background:var(--g-forest);color:#fff;display:grid;place-items:center;font-size:26px;box-shadow:0 0 0 8px var(--g-mist)}
+.gdone h3{margin:6px 0 0;font-size:17px}
+.gdone p{margin:0;color:var(--g-muted);line-height:1.5}
+.coach-target{outline:3px solid var(--focus)!important;outline-offset:2px;animation:pulse 1.5s ease-in-out infinite;z-index:5}
+.coach-target:not(.ev){position:relative}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgb(240 164 0 / .55)}50%{box-shadow:0 0 0 7px rgb(240 164 0 / 0)}}
+@media (prefers-reduced-motion:reduce){.coach-target{animation:none}}
+.toast{position:fixed;left:50%;top:calc(66px + env(safe-area-inset-top,0px));transform:translateX(-50%);background:#333;color:#fff;border-radius:4px;padding:8px 14px;z-index:90;font-size:13px}
+/* narrow screens */
+@media (max-width:1180px){.app,.app.nav-open{grid-template-columns:66px minmax(0,1fr) 300px}.app.guide-min,.app.nav-open.guide-min{grid-template-columns:66px minmax(0,1fr) 44px}.app.nav-open .rail{position:fixed;inset:0 auto 0 0;width:220px;z-index:45;box-shadow:4px 0 18px rgb(0 0 0 / .12)}.income{display:none}.chartgrid{grid-template-columns:minmax(0,1fr)}.notepage{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:860px){
+  .app,.app.nav-open,.app.guide-min,.app.nav-open.guide-min{grid-template-columns:minmax(0,1fr);grid-template-rows:auto 52px minmax(0,1fr) auto auto}
+  .rail{grid-row:1;flex-direction:row;align-items:center;padding:6px max(8px,env(safe-area-inset-right,0px)) 6px max(8px,env(safe-area-inset-left,0px));overflow-x:auto;border-right:0;border-bottom:1px solid var(--line-soft)}
+  .app.nav-open .rail{position:static;width:auto;box-shadow:none}
+  .rail .top,.rail hr,.rail .brand{display:none!important}
+  .rail nav{display:flex;gap:2px}
+  .rail nav button{padding:0 10px}
+  .rail nav button .lbl{display:none!important}
+  .topbar{grid-column:1;grid-row:2;padding:0 max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px))}
+  .search{width:auto;flex:1}
+  .topbar .sp,.msgs span,.income{display:none}
+  .main{grid-column:1;grid-row:3}
+  .foot{grid-column:1;grid-row:4;height:30px;padding:0 max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px))}
+  .foot .long{display:none}
+  .guide{grid-column:1;grid-row:5;border-left:0;border-top:1px solid var(--g-line);max-height:46vh}
+  .app.guide-min .ghead{writing-mode:horizontal-tb;height:auto;padding:10px 16px}
+  .app.guide-min .gtitle,.app.guide-min .gmark{display:block}
+  .app.guide-min .gmark{display:grid}
+  .app.guide-min .ghead .gbtn{writing-mode:horizontal-tb;height:28px;padding:0 12px}
+  .gbody{padding-bottom:calc(14px + env(safe-area-inset-bottom,0px))}
+  .pad,.calbar,.filters,.pagehead,.util,.chart-h,.nhead{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .cal,.clist,.notice,.ctabs{margin-left:max(16px,env(safe-area-inset-left,0px));margin-right:max(16px,env(safe-area-inset-right,0px))}
+  .chartgrid,.notepage{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .daytabs{display:flex;padding-left:max(16px,env(safe-area-inset-left,0px))}
+  .views{margin-left:0}
+  .chead{display:none}
+  .crow{grid-template-columns:minmax(0,1fr);gap:10px}
+  .util .inp{width:100%}
+  .notice{padding:12px 14px}
+  .pop{left:0!important;right:0;top:auto!important;width:auto;max-width:none!important;border-radius:10px 10px 0 0;box-shadow:0 -6px 24px rgb(0 0 0 / .16)}
+  .pop .foot2{padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))}
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <aside class="rail" id="rail"></aside>
+  <header class="topbar" id="topbar"></header>
+  <main class="main" id="main"></main>
+  <footer class="foot"><a href="/orientation/lesson-1-problemsolving-t6xn2-s2taf" style="color:var(--blue);font-weight:600;text-decoration:none;white-space:nowrap">‹ Back to orientation</a><span><b>Sample Practice</b> <span class="long">training sandbox · every client here is made up · nothing is sent to SimplePractice, insurance or billing</span></span><span class="sp"></span><button type="button" id="resetBtn">Reset sandbox</button></footer>
+  <aside class="guide" id="guide" aria-label="Practice guide"></aside>
+</div>
+<div id="layer"></div>
+<div id="toastRoot" aria-live="polite"></div>
+
+<script>
+(() => {
+'use strict';
+/* ---------- helpers ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad = n => String(n).padStart(2, '0');
+const dayKey = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const parseDay = k => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); };
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const weekStart = d => { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate() - x.getDay()); return x; };
+const DOW = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MON = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const fmtTime = m => { const h = Math.floor(m / 60), mm = m % 60; return (((h + 11) % 12) + 1) + ':' + pad(mm) + ' ' + (h < 12 ? 'AM' : 'PM'); };
+const fmtShort = k => { const d = parseDay(k); return MON[d.getMonth()].slice(0, 3) + ' ' + d.getDate() + ', ' + d.getFullYear(); };
+const fmtLong = k => { const d = parseDay(k); return DOW[d.getDay()] + ', ' + MON[d.getMonth()] + ' ' + d.getDate(); };
+const uid = p => p + Math.random().toString(36).slice(2, 8);
+const store = { get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
+const NOW = new Date();
+const TK = dayKey(NOW);
+const NOWMIN = NOW.getHours() * 60 + NOW.getMinutes();
+
+/* ---------- reference data (mirrors the practice's real lists) ---------- */
+const SERVICES = [
+  ['90791', 'First Session'], ['90832', 'Psychotherapy (16-37 min)'], ['90837', 'Psychotherapy (53 min)'],
+  ['90846', 'Family Psychotherapy without patient present (2...'], ['90847', 'Family Therapy (26-90 min)'], ['90853', 'Group Therapy'],
+  ['99404', 'Preventive medicine counseling and/or risk fact...'], ['Consult', 'Free Initial Consultation'], ['late', 'Late Cancellation Fee'],
+  ['NOSHOW', 'No Show Fee'], ['OPTUM', 'Optum Introduction Session']
+];
+const svcName = c => (SERVICES.find(s => s[0] === c) || [c, ''])[1];
+const LOCATIONS = ['Virtual Office', 'Tangible Therapy Orem A', 'Tangible Therapy Provo', 'Tangible Therapy Orem B', 'Tangible Therapy Sandy', 'Unassigned'];
+const STATUSES = ['Show', 'No show', 'Canceled', 'Late canceled', 'Clinician canceled'];
+const DX = [
+  ['F41.1','Generalized anxiety disorder'], ['F43.23','Adjustment disorder with mixed anxiety and depressed mood'], ['F43.22','Adjustment disorder with anxiety'],
+  ['F33.1','Major depressive disorder, recurrent, moderate'], ['F43.20','Adjustment disorder, unspecified'], ['F41.9','Anxiety disorder, unspecified'],
+  ['F43.21','Adjustment disorder with depressed mood'], ['Z63.0','Problems in relationship with spouse or partner'], ['F43.10','Post-traumatic stress disorder, unspecified'],
+  ['F43.12','Post-traumatic stress disorder, chronic'], ['F41.0','Panic disorder [episodic paroxysmal anxiety]'], ['F40.10','Social phobia, unspecified'],
+  ['F32.A','Depression, unspecified'], ['F32.1','Major depressive disorder, single episode, moderate'], ['F34.1','Dysthymic disorder'],
+  ['F42.2','Mixed obsessional thoughts and acts'], ['F90.0','Attention-deficit hyperactivity disorder, predominantly inattentive type'], ['F90.2','Attention-deficit hyperactivity disorder, combined type'],
+  ['F84.0','Autistic disorder'], ['F31.81','Bipolar II disorder'], ['F60.3','Borderline personality disorder'], ['F10.20','Alcohol dependence, uncomplicated']
+];
+const NOTE_TPLS = ['Simple Progress Note', 'Group Therapy Progress Note', 'Standard Progress Note', 'Tangible Progress Note'];
+const TPN = {
+  Appearance: ['Poor hygiene', 'Well groomed', 'Inappropriate', 'Appropriate', 'Neat', 'Disheveled'],
+  Behavior: ['Cooperative', 'Engaged', 'Aggressive', 'Agitated', 'Unusual', 'Impulsive', 'Anxious', 'Abrasive', 'Polite', 'Defensive/Guarded', 'Disorganized'],
+  'Stream of thought': ['Linear & Coherent', 'Organized', 'Tangential', 'Pressured', 'Disorganized', 'Paranoid', 'Delusional', 'Obsessive/Looping', 'Inflexible'],
+  Affect: ['Appropriate', 'Inappropriate', 'Congruent with reported mood', 'Bright', 'Flat', 'Labile', 'Depressed', 'Constricted', 'Anxious'],
+  Mood: ['Euthymic', 'Depressed', 'Elevated', 'Angry/irritable', 'Anxious', 'Apathetic'],
+  'Risk Factors': ['None', 'Suicidal Ideation', 'Homicidal Ideation', 'Abuse', 'Neglect', 'Self Harm without suicidal intent'],
+  Interventions: ['OARS', 'Joining/Validation', 'Cognitive Reframing', 'Communication Skills', 'Exploring Relationships', 'Identifying Patterns & Themes', 'Exploration of Emotions', 'DBT', 'IFS', 'ACT', 'Motivational Interviewing', 'Mindfulness Training', 'Setting Therapeutic Goals', 'Teaching Strategies/Skills', 'Building Insight & Awareness', 'Other']
+};
+const WHEEL = ['Biology (Chemicals & Hormones, Depression, Anxiety)', 'Hard Wiring (Neurodivergence, ADHD, Autism, OCD)', 'Learned Behaviors (Coping strategies)', 'Character (Personality Disorders or traits)', 'Friends & Family', 'Trauma', 'Environment'];
+const DOCS = ['Informed Consent & Practice Policies', 'Intake Questionnaire', 'Insurance Information', 'Credit Card Authorization', 'Release of Information'];
+
+/* ---------- seed: all made-up people ---------- */
+function seed() {
+  const clients = [
+    { id: 'c1', first: 'Avery', last: 'Sample', phone: '(555) 010-2231', email: 'avery.sample@example.com', billing: 'Insurance', payer: 'Sample Health PPO', status: 'Active', docs: [1,1,1,1,1] },
+    { id: 'c2', first: 'Jordan', last: 'Testcase', phone: '(555) 010-4410', email: 'jordan.t@example.com', billing: 'Self-pay', payer: '', status: 'Active', docs: [1,1,1,1,0] },
+    { id: 'c3', first: 'Riley', last: 'Practice', phone: '(555) 010-7782', email: 'riley.p@example.com', billing: 'Insurance', payer: 'Not entered', status: 'Active', docs: [1,1,0,0,0] },
+    { id: 'c4', first: 'Morgan', last: 'Demo', phone: '(555) 010-3359', email: 'morgan.demo@example.com', billing: 'Insurance', payer: 'Mock Mutual HMO', status: 'Active', docs: [1,1,1,1,1] },
+    { id: 'c5', first: 'Casey', last: 'Example', phone: '(555) 010-9024', email: 'casey.e@example.com', billing: 'Insurance', payer: 'Sample Health PPO', status: 'Active', docs: [1,1,1,1,1] },
+    { id: 'c6', first: 'Quinn', last: 'Placeholder', phone: '(555) 010-5567', email: 'quinn.p@example.com', billing: 'Self-pay', payer: '', status: 'Active', docs: [1,1,1,1,1] },
+    { id: 'c7', first: 'Taylor', last: 'Mockingbird', phone: '(555) 010-6643', email: 'taylor.m@example.com', billing: 'Insurance', payer: 'Mock Mutual HMO', status: 'Active', docs: [1,1,1,1,1] },
+    { id: 'c8', first: 'Drew', last: 'Fakename', phone: '(555) 010-1188', email: 'drew.f@example.com', billing: 'Insurance', payer: 'Sample Health PPO', status: 'Active', docs: [1,1,1,1,1] }
+  ];
+  const appts = [], notes = [];
+  const series = (cid, dayOff, start, from, to, loc, firstIntake) => {
+    const sid = uid('s');
+    for (let w = from; w <= to; w++) appts.push({ id: uid('a'), clientId: cid, date: dayKey(addDays(NOW, dayOff + w * 7)), start, dur: 53, code: (firstIntake && w === from) ? '90791' : '90837', location: loc, status: 'Show', series: sid });
+  };
+  series('c1', 0, 600, -3, 6, 'Tangible Therapy Orem A', true);
+  series('c2', -1, 840, -3, 5, 'Virtual Office', false);
+  series('c4', -5, 660, -1, 6, 'Tangible Therapy Orem A', true);
+  series('c7', 1, 780, -2, 6, 'Tangible Therapy Provo', false);
+  series('c8', 2, 540, -2, 6, 'Virtual Office', false);
+  appts.push({ id: uid('a'), clientId: 'c6', date: dayKey(addDays(NOW, -6)), start: 960, dur: 53, code: '90837', location: 'Tangible Therapy Orem A', status: 'Show', series: null });
+  appts.push({ id: uid('a'), clientId: 'c5', date: TK, start: 540, dur: 53, code: '90791', location: 'Tangible Therapy Orem A', status: 'Show', series: null, tutPast: true });
+  appts.push({ id: uid('a'), clientId: 'c3', date: dayKey(addDays(NOW, 1)), start: 900, dur: 53, code: '90791', location: 'Tangible Therapy Orem A', status: 'Show', series: null });
+  const jy = appts.find(a => a.clientId === 'c2' && a.date === dayKey(addDays(NOW, -1))); if (jy) jy.tutNoShow = true;
+  const at = appts.find(a => a.clientId === 'c1' && a.date === TK); if (at) at.tutNote = true;
+  const fields = cid => ({
+    content: cid === 'c1' ? 'Client reported increased worry about work deadlines and trouble falling asleep 3-4 nights this week. Explored the thoughts that show up at bedtime.' : cid === 'c2' ? 'Discussed conflict with a coworker and a pattern of shutting down. Practiced naming the emotion under the reaction.' : 'Client described low mood and less interest in hobbies. Reviewed sleep and activity.',
+    approach: 'Review homework and continue building coping skills.',
+    problem: cid === 'c1' ? 'Generalized worry, poor sleep' : cid === 'c2' ? 'Low mood, withdrawal' : 'Low mood',
+    symptoms: 'Worry, restlessness, trouble sleeping',
+    checks: { Appearance: ['Well groomed', 'Appropriate'], Behavior: ['Cooperative', 'Engaged'], 'Stream of thought': ['Linear & Coherent'], Affect: ['Congruent with reported mood'], Mood: ['Anxious'], 'Risk Factors': ['None'], Interventions: ['Cognitive Reframing', 'Teaching Strategies/Skills'] },
+    safety: '', meds: 'None reported'
+  });
+  appts.filter(a => (a.date < TK || a.tutPast || (a.date === TK && a.start + a.dur < NOWMIN)) && !a.tutNote && !a.tutNoShow && a.clientId !== 'c3').forEach(a => {
+    const n = { id: uid('n'), apptId: a.id, clientId: a.clientId, tpl: 'Tangible Progress Note', f: fields(a.clientId), date: a.date };
+    notes.push(n); a.noteId = n.id;
+  });
+  const dx = { c1: ['F41.1'], c2: ['F33.1'], c6: ['F41.9'], c7: ['F43.10'], c8: ['F90.0'] };
+  const plans = { c1: { tpl: 'Basic', problem: 'Persistent worry about work and health; difficulty sleeping.', goal: 'Reduce worry to a manageable level so Avery can sleep and focus at work.', objective: 'GAD-7 from 15 to under 8 within 12 weeks. Practice a grounding or worry-postponement skill at least 5 days a week (CBT, mindfulness).', freq: 'Weekly', remType: 'After', remDays: '90 days', date: dayKey(addDays(NOW, -14)) } };
+  return { clients, appts, notes, dx, plans, reminders: {} };
+}
+
+/* ---------- state ---------- */
+const SKEY = 'sps.state.v5', PKEY = 'sps.progress.v3';
+let S = store.get(SKEY) || seed();
+let P = store.get(PKEY) || { done: {} };
+const ui = { page: 'calendar', clientId: null, ctab: 'overview', apptId: null, weekOff: 0, mday: TK, view: 'Week', navOpen: false, guideMin: false, lesson: null, step: 0, fb: null, quiz: {}, dxtx: null };
+const save = () => { store.set(SKEY, S); store.set(PKEY, P); };
+const C = id => S.clients.find(c => c.id === id);
+const nm = c => c ? c.first + ' ' + c.last : '';
+const A = id => S.appts.find(a => a.id === id);
+const isPast = a => !!a.tutNote || !!a.tutPast || a.date < TK || (a.date === TK && a.start + a.dur <= NOWMIN + 1);
+const evClass = a => /No show|Late canceled/.test(a.status) ? 'bad' : /Canceled|Clinician canceled/.test(a.status) ? 'can' : isPast(a) ? 'show' : '';
+const pillClass = s => /No show|Late canceled/.test(s) ? 'bad' : /anceled/.test(s) ? 'can' : 'show';
+
+/* ---------- icons (simple line drawings) ---------- */
+const I = {
+  cal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+  clients: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><circle cx="17" cy="9" r="2.6"/><path d="M16.5 14.6c2.6.2 4.4 1.9 5 4.9"/></svg>',
+  billing: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/></svg>',
+  analytics: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
+  activity: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg>',
+  supervision: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l8 4v5c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V7z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>',
+  settings: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.6 1.6 0 00-1.8-.3 1.6 1.6 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.6 1.6 0 00-1-1.5 1.6 1.6 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.6 1.6 0 00.3-1.8 1.6 1.6 0 00-1.5-1H3a2 2 0 110-4h.1a1.6 1.6 0 001.5-1 1.6 1.6 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.6 1.6 0 001.8.3H9a1.6 1.6 0 001-1.5V3a2 2 0 114 0v.1a1.6 1.6 0 001 1.5 1.6 1.6 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.6 1.6 0 00-.3 1.8V9a1.6 1.6 0 001.5 1H21a2 2 0 110 4h-.1a1.6 1.6 0 00-1.5 1z"/></svg>',
+  bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 8a6 6 0 1112 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.9 1.9 0 003.4 0"/></svg>',
+  tasks: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 01-2 2H6a2 2 0 01-2-2V5a2 2 0 012-2h9"/></svg>',
+  requests: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M12 13v5M9.5 15.5h5"/></svg>',
+  inquiries: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>',
+  marketing: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11v2a1 1 0 001 1h3l5 4V6L7 10H4a1 1 0 00-1 1zM16 8a5 5 0 010 8"/></svg>',
+  recent: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  note: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z"/><path d="M14 3v6h6"/></svg>',
+  search: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>',
+  chev: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg>',
+  chevl: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 6l-6 6 6 6"/></svg>'
+};
+const NAV = [
+  ['calendar', 'Calendar', I.cal], ['clients', 'Clients', I.clients], ['billing', 'Billing', I.billing], ['analytics', 'Analytics', I.analytics], ['activity', 'Activity', I.activity], ['supervision', 'Supervision', I.supervision], ['settings', 'Settings', I.settings],
+  '-', ['notifications', 'Notifications', I.bell, 12], ['tasks', 'Tasks', I.tasks], ['requests', 'Requests', I.requests, 1], ['inquiries', 'Inquiries', I.inquiries, 3], '-', ['marketing', 'Marketing', I.marketing], '-', ['recent', 'Recently Viewed', I.recent]
+];
+
+/* ---------- coach event bus ---------- */
+function emit(type, d = {}) {
+  const L = ui.lesson && LESSONS.find(l => l.id === ui.lesson);
+  if (!L || ui.step >= L.steps.length) return;
+  const st = L.steps[ui.step];
+  if (st.on !== type) return;
+  const v = st.test ? st.test(d) : true;
+  if (v === true) advance(); else { ui.fb = typeof v === 'string' ? v : 'Not quite. Check the step and try again.'; renderGuide(); }
+}
+function advance() {
+  const L = LESSONS.find(l => l.id === ui.lesson);
+  ui.fb = null;
+  ui.step++; while (ui.step < L.steps.length && L.steps[ui.step].skipIf && L.steps[ui.step].skipIf()) ui.step++;
+  if (ui.step >= L.steps.length) { P.done[L.id] = true; ui.step = L.steps.length; save(); }
+  renderGuide(); requestAnimationFrame(() => highlight());
+}
+
+/* ---------- lessons ---------- */
+const AVERY = 'c1', RILEY = 'c3', MORGAN = 'c4', CASEY = 'c5', QUINN = 'c6';
+// Measurable = a number (digits or words), a frequency, a score/scale/percent, a direction of change or tracking.
+const isMeasurable = t => /\d|%|\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|fifteen|twenty|thirty|forty|fifty|hundred|once|twice|half|daily|nightly|weekly|biweekly|monthly|times?|per|each|every|percent|score|scale|rating|rated|level|gad|phq|pcl|pcl-5|reduce[sd]?|reducing|reduction|decrease[sd]?|increase[sd]?|fewer|lower|higher|track(ed|ing)?|log(ged|ging)?|record(ed|ing)?|measured?|frequency|duration|within|until|by the end)\b/i.test(t);
+const averyToday = () => S.appts.find(a => a.tutNote);
+const jordanAppt = () => S.appts.find(a => a.tutNoShow);
+const lastWeekAvery = () => S.appts.find(a => a.clientId === AVERY && a.date === dayKey(addDays(NOW, -7)));
+const at = (page, sel, fallback) => () => ui.page === page ? sel : fallback;
+const toClients = id => () => ui.page === 'clients' ? `[data-open-client="${id}"]` : (ui.page === 'chart' && ui.clientId === id) ? null : '[data-nav="clients"]';
+const LESSONS = [
+  { id: 'tour', title: 'Find your way around', sub: 'Menu, calendar and a client chart', steps: [
+    { skipIf: () => matchMedia('(max-width:860px)').matches, title: 'The left menu', text: 'Everything starts from the icon menu on the left. Hover an icon to see its name, or click the <b>»</b> button at the top to expand it. Expand it now.', on: 'navtoggle', test: d => d.open || 'Click the button at the top of the menu to expand it.', target: '#navToggle' },
+    { title: 'Open Clients', text: 'Click <b>Clients</b>.', on: 'page', test: d => d.page === 'clients' || 'Click Clients in the left menu.', target: '[data-nav="clients"]' },
+    { title: 'Open a chart', text: 'Click <b>Avery Sample</b>. A client\'s name is always the way into their chart.', on: 'open-client', test: d => d.id === AVERY || 'Click Avery Sample.', target: '[data-open-client="c1"]' },
+    { title: 'Review last week\'s note', text: 'You\'re seeing Avery today at 10:00 AM. Before the session, check where you left off. In her timeline, find last week\'s appointment and click <b>Progress Note</b>.', why: 'A quick look at the last note (what you covered, the plan and the homework) helps you pick up where you left off.', on: 'note-page', test: d => d.id === lastWeekAvery()?.id || 'Open the Progress Note from last week\'s appointment (one week ago).', target: () => `[data-open-appt="${lastWeekAvery()?.id}"]` },
+    { title: 'Back to the calendar', text: 'Click <b>Calendar</b> in the left menu.', on: 'page', test: d => d.page === 'calendar' || 'Click Calendar in the left menu.', target: '[data-nav="calendar"]' }
+  ]},
+  { id: 'files', title: 'Check intake paperwork', sub: 'Before every first session', alert: { title: 'No paperwork, no session', text: 'You may not meet with a client until <b>all</b> of their intake paperwork is complete.', more: 'If they show up with paperwork still open, invite them into your office to finish it there, but don\'t start the session until every document is done.' }, steps: [
+    { title: 'Open tomorrow\'s new client', text: 'Riley Practice has a first session tomorrow. Go to <b>Clients</b> and open <b>Riley Practice</b>.', on: 'open-client', test: d => d.id === RILEY || 'Open Riley Practice.', target: toClients(RILEY) },
+    { title: 'Open Files', text: 'Click the <b>Files</b> tab in Riley\'s chart.', on: 'ctab', test: d => d.tab === 'files' || 'Click the Files tab.', target: '[data-ctab="files"]' },
+    { title: 'Find what\'s missing', text: '<b>Insurance Information</b> and <b>Credit Card Authorization</b> aren\'t done. Those are the two clients forget most. Click <b>Send reminder</b>.', why: 'Reception reminds clients too, but you are responsible for checking before every first session.', on: 'reminder', test: d => d.id === RILEY || 'Send the reminder from Riley\'s Files tab.', target: '#sendReminder' }
+  ]},
+  { id: 'second', title: 'Book the second session', sub: 'On the calendar, before the client leaves', steps: [
+    { title: 'Go to next week', text: 'You just finished Casey Example\'s first session (9:00 AM today, booked by reception). Before he leaves, you agree on the same time every week. On the <b>Calendar</b>, click <b>›</b> next to Today to move to next week.', why: 'Reception books the first session. From the second session on, you book recurring sessions yourself, the same day you meet with the client.', on: 'week', test: d => d.off >= 1 || 'Use the › arrow next to Today to move to next week.', target: () => ui.page === 'calendar' ? '#wkNext' : '[data-nav="calendar"]' },
+    { title: 'Click the time slot', text: 'Click the empty slot on the <b>' + DOW[NOW.getDay()] + '</b> at <b>9:00 AM</b> next week. The new appointment window opens with that day and time filled in.', on: 'appt-new', test: d => d.fromSlot || 'Close that window and click straight on the calendar slot instead.', target: () => `[data-slot="${dayKey(addDays(NOW, 7))}|540"]`, go: () => showDate(dayKey(addDays(NOW, 7))) },
+    { title: 'Pick the client', text: 'Click <b>Search Client</b>, type <b>casey</b>, and choose <b>Casey Example</b>.', on: 'client-picked', test: d => d.id === CASEY || 'Pick Casey Example.', target: () => $('[data-pick-client="c5"]') ? '[data-pick-client="c5"]' : '#naClient' },
+    { title: 'Code, recurring, save', text: '<ul><li><b>Services</b>: the code for a regular session (not the intake code)</li><li>Check <b>Recurring</b>: every 1 week, ends after 10 events</li></ul>Then click <b>Save</b>.', why: 'Book a slot, not a single week: "Casey on ' + DOW[NOW.getDay()] + 's at 9." Scheduling 8 to 10 weeks ahead keeps your caseload steady and shows reception your real openings.', on: 'appt-saved', test: d => {
+        const a = d.appt;
+        if (a.clientId !== CASEY) return 'The client should be Casey Example.';
+        if (a.code === '90791') return '90791 is only for the first session, which just happened. Every session after that is 90837 Psychotherapy (53 min).';
+        if (a.code !== '90837') return 'Regular sessions use 90837 Psychotherapy (53 min).';
+        if (a.date <= TK) return 'Book it for next week, not today.';
+        if (!d.rec) return 'Check Recurring so the session repeats every week.';
+        if (d.rec.every !== 1 || d.rec.period !== 'week') return 'Set it to repeat every 1 week.';
+        if (d.rec.count < 8 || d.rec.count > 12) return 'Schedule out 8 to 10 sessions. Set Ends: After 10 events.';
+        return true;
+      }, target: () => $('#naService') && !$('#naService').value ? '#naService' : $('#naRec') && !$('#naRec').checked ? '#naRec' : '#naSave' }
+  ]},
+  { id: 'attendance', title: 'No-shows and late cancels', sub: 'Status, then the $75 fee', alert: { title: 'Billing charges what you set', text: 'To charge the fee, set <b>No show</b> or <b>Late canceled</b> and change the fee to <b>$75</b>.', more: 'Not charging, or the client cancelled because they\'re <b>sick</b>? Set the status to <b>Canceled</b> instead. We never charge clients for cancelling because of illness.' }, steps: [
+    { title: 'Open the missed session', text: 'Jordan Testcase didn\'t come to his 2:00 PM session yesterday. You waited 15 minutes and reception called with no answer. On the <b>Calendar</b>, click his appointment.', why: 'No-shows and late cancels (under 24 hours\' notice) are handled exactly the same way. The only difference is which status you pick. Here you\'ve decided to charge Jordan.', on: 'appt-open', test: d => d.id === jordanAppt()?.id || 'Click Jordan Testcase\'s 2:00 PM appointment from yesterday.', target: () => ui.page === 'calendar' ? `[data-appt="${jordanAppt()?.id}"]` : '[data-nav="calendar"]', go: () => showDate(jordanAppt()?.date) },
+    { title: 'Change the status', text: 'Click the green <b>Show</b> button under his name and choose <b>No show</b>. (For a client who cancels with less than 24 hours\' notice, you\'d choose <b>Late canceled</b> instead. Everything else is the same.)', on: 'status', test: d => (d.id === jordanAppt()?.id && d.status === 'No show') || (d.status === 'Late canceled' ? 'Jordan didn\'t cancel, so this one is a No show. Late canceled is for cancellations with under 24 hours\' notice.' : d.status === 'Show' ? 'Jordan wasn\'t there, so it can\'t stay Show.' : d.status === 'Canceled' ? 'Canceled is for when you\'re not charging (like a client who\'s sick). You\'re charging Jordan, so pick No show.' : 'Pick No show.'), target: () => $('.menu') ? '[data-status="No show"]' : '#statusBtn' },
+    { title: 'Change the fee to $75', text: 'The fee does <b>not</b> change on its own. Under <b>Billing</b>, change <b>Appointment Fee</b> to <b>75</b>, then click <b>Save</b>.', why: 'Billing charges the client from the status and fee on the calendar, so set both the same day. You\'re only paid for sessions that are charged. Never leave a missed session as Show; billing insurance for it is fraud.', on: 'fee-saved', test: d => {
+        if (d.id !== jordanAppt()?.id) return 'Do this on Jordan Testcase\'s appointment.';
+        if (d.status !== 'No show' && d.status !== 'Late canceled') return 'Set the status to No show first.';
+        if (d.fee !== 75) return d.fee === 150 ? 'The fee is still the regular $150. Change Appointment Fee to 75.' : 'Set Appointment Fee to exactly 75.';
+        return true;
+      }, target: () => $('#apptFee') && +$('#apptFee').value !== 75 ? '#apptFee' : '#popSave' }
+  ]},
+  { id: 'note', title: 'Write a progress note', sub: 'Tangible Progress Note, within 72 hours', alert: { title: 'Note deadlines', text: 'Every progress note is due within <b>72 hours</b> of the session.', more: 'If a session had any safety concern (suicidal or homicidal ideation, self-harm, abuse or neglect), the note must be completed within <b>24 hours</b>.' }, steps: [
+    { title: 'Open today\'s session', text: 'You saw Avery Sample at 10:00 AM today. On the <b>Calendar</b>, click her appointment. Green means the session happened; the page icon means a note is due.', on: 'appt-open', test: d => d.id === averyToday()?.id || 'Click Avery Sample\'s 10:00 AM appointment today.', target: () => ui.page === 'calendar' ? `[data-appt="${averyToday()?.id}"]` : '[data-nav="calendar"]', go: () => showDate(TK) },
+    { title: 'Add Note', text: 'Next to <b>Notes</b>, click <b>Add Note</b>.', on: 'note-page', test: d => d.id === averyToday()?.id || 'Open the note for Avery\'s session today.', target: '#popAddNote' },
+    { title: 'Pick the template', text: 'Click the template menu (it starts on Simple Progress Note) and choose <b>Tangible Progress Note</b>.', why: 'The Psychotherapy Note further down is kept separate from the client record and isn\'t released to insurance, so it can\'t replace the progress note.', on: 'tpl', test: d => d.tpl === 'Tangible Progress Note' || 'Choose Tangible Progress Note.', target: () => $('[data-ntpl]') ? '[data-ntpl="Tangible Progress Note"]' : '#noteTplBtn' },
+    { title: 'Fill it in and Sign', text: 'Complete each section, or click <b>Load last note</b> and update it (the fast way after the first note). Then click <b>Sign</b>.', why: 'If a safety concern came up, check it under Risk Factors and describe the steps you took (safety plan, supervisor informed, any report made and its case number).', on: 'signed', test: d => d.tpl === 'Tangible Progress Note' || 'Sign the Tangible Progress Note.', target: '#signNote' }
+  ]},
+  { id: 'dx', title: 'Add a diagnosis', sub: 'Same day as the first session', alert: { title: 'Diagnosis due the same day', text: 'Every client\'s diagnosis must be submitted <b>the same day</b> you see them for their first session.', more: 'Billing can\'t send insurance claims until it\'s in. If you\'re unsure, use the closest unspecified code and update it later.' }, steps: [
+    { title: 'Open Morgan\'s chart', text: 'Morgan Demo\'s diagnosis was never entered after her first session, so billing can\'t submit her claims. Fix it now: open <b>Morgan Demo</b> from <b>Clients</b>.', on: 'open-client', test: d => d.id === MORGAN || 'Open Morgan Demo.', target: toClients(MORGAN) },
+    { title: 'New ▸ Diagnosis and treatment plan', text: 'Above the timeline, click the blue <b>New</b> button and choose <b>Diagnosis and treatment plan</b>.', on: 'dxtx-open', test: d => d.cid === MORGAN || 'Do this from Morgan Demo\'s chart.', target: () => $('.menu') ? '[data-new="dxtx"]' : '#chartNew' },
+    { title: 'Select a diagnosis', text: 'Morgan reports constant worry, restlessness and poor sleep for 8 months. Click <b>Select a diagnosis</b>, type <b>anxiety</b>, and pick the best fit. Then click <b>Save</b> at the bottom.', why: 'If you\'re unsure, use the closest "unspecified" code and update it later. Most insurance plans won\'t pay for adjustment disorder diagnoses.', on: 'dxtx-saved', test: d => {
+        if (d.clientId !== MORGAN) return 'Save it on Morgan Demo\'s chart.';
+        if (!d.dx.length) return 'Select at least one diagnosis before saving.';
+        if (d.dx.some(c => c.startsWith('F43.2'))) return 'Adjustment disorders usually aren\'t paid by insurance. If you aren\'t sure yet, use the closest unspecified code, such as F41.9.';
+        return true;
+      }, target: () => $('#dxSearch') ? '#dxSearch' : ($('#dxtxSave') && (ui.dxtx?.dx || []).length) ? '#dxtxSave' : '#dxSelect' }
+  ]},
+  { id: 'plan', title: 'Build a treatment plan', sub: 'Due within a week of session 2', steps: [
+    { title: 'Open the plan page', text: 'On <b>Morgan Demo</b>\'s chart, click <b>New</b> ▸ <b>Diagnosis and treatment plan</b> again.', on: 'dxtx-open', test: d => d.cid === MORGAN || 'Do this from Morgan Demo\'s chart.', target: () => $('.menu') ? '[data-new="dxtx"]' : (ui.page === 'chart' && ui.clientId === MORGAN) ? '#chartNew' : ui.page === 'clients' ? '[data-open-client="c4"]' : '[data-nav="clients"]' },
+    { title: 'Choose the Basic template', text: 'Under <b>Treatment plan</b>, click <b>Select a template</b> and choose <b>Basic</b> (under SimplePractice templates).', on: 'plan-tpl', test: d => d.tpl === 'Basic' || 'Tangible now uses the Basic template, listed under SimplePractice templates.', target: () => $('[data-ptpl]') ? '[data-ptpl="Basic"]' : '#tplBtn' },
+    { title: 'Write it and Save', text: '<ul><li><b>Presenting Problem</b>: what brought the client in</li><li><b>Goal</b>: what the client wants to get out of therapy</li><li><b>Objective</b>: measurable steps toward the goal and the interventions you\'ll use</li><li><b>Treatment frequency</b>: for example, Weekly</li></ul>Then click <b>Save</b>.', why: 'Every client needs a treatment plan within a week of their second session. Make it measurable, for example "GAD-7 from 14 to under 8 in 12 weeks" or "uses a coping skill 4 days a week".', on: 'dxtx-saved', test: d => {
+        if (d.clientId !== MORGAN) return 'Save the plan on Morgan Demo\'s chart.';
+        const p = d.plan; if (!p) return 'Choose the Basic template first.';
+        if (!p.problem) return 'Fill in Presenting Problem.';
+        if (!p.goal) return 'Fill in the Goal.';
+        if (!p.objective) return 'Fill in the Objective.';
+        if (!isMeasurable(p.goal + ' ' + p.objective)) return 'Make it measurable: say how you\'ll know it\'s working, such as a number, a score, how often ("twice a week") or a change you can track.';
+        if (!p.freq) return 'Fill in Treatment frequency (for example, Weekly).';
+        return true;
+      }, target: '#dxtxSave' }
+  ]},
+];
+const QUIZ = [
+  { q: 'First session with a brand-new client.', a: '90791', why: '90791 First Session is the diagnostic evaluation.' },
+  { q: 'The second session with a client whose intake was last week.', a: '90837', why: '90791 is used once, for the intake. Every session after it, starting with the second, is 90837 Psychotherapy (53 min).' },
+  { q: 'A Tuesday night skills group.', a: '90853', why: '90853 Group Therapy ($30 per session).' },
+  { q: 'A regular session plus time spent coordinating with the client\'s parents and psychiatrist. What goes with 90837?', a: '90785', why: '90785 is the interactive-complexity add-on. If it isn\'t in your service list, ask billing how to add it.' },
+  { q: 'A client cancels 3 hours before a regular session.', a: 'Late canceled', why: 'Under 24 hours\' notice: set the status to Late canceled the same day; billing charges the $75 fee. Nothing goes to insurance.' }
+];
+
+/* ---------- navigation ---------- */
+function go(page, o = {}) { Object.assign(ui, { page }, o); closeLayer(); render(); emit('page', { page }); }
+function openClient(id, tab = 'overview') { ui.page = 'chart'; ui.clientId = id; ui.ctab = tab; closeLayer(); render(); emit('open-client', { id }); }
+function showDate(k) { if (!k) return; ui.weekOff = Math.round((weekStart(parseDay(k)) - weekStart(NOW)) / 6048e5); ui.mday = k; if (ui.page === 'calendar') render(); }
+
+/* ---------- rail + top bar ---------- */
+function renderRail() {
+  $('#app').classList.toggle('nav-open', ui.navOpen);
+  const active = ui.page === 'chart' || ui.page === 'dxtx' ? 'clients' : ui.page === 'appt' ? 'calendar' : ui.page;
+  $('#rail').innerHTML = `<div class="top"><span class="brand">Sample <i>Practice</i></span><button type="button" class="toggle" id="navToggle" aria-label="${ui.navOpen ? 'Collapse menu' : 'Expand menu'}" aria-expanded="${ui.navOpen}">${ui.navOpen ? I.chevl : I.chev}</button></div><hr>
+    <nav aria-label="Main menu">${NAV.map(n => n === '-' ? '<hr>' : `<button type="button" data-nav="${n[0]}" ${active === n[0] ? 'aria-current="page"' : ''} aria-label="${n[1]}">${n[2]}${n[3] ? `<span class="cnt">${n[3]}</span>` : ''}<span class="lbl">${n[1]}</span><span class="tip">${n[1]}</span></button>`).join('')}</nav>`;
+}
+function renderTop() {
+  const mon = MON[NOW.getMonth()].slice(0, 3);
+  $('#topbar').innerHTML = `<label class="search">${I.search}<input id="topSearch" placeholder="Search" aria-label="Search"></label><span class="sp"></span>
+    <button type="button" class="income" title="Sample figure">${mon} income<b>$18.4k</b></button>
+    <button type="button" class="circ" id="topCreate" aria-label="create">+</button>
+    <button type="button" class="msgs" aria-label="messages"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span>Messages</span></button>
+    <button type="button" class="avatar" aria-label="Profile Menu">ST</button>`;
+}
+
+/* ---------- calendar ---------- */
+const H0 = 6, H1 = 22;
+function renderCalendar() {
+  const ws = addDays(weekStart(NOW), ui.weekOff * 7);
+  const days = Array.from({ length: 7 }, (_, i) => addDays(ws, i));
+  const mobile = matchMedia('(max-width:860px)').matches;
+  if (!days.some(d => dayKey(d) === ui.mday)) ui.mday = dayKey(days.find(d => dayKey(d) === TK) || days[1]);
+  const shown = (mobile || ui.view === 'Day') ? days.filter(d => dayKey(d) === ui.mday) : days;
+  const hourPx = 64;
+  const labels = []; for (let h = H0; h < H1; h++) labels.push(`<div>${((h + 11) % 12) + 1} ${h < 12 ? 'am' : 'pm'}</div>`);
+  const cols = shown.map(d => {
+    const k = dayKey(d);
+    let slots = ''; for (let m = H0 * 60; m < H1 * 60; m += 15) slots += `<button type="button" class="slot" data-slot="${k}|${m}" aria-label="New appointment ${fmtLong(k)} ${fmtTime(m)}" tabindex="-1"></button>`;
+    const dayEvs = S.appts.filter(a => a.date === k).sort((a, b) => a.start - b.start || a.id.localeCompare(b.id));
+    const lay = {}; let cluster = [], cEnd = -1;
+    const flush = () => { const cols = []; cluster.forEach(a => { let i = cols.findIndex(end => end <= a.start); if (i < 0) { i = cols.length; cols.push(0); } cols[i] = a.start + a.dur; lay[a.id] = { i }; }); cluster.forEach(a => lay[a.id].n = cols.length); cluster = []; };
+    dayEvs.forEach(a => { if (a.start >= cEnd) { flush(); cEnd = -1; } cluster.push(a); cEnd = Math.max(cEnd, a.start + a.dur); }); flush();
+    const evs = dayEvs.map(a => {
+      const c = C(a.clientId), top = (a.start - H0 * 60) / 60 * hourPx, h = a.dur / 60 * hourPx;
+      const ly = lay[a.id], posStyle = ly.n > 1 ? `left:calc(${ly.i * 100 / ly.n}% + 1px);right:auto;width:calc(${100 / ly.n}% - 3px);` : '';
+      const due = isPast(a) && a.status === 'Show' && !a.noteId;
+      return `<button type="button" class="ev ${evClass(a)}" data-appt="${a.id}" style="${posStyle}top:${top}px;height:${h - 1}px"><span class="t">${fmtTime(a.start)}</span><span class="n">ST ${esc(nm(c))}</span>${due ? `<span class="ic" title="Add note">${I.note}</span>` : ''}</button>`;
+    }).join('');
+    const now = k === TK && NOWMIN > H0 * 60 && NOWMIN < H1 * 60 ? `<div class="nowl" style="top:${(NOWMIN - H0 * 60) / 60 * hourPx}px"></div>` : '';
+    return `<div class="dcol ${k === TK ? 'today' : ''}">${slots}${evs}${now}</div>`;
+  }).join('');
+  return `<div class="calpage"><div class="calbar"><button type="button" class="tod" id="wkToday">Today</button><button type="button" class="arr" id="wkPrev" aria-label="Previous week">‹</button><button type="button" class="arr" id="wkNext" aria-label="Next week">›</button>
+      <h2>${MON[ws.getMonth()].slice(0, 3)} ${ws.getFullYear()}</h2>
+      <div class="views">${['Day', 'Week', 'Month'].map(v => `<button type="button" data-view="${v}" class="${ui.view === v || (v === 'Week' && ui.view === 'Month') ? 'on' : ''}">${v}</button>`).join('')}</div>
+      <button type="button" class="btn chip">Color: Status</button></div>
+    <div class="filters"><button type="button" class="btn chip on">Sample Therapist</button><button type="button" class="btn chip">All locations</button><button type="button" class="btn chip">More filters</button><button type="button" class="btn chip">Hide cancels</button></div>
+    <div class="daytabs" role="group" aria-label="Pick a day">${days.map(d => { const k = dayKey(d); return `<button type="button" data-day="${k}" class="${k === ui.mday ? 'on' : ''}">${DOW[d.getDay()].slice(0, 3)} ${d.getDate()}</button>`; }).join('')}</div>
+    <div class="cal" style="--days:${shown.length}" id="calView">
+      <div class="calhead"><div></div>${shown.map(d => `<div class="${dayKey(d) === TK ? 'today' : ''}">${DOW[d.getDay()].slice(0, 3)} ${d.getDate()}</div>`).join('')}</div>
+      <div class="allday"><div>all day</div>${shown.map(() => '<div></div>').join('')}</div>
+      <div class="tgrid"><div class="tlabels">${labels.join('')}</div>${cols}</div>
+    </div></div>`;
+}
+
+/* ---------- clients list ---------- */
+function nextAppt(cid) { return S.appts.filter(a => a.clientId === cid && !isPast(a) && a.status === 'Show').sort((a, b) => (a.date + pad(a.start)).localeCompare(b.date + pad(b.start)))[0]; }
+function renderClients() {
+  const q = (ui.clientQ || '').toLowerCase();
+  const list = S.clients.filter(c => !q || nm(c).toLowerCase().includes(q)).sort((a, b) => a.last.localeCompare(b.last));
+  return `<div class="pagehead"><div><h1 class="h1">Clients and contacts</h1><div class="sub">${S.clients.length} clients</div></div><span class="sp"></span><button type="button" class="btn">Share documents</button><button type="button" class="btn primary">Create client</button></div>
+    <div class="notice">This is the sample client list. Every name here is made up.</div>
+    <div class="util"><input class="inp" id="clientSearch" placeholder="Search" aria-label="Search clients" value="${esc(ui.clientQ || '')}"><button type="button" class="btn chip">All clinicians</button><button type="button" class="btn chip">Client status</button><button type="button" class="btn chip">Billing type</button><button type="button" class="btn chip">Insurance payer</button><span class="sp"></span><button type="button" class="btn link">Sort: last name</button></div>
+    <div class="clist"><div class="chead"><div>Name</div><div>Billing</div><div>Relationship</div><div>Manage</div></div>
+    ${list.map(c => `<div class="crow"><div><div class="nm"><button type="button" data-open-client="${c.id}">${esc(nm(c))}</button><span class="badge">Adult</span><span class="pill ${c.status === 'Active' ? 'show' : 'can'}" style="height:22px">${c.status}</span></div>
+      <div class="ct"><div>${c.phone}<span>Mobile</span></div><div>${esc(c.email)}<span>Home</span></div></div></div>
+      <div class="bill"><b>${c.billing}</b><div>${esc(c.payer)}</div></div><div class="cl">Clinician: Sample Therapist</div><div><button type="button" class="btn link" data-open-client="${c.id}">Manage</button></div></div>`).join('') || '<div class="placeholder">No clients match that search.</div>'}</div>`;
+}
+
+/* ---------- chart ---------- */
+function chartHeader(c, crumbTail) {
+  const n = nextAppt(c.id);
+  return `<div class="chart-h"><div class="crumb"><button type="button" data-nav="clients">Clients and contacts</button> / ${crumbTail ? `<button type="button" data-open-client="${c.id}">${esc(nm(c))}'s profile</button> / ${crumbTail}` : esc(nm(c)) + '\'s profile'}</div>
+    <div class="nm"><h1 class="h1">${esc(nm(c))}${crumbTail ? ' <span style="color:var(--muted);font-weight:400">/ ' + crumbTail + '</span>' : ''}</h1><span class="pill ${c.status === 'Active' ? 'show' : 'can'}" style="height:22px">${c.status}</span><button type="button" class="btn link">Edit client</button>
+      <div class="acts">${crumbTail ? '<button type="button" class="btn">Documentation history</button>' : '<button type="button" class="btn">Send Referrals</button><button type="button" class="btn">Share</button><button type="button" class="btn">Upload</button><button type="button" class="btn">Message</button>'}</div></div>
+    <div class="meta"><span class="badge">Adult</span><span>Phone: ${c.phone}</span><button type="button">Add to Waitlist</button></div>
+    <div class="nextline">${n ? `Next appointment: ${fmtLong(n.date)} at ${fmtTime(n.start)}` : 'No appointments scheduled. or <button type="button" data-schedule="' + c.id + '">Schedule more</button>'}</div></div>`;
+}
+function renderChart() {
+  const c = C(ui.clientId);
+  const tabs = [['overview', 'Overview'], ['billing', 'Billing'], ['measures', 'Measures'], ['files', 'Files', DOCS.length]];
+  let body = '';
+  if (ui.ctab === 'overview') {
+    const items = [];
+    S.appts.filter(a => a.clientId === c.id && isPast(a)).forEach((a, i) => items.push({ date: a.date, t: a.start, kind: 'appt', a }));
+    if (S.plans[c.id]) items.push({ date: S.plans[c.id].date, t: 0, kind: 'plan' });
+    if ((S.dx[c.id] || []).length && !S.plans[c.id]) items.push({ date: S.dxDate?.[c.id] || TK, t: 0, kind: 'dx' });
+    items.sort((x, y) => (y.date + pad(y.t)).localeCompare(x.date + pad(x.t)));
+    let yr = '';
+    const rows = items.map(it => {
+      const d = parseDay(it.date); let h = '';
+      if (String(d.getFullYear()) !== yr) { yr = String(d.getFullYear()); h = `<div class="yr">${yr}</div>`; }
+      const dl = `<div><div class="d">${MON[d.getMonth()].slice(0, 3)} ${d.getDate()}</div></div>`;
+      if (it.kind === 'appt') {
+        const a = it.a, idx = S.appts.filter(x => x.clientId === c.id && isPast(x)).sort((x, y) => (x.date + pad(x.start)).localeCompare(y.date + pad(y.start))).indexOf(a) + 1;
+        return h + `<div class="tli">${dl}<div><div class="ttl">Appointment #${idx}</div><div class="w">Billing code : ${a.code}${a.status !== 'Show' ? ' · ' + a.status : ''}</div>${a.noteId ? `<button type="button" class="lnk" data-open-appt="${a.id}">Progress Note</button>` : a.status === 'Show' ? `<button type="button" class="lnk" data-open-appt="${a.id}">+ Add Note</button>` : ''}</div><div class="w">${fmtTime(a.start)} – ${fmtTime(a.start + a.dur)}</div></div>`;
+      }
+      return h + `<div class="tli">${dl}<div><button type="button" class="lnk" data-open-dxtx="${c.id}">Diagnosis and treatment plan</button><div class="w">${(S.dx[c.id] || []).join(', ')}</div></div><div class="w"></div></div>`;
+    }).join('');
+    const up = S.appts.filter(a => a.clientId === c.id && !isPast(a) && a.status === 'Show').sort((a, b) => (a.date + pad(a.start)).localeCompare(b.date + pad(b.start))).slice(0, 3);
+    body = `<div class="chartgrid"><div>
+        <div class="lrow"><span class="lab b" style="margin:0">Chart note</span><span class="w muted" style="font-size:12px">Administrative Note</span></div>
+        <div class="chartnote" style="margin-top:8px">Add a note about this client...</div>
+        <div class="tl-filters"><button type="button" class="btn chip">All time</button><button type="button" class="btn chip">All Items</button><span class="sp"></span><button type="button" class="btn primary" id="chartNew">New ▾</button></div>
+        ${rows || '<div class="placeholder" style="padding:30px">There are no items for this client yet.</div>'}
+      </div>
+      <div class="side">
+        <section><h3>Client billing</h3><div class="kv"><span>Client balance</span><span>$0</span></div><div class="kv"><span>Unallocated</span><span>$0</span></div><div class="kv"><span>Unpaid invoices</span><span>$0</span></div><button type="button" class="lnk">Add Payment</button></section>
+        <section><h3>Client info <button type="button">Edit</button></h3><div class="kv"><span>Billing</span><span>${c.billing}</span></div><div class="kv"><span>Diagnosis</span><span>${(S.dx[c.id] || []).join(', ') || '<span style="color:var(--err)">None</span>'}</span></div></section>
+        <section><h3>Contacts <button type="button">Edit</button></h3><div>No contacts on file <button type="button" class="lnk">Add Now</button></div></section>
+        <section><h3>Upcoming appointments</h3>${up.map(a => `<div class="kv"><span>${fmtShort(a.date)}</span><span>${fmtTime(a.start)}</span></div>`).join('') || '<div>None scheduled</div>'}<button type="button" class="lnk" id="sideSchedule" style="margin-top:6px">Schedule appointment</button></section>
+        <section><h3>Communication settings</h3></section><section><h3>Invoices</h3></section><section style="border:0"><h3>Billing documents</h3></section>
+      </div></div>`;
+  } else if (ui.ctab === 'files') {
+    const sent = S.reminders[c.id];
+    const missing = c.docs.slice(0, 4).filter(x => !x).length;
+    body = `<div class="pad" style="max-width:900px"><div class="lrow"><span class="sect" style="margin:0">Shared documents</span><button type="button" class="btn">Share documents</button></div>
+      ${DOCS.map((d, i) => `<div class="doc"><span style="color:var(--muted)">${I.note.replace('stroke-width="2.2"', 'stroke-width="1.6" width="18" height="18"')}</span><span class="sp">${d}${i === 4 ? ' <span style="color:var(--muted)">(optional)</span>' : ''}</span>${c.docs[i] ? '<span class="st-done">Completed</span>' : i === 4 ? '<span style="color:var(--muted);font-size:12px">Not started</span>' : '<span class="st-todo">Not completed</span>'}</div>`).join('')}
+      <div class="row2" style="margin-top:16px">${missing ? `<button type="button" class="btn primary" id="sendReminder">${sent ? 'Send another reminder' : 'Send reminder'}</button><span class="muted" style="color:var(--muted)">${sent ? 'Reminder sent to the client portal (sandbox only).' : missing + ' required document' + (missing > 1 ? 's' : '') + ' not completed.'}</span>` : '<span style="color:var(--muted)">All required documents are completed.</span>'}</div></div>`;
+  } else body = `<div class="placeholder"><h2>${ui.ctab === 'billing' ? 'Billing' : 'Measures'}</h2>This tab isn't part of the practice sandbox.</div>`;
+  return chartHeader(c) + `<div class="ctabs" role="tablist">${tabs.map(([k, l, n]) => `<button type="button" role="tab" data-ctab="${k}" class="${ui.ctab === k ? 'on' : ''}" aria-selected="${ui.ctab === k}">${l}${n ? `<span class="n">${n}</span>` : ''}</button>`).join('')}</div>` + body;
+}
+
+/* ---------- dx / tx plan page ---------- */
+function openDxTx(cid) {
+  const prev = S.plans[cid];
+  ui.dxtx = { cid, dx: [...(S.dx[cid] || [])], tpl: null, plan: null, prev };
+  ui.page = 'dxtx'; ui.clientId = cid; ui.dd = null; ui.dxQ = ''; closeLayer(); render(); emit('dxtx-open', { cid });
+}
+function blankPlan() { return { problem: '', goal: '', objective: '', freq: '', remType: 'After', remDays: '90 days' }; }
+function renderDxTx() {
+  const c = C(ui.clientId), D = ui.dxtx;
+  const dxChips = D.dx.map(code => `<span>${code} - ${esc((DX.find(x => x[0] === code) || ['', ''])[1])}<button type="button" data-dxrm="${code}" aria-label="Remove ${code}">×</button></span>`).join('');
+  let plan = '';
+  const rte = (k, lbl, val) => `<div class="field"><span class="lab" id="lb-${k}">${lbl}</span><div class="rte"><div class="rtebar" role="toolbar" aria-label="${lbl} formatting">${[['bold', 'B', 'Bold'], ['italic', 'I', 'Italic'], ['strikeThrough', 'S', 'Strikethrough'], ['insertUnorderedList', '•', 'Bulleted list'], ['insertOrderedList', '1.', 'Numbered list']].map(([cmd, t, l]) => `<button type="button" data-rte="${cmd}" aria-label="${l}" title="${l}" class="rb-${cmd}">${t}</button>`).join('')}</div><div class="rtein" contenteditable="true" role="textbox" aria-multiline="true" aria-labelledby="lb-${k}" data-prt="${k}" id="pr-${k}">${esc(val)}</div></div></div>`;
+  if (D.tpl === 'Basic') {
+    const p = D.plan;
+    plan = `<div class="field" style="margin-top:4px"><label class="lab" for="pp">Presenting Problem</label><textarea class="inp" id="pp" data-pf="problem" rows="1" placeholder="Enter your description" style="min-height:32px;height:32px;padding-top:5px">${esc(p.problem)}</textarea></div>
+      ${rte('goal', 'Goal', p.goal)}${rte('objective', 'Objective', p.objective)}
+      <div class="field"><label class="lab" for="pfreq">Treatment frequency</label><input class="inp" id="pfreq" data-pf="freq" placeholder="Example: Every 2 weeks" value="${esc(p.freq)}" style="width:250px;max-width:100%"></div>
+      <div class="field"><span class="lab">Date and time</span><div class="row2"><input class="inp" style="width:125px" value="${pad(NOW.getMonth() + 1) + '/' + pad(NOW.getDate()) + '/' + NOW.getFullYear()}" aria-label="Date picker"><input class="inp" style="width:125px" value="${fmtTime(Math.floor(NOWMIN / 15) * 15)}" aria-label="Time picker"></div></div>
+      <div class="field"><span class="lab">Reminder to review plan</span><div class="row2"><select class="inp" style="width:120px" data-pf="remType" aria-label="Reminder type">${['None', 'After', 'On Date'].map(o => `<option ${p.remType === o ? 'selected' : ''}>${o}</option>`).join('')}</select><select class="inp" style="width:120px" data-pf="remDays" aria-label="Reminder after">${['7 days', '30 days', '60 days', '90 days', '120 days', '180 days', '365 days'].map(o => `<option ${p.remDays === o ? 'selected' : ''}>${o}</option>`).join('')}</select></div></div>`;
+  } else if (D.tpl) {
+    plan = `<div class="field" style="margin-top:12px"><label class="lab" for="simplePlan">${D.tpl}</label><textarea class="inp" id="simplePlan" rows="6" placeholder="Write the plan"></textarea></div><div class="err" style="margin:0 0 10px">Tangible uses the <b>Basic</b> template now. Switch templates above.</div>`;
+  }
+  return chartHeader(c, 'Diagnosis and treatment plan') + `<div class="pad"><div class="form-w">
+    <h2 class="sect" style="font-size:20px;margin-top:10px">Diagnosis and treatment plan</h2>
+    <div class="field"><span class="lab">Diagnoses</span>
+      <div class="ddwrap"><button type="button" class="ddbtn ph" id="dxSelect">Select a diagnosis</button>${ui.dd === 'dx' ? `<div class="ddlist"><div class="srch"><input class="inp" id="dxSearch" placeholder="Search diagnosis by code or name" aria-label="Search diagnoses" value="${esc(ui.dxQ || '')}" autocomplete="off"></div><div id="dxResults">${dxResults()}</div></div>` : ''}</div>
+      <div class="dxsel">${dxChips}</div></div>
+    <div class="field"><span class="lab">Treatment plan</span>
+      <div class="ddwrap"><button type="button" class="ddbtn ${D.tpl ? '' : 'ph'}" id="tplBtn">${D.tpl || 'Select a template'}</button>${ui.dd === 'tpl' ? `<div class="ddlist"><div class="grp">MY NOTES AND FORMS</div><button type="button" data-ptpl="Tangible Treatment Plan">Tangible Treatment Plan</button><div class="grp">SIMPLEPRACTICE TEMPLATES</div>
+        ${[['Simple', 'Capture your plan in a single text box'], ['Basic', 'Write quick plans, broken out by presenting problem'], ['Advanced', 'Create step-by-step plans with multiple fields'], ['Wiley', 'Accelerate your documentation with prewritten content']].map(([t, s]) => `<button type="button" data-ptpl="${t}">${t}<small>${s}</small></button>`).join('')}<div class="grp" style="padding-bottom:8px;color:var(--blue)">Create new template</div></div>` : ''}</div></div>
+    ${plan}
+    ${D.tpl ? '' : `<div class="field"><span class="lab">Date and time</span><div class="row2"><input class="inp" style="width:120px" value="${(NOW.getMonth() + 1) + '/' + NOW.getDate() + '/' + NOW.getFullYear()}" aria-label="Date picker"><input class="inp" style="width:100px" value="${fmtTime(Math.floor(NOWMIN / 15) * 15)}" aria-label="Time picker"></div></div>`}
+    <div id="dxtxErr"></div>
+    <div class="formbtns"><button type="button" class="btn" data-open-client="${c.id}">Cancel</button><span class="sp"></span>${D.tpl ? '' : '<button type="button" class="btn" id="loadLastPlan">Load last plan</button>'}<button type="button" class="btn primary" id="dxtxSave">Save</button></div>
+  </div></div>`;
+}
+function dxResults() {
+  const q = (ui.dxQ || '').trim().toLowerCase();
+  const list = q ? DX.filter(([c, n]) => c.toLowerCase().includes(q) || n.toLowerCase().includes(q)) : DX.slice(0, 13);
+  return list.map(([c, n]) => `<button type="button" data-dx="${c}">${c} - ${esc(n)}</button>`).join('') || '<div class="grp">No matches. Try a shorter word.</div>';
+}
+
+/* ---------- appointment / note page ---------- */
+function renderAppt() {
+  const a = A(ui.apptId), c = C(a.clientId), n = a.noteId && S.notes.find(x => x.id === a.noteId);
+  const draft = ui.ndraft || (ui.ndraft = { tpl: 'Simple Progress Note', f: { checks: {} } });
+  let content;
+  if (n) {
+    const f = n.f;
+    content = `<div class="signed">Signed ${fmtShort(n.date)} · ${esc(n.tpl)}</div><div class="field"><span class="lab b">Content or Topics Discussed:</span><div>${esc(f.content)}</div></div><div class="field"><span class="lab b">Approach for Next Session:</span><div>${esc(f.approach)}</div></div><div class="field"><span class="lab b">Risk Factors</span><div>${esc((f.checks['Risk Factors'] || []).join(', '))}</div></div><div class="field"><span class="lab b">Interventions</span><div>${esc((f.checks.Interventions || []).join(', '))}</div></div>`;
+  } else {
+    const f = draft.f;
+    const tplList = ui.dd === 'ntpl' ? `<div class="ddlist">${NOTE_TPLS.filter(t => t !== 'Simple Progress Note').map(t => `<button type="button" data-ntpl="${t}">${t}</button>`).join('')}<div class="grp" style="padding-bottom:8px;color:var(--blue)">Create new template</div></div>` : '';
+    let fields;
+    if (draft.tpl === 'Tangible Progress Note') {
+      const ta = (k, l, rows = 4) => `<div class="field"><label class="lab b" for="nf-${k}">${l}</label><textarea class="inp" id="nf-${k}" data-nf="${k}" rows="${rows}">${esc(f[k])}</textarea></div>`;
+      fields = ta('content', 'Content or Topics Discussed:', 5) + ta('approach', 'Approach for Next Session:', 3) + ta('problem', 'Presenting Problem:', 2) + ta('symptoms', 'Current Symptoms:', 3)
+        + Object.entries(TPN).map(([grp, opts]) => `<div class="field"><span class="lab b">${grp}</span><div class="cbgrid">${opts.map(o => `<label class="check"><input type="checkbox" data-nc="${grp}|${o}" ${(f.checks[grp] || []).includes(o) ? 'checked' : ''}> ${o}</label>`).join('')}</div></div>` + (grp === 'Risk Factors' ? ta('safety', 'If safety factors were presented, how were they addressed?', 3) + ta('meds', 'Medications', 2) : '')).join('');
+    } else fields = `<div class="field"><label class="lab" for="nf-simple">Note</label><textarea class="inp" id="nf-simple" rows="8" placeholder="Start typing..."></textarea></div>${draft.tpl === 'Simple Progress Note' ? '' : '<div class="err" style="margin:0 0 10px">Tangible uses the Tangible Progress Note. Switch templates above.</div>'}`;
+    content = `<div class="tplrow"><div class="ddwrap"><button type="button" class="ddbtn" id="noteTplBtn">${draft.tpl}</button>${tplList}</div><button type="button" class="btn" id="loadLast">Load last note</button></div><div style="margin-top:20px">${fields}</div><div id="noteErr"></div>
+      <div class="signrow"><button type="button" class="btn primary" id="signNote">Sign</button><button type="button" class="btn caret" aria-label="More sign options">▾</button></div>`;
+  }
+  const prev = S.appts.filter(x => x.clientId === c.id && (x.date + pad(x.start)) < (a.date + pad(a.start))).length;
+  return `<div class="nhead"><div><div class="who">${esc(nm(c))}</div><div style="margin-top:6px;color:var(--text)">${c.phone} &nbsp; ${esc(c.email)}</div></div><span class="sp"></span><button type="button" class="btn">Attachments</button><button type="button" class="btn">Documentation</button><button type="button" class="btn">Message</button></div>
+    <div class="ntabs"><button type="button" class="on">Note</button><button type="button">Treatment progress</button></div>
+    <div class="notepage"><div>
+      <div class="card"><h3>Progress Note</h3>${content}</div>
+      <div class="card"><div class="lrow"><h3 style="margin:0">Psychotherapy Note</h3><button type="button" class="btn" id="addPsy">More</button></div><div style="margin-top:6px">Kept separate from the client record. <a href="#" onclick="return false">Learn more</a></div>${ui.psy ? `<textarea class="inp" style="margin-top:12px" rows="4" aria-label="Psychotherapy note" placeholder="Private notes for you only"></textarea>` : ''}</div>
+    </div>
+    <div class="appt-side"><h4>Appointment Details</h4>
+      <div class="kv"><span>${fmtShort(a.date)}</span><span class="pill ${pillClass(a.status)}" style="height:20px">${a.status}</span></div>
+      <div class="kv"><span>${fmtTime(a.start)} - ${fmtTime(a.start + a.dur)}</span><span>( ${a.dur} mins)</span></div>
+      <div class="kv"><span>${esc(nm(c))}</span></div><div class="kv"><span>${esc(a.location)}</span></div>
+      <button type="button" class="btn link" style="padding:0;margin:6px 0 14px" data-back-cal="${a.date}">Open in calendar</button>
+      <h4>Services</h4><div class="kv"><span>${a.code} ${svcName(a.code)}</span><span>$0</span></div>
+      <h4 style="margin-top:14px">Billing</h4><div class="kv"><span>Billing</span><span>${c.billing}</span></div><div class="kv"><span>Appointment total</span><span>$0</span></div>
+      <h4 style="margin-top:14px">Appointments</h4><div class="kv"><span>${prev ? prev + ' previous appointments' : 'No previous appointments'}</span></div></div></div>`;
+}
+
+/* ---------- placeholder pages ---------- */
+function renderPlaceholder() {
+  const n = NAV.find(x => x !== '-' && x[0] === ui.page);
+  return `<div class="placeholder"><h2>${n ? n[1] : ''}</h2>This area isn't part of the practice sandbox. In the real app, this is where ${n ? n[1] : 'it'} lives.</div>`;
+}
+
+/* ---------- render ---------- */
+function render() {
+  renderRail(); renderTop();
+  const m = $('#main');
+  const key = ui.page + '|' + (ui.page === 'calendar' ? ui.weekOff : ui.clientId + ui.ctab + ui.apptId);
+  const keep = key === render.key, prevTop = m.scrollTop, prevCal = $('#calView')?.scrollTop || 0;
+  m.innerHTML = ui.page === 'calendar' ? renderCalendar() : ui.page === 'clients' ? renderClients() : ui.page === 'chart' ? renderChart() : ui.page === 'dxtx' ? renderDxTx() : ui.page === 'appt' ? renderAppt() : renderPlaceholder();
+  const cal = $('#calView');
+  if (keep) { m.scrollTop = prevTop; if (cal) cal.scrollTop = prevCal; }
+  else if (cal) { m.scrollTop = 0; cal.scrollTop = (8 - H0) * 64 - 10; }
+  else m.scrollTop = 0;
+  render.key = key;
+  if (ui.dd === 'dx') { const s = $('#dxSearch'); if (s) { s.focus(); s.setSelectionRange(s.value.length, s.value.length); } }
+  renderGuide(); highlight(); save();
+}
+
+/* ---------- guide ---------- */
+const GROUPS = [['Getting around', ['tour', 'files']], ['Scheduling', ['second', 'attendance']], ['Documentation', ['note', 'dx', 'plan']]];
+function renderGuide() {
+  $('#app').classList.toggle('guide-min', ui.guideMin);
+  const done = LESSONS.filter(l => P.done[l.id]).length, circ = 2 * Math.PI * 15;
+  const head = `<div class="ghead"><span class="gmark" aria-hidden="true">T</span><span class="gtitle"><b>Practice guide</b><span>Tangible Therapy</span></span>
+    <span class="ring" title="${done} of ${LESSONS.length} lessons done"><svg viewBox="0 0 38 38" aria-hidden="true"><circle class="bg" cx="19" cy="19" r="15"/><circle class="fg" cx="19" cy="19" r="15" stroke-dasharray="${circ}" stroke-dashoffset="${circ * (1 - done / LESSONS.length)}"/></svg><em>${done}/${LESSONS.length}</em></span>
+    <button type="button" class="gbtn" id="guideMin" aria-expanded="${!ui.guideMin}">${ui.guideMin ? 'Practice guide' : 'Hide'}</button></div>`;
+  let body;
+  if (!ui.lesson) {
+    const card = l => { const i = LESSONS.indexOf(l); return `<button type="button" class="lesson ${P.done[l.id] ? 'done' : ''}" data-lesson="${l.id}"><span class="k">${P.done[l.id] ? '✓' : i + 1}</span><span class="tx"><b>${esc(l.title)}</b><span>${esc(l.sub)}</span></span><span class="go" aria-hidden="true">›</span></button>`; };
+    body = `<p class="gintro">Short, hands-on lessons in this practice copy, using Tangible's own procedures. Pick one to start, or click around on your own.</p>
+      ${GROUPS.map(([g, ids]) => `<div class="ggroup"><h4>${g}</h4>${ids.map(id => card(LESSONS.find(l => l.id === id))).join('')}</div>`).join('')}
+      <div class="gcard"><h4>Tangible billing codes</h4><div class="codes"><div><b>90791</b>First session only (reception books it)</div><div><b>90837</b>Every regular session</div><div><b>90853</b>Group therapy</div><div><b>90785</b>Add-on with 90837 for extra care coordination</div><div><b>$75</b>No show or late cancel under 24 hours</div></div></div>`;
+  } else {
+    const L = LESSONS.find(l => l.id === ui.lesson), idx = LESSONS.indexOf(L);
+    const segs = `<div class="segs" aria-hidden="true">${L.steps.map((_, i) => `<i class="${i < ui.step ? 'dn' : i === ui.step ? 'cur' : ''}"></i>`).join('')}</div>`;
+    const top = `<button type="button" class="gback" id="gExit">‹ All lessons</button><div class="glesson"><h2>${esc(L.title)}</h2>${segs}</div>`;
+    if (ui.step >= L.steps.length) {
+      const nx = LESSONS.slice(idx + 1).find(l => !P.done[l.id]) || LESSONS.find(l => !P.done[l.id]);
+      body = top + `<div class="step gdone"><span class="big" aria-hidden="true">✓</span><h3>Lesson complete</h3><p>${done === LESSONS.length ? 'That\'s every lesson. You\'re ready for the real thing.' : 'Nice work. ' + (LESSONS.length - done) + ' lesson' + (LESSONS.length - done > 1 ? 's' : '') + ' to go.'}</p>
+        <div class="gbtns" style="justify-content:center;margin-top:6px">${nx ? `<button type="button" class="gp" data-lesson="${nx.id}">Next: ${esc(nx.title)} ›</button>` : ''}</div></div>`;
+    } else {
+      const st = L.steps[ui.step];
+      const quiz = st.quiz ? `<div class="qz">${QUIZ.map((q, i) => { const p = ui.quiz[i]; return `<div class="q"><b>${i + 1}.</b>${esc(q.q)}<div class="opts">${['90791', '90837', '90853', '90785', 'Late canceled'].map(o => `<button type="button" data-quiz="${i}|${o}" class="${p === o ? (o === q.a ? 'r' : 'w') : ''}" ${p === q.a ? 'disabled' : ''}>${o}</button>`).join('')}</div>${p ? `<div class="fb ${p === q.a ? 'good' : ''}">${p === q.a ? 'Correct. ' + esc(q.why) : 'Not this one. Try again.'}</div>` : ''}</div>`; }).join('')}</div>` : '';
+      body = top + `<div class="step"><span class="eye">Step ${ui.step + 1} of ${L.steps.length}</span><h3>${esc(st.title)}</h3><div class="tx">${st.text}</div>
+        ${ui.fb ? `<div class="fb" role="status">${esc(ui.fb)}</div>` : ''}${quiz}
+        ${st.quiz ? '' : '<div class="gbtns"><button type="button" class="gp" id="gShow">Show me</button><button type="button" class="gt" id="gSkip">Skip step</button></div>'}
+        ${st.why ? `<div class="why"><span><b>Why it matters.</b> ${st.why}</span></div>` : ''}</div>
+        ${L.steps.length > 1 ? `<ol class="slist">${L.steps.map((s, i) => `<li class="${i < ui.step ? 'dn' : i === ui.step ? 'cur' : ''}"><span class="d">${i < ui.step ? '✓' : i + 1}</span><span>${esc(s.title)}</span></li>`).join('')}</ol>` : ''}
+        ${L.alert ? `<div class="galert" role="note"><span class="ic" aria-hidden="true">!</span><div><span class="lbl">Important</span><b>${L.alert.title}</b><p>${L.alert.text}</p>${L.alert.more ? `<p>${L.alert.more}</p>` : ''}</div></div>` : ''}`;
+    }
+  }
+  $('#guide').innerHTML = head + `<div class="gbody">${body}</div>`;
+  const pp = $('#layer .pop'); if (pp) fit(pp);
+}
+function curTarget() {
+  const L = ui.lesson && LESSONS.find(l => l.id === ui.lesson);
+  if (!L || ui.step >= L.steps.length) return null;
+  const t = L.steps[ui.step].target; const sel = typeof t === 'function' ? t() : t;
+  return sel ? document.querySelector(sel) : null;
+}
+function highlight(scroll) {
+  $$('.coach-target').forEach(e => e.classList.remove('coach-target'));
+  const el = curTarget(); if (!el) return;
+  el.classList.add('coach-target');
+  if (scroll) el.scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion:reduce)').matches ? 'auto' : 'smooth' });
+}
+function startLesson(id) {
+  ui.lesson = id; ui.step = 0; ui.fb = null; ui.guideMin = false; ui.quiz = {};
+  const Ls = LESSONS.find(l => l.id === id); while (Ls.steps[ui.step].skipIf && Ls.steps[ui.step].skipIf()) ui.step++;
+  const st = Ls.steps[ui.step]; if (st.go) st.go();
+  closeLayer(); render(); highlight(true);
+}
+
+/* ---------- layer: popovers & menus ---------- */
+let L = null;
+function closeLayer() { $('#layer').innerHTML = ''; L = null; ui.dd = ui.dd === 'dx' || ui.dd === 'tpl' || ui.dd === 'ntpl' ? ui.dd : null; }
+const isPhone = () => matchMedia('(max-width:860px)').matches;
+// The work area the popover may use: everything except the left menu and the practice guide.
+function workArea() {
+  const m = $('#main').getBoundingClientRect(), g = $('#guide').getBoundingClientRect();
+  return { l: m.left + 8, r: (g.width && g.left > m.left ? Math.min(m.right, g.left) : m.right) - 8, t: 8, b: (isPhone() && g.height ? g.top : innerHeight) - 8 };
+}
+function fit(el) {
+  const a = workArea();
+  if (isPhone()) { el.style.bottom = (innerHeight - a.b - 8) + 'px'; el.style.maxHeight = Math.max(200, a.b - 56) + 'px'; return; }
+  el.style.maxWidth = (a.r - a.l) + 'px';
+  el.style.maxHeight = (a.b - a.t) + 'px';
+  const w = el.offsetWidth, h = el.offsetHeight;
+  let left = parseFloat(el.style.left) || a.l, top = parseFloat(el.style.top) || a.t;
+  left = Math.min(Math.max(a.l, left), a.r - w); top = Math.min(Math.max(a.t, top), a.b - h);
+  el.style.left = Math.max(a.l, left) + 'px'; el.style.top = Math.max(a.t, top) + 'px';
+}
+function place(el, anchor) {
+  const a = workArea();
+  if (isPhone()) return fit(el);
+  if (!anchor) { el.style.left = ((a.l + a.r - el.offsetWidth) / 2) + 'px'; el.style.top = '64px'; return fit(el); }
+  const r = anchor.getBoundingClientRect(), w = el.offsetWidth;
+  let left = r.right + 10; if (left + w > a.r) left = r.left - w - 10; if (left < a.l) left = (a.l + a.r - w) / 2;
+  el.style.left = left + 'px'; el.style.top = (r.top - 40) + 'px';
+  fit(el);
+}
+function showMenu(anchor, html) {
+  $('#layer').innerHTML = `<div class="menu" role="menu">${html}</div>`;
+  const m = $('#layer .menu'), r = anchor.getBoundingClientRect();
+  m.style.top = Math.min(r.bottom + 4, innerHeight - m.offsetHeight - 8) + 'px';
+  m.style.left = Math.max(8, Math.min(r.left, innerWidth - m.offsetWidth - 8)) + 'px';
+  L = { kind: 'menu' }; highlight();
+}
+function apptPopover(id, anchor) {
+  const a = A(id), c = C(a.clientId), past = isPast(a);
+  const html = `<div class="pop" role="dialog" aria-label="Show appointment"><button type="button" class="x" data-close aria-label="Close">×</button><div class="body">
+    <button type="button" class="ctitle" data-open-client="${c.id}">${esc(nm(c))}</button>
+    <div class="row2" style="margin-top:6px"><span class="badge">Adult</span><span class="badge" style="background:#f2f0ff;color:#3b287a">${c.billing}</span></div>
+    <div style="font-weight:600;color:var(--text-strong);margin-top:12px">${fmtLong(a.date)} @ ${fmtTime(a.start)}</div>
+    <div style="margin:14px 0 18px"><button type="button" class="pill ${pillClass(a.status)}" id="statusBtn" aria-haspopup="menu">${a.status} ▾</button></div>
+    <hr class="sep" style="margin:0 0 18px"><div class="lab b">Appointment details</div>
+    <div class="lrow" style="margin-bottom:10px"><label class="check"><input type="checkbox"> All day</label><button type="button" class="btn link small">Suggested times</button></div>
+    <div class="row2" style="margin-bottom:14px"><input class="inp" style="width:130px" value="${fmtShort(a.date)}" aria-label="Start date" readonly><input class="inp" style="width:90px" value="${fmtTime(a.start)}" readonly aria-label="Start time"><span>to</span><input class="inp" style="width:90px" value="${fmtTime(a.start + a.dur)}" readonly aria-label="End time"><input class="inp" style="width:48px" value="${a.dur}" readonly aria-label="Duration"><span>min</span></div>
+    <div class="field"><span class="lab">Clinician</span><div class="nonedit"><span class="dot">ST</span>Sample Therapist</div></div>
+    <div class="field"><span class="lab">Location</span><div class="nonedit" style="background:#fff;border:1px solid var(--line)">${esc(a.location)}</div></div>
+    <div class="memo"><span>Memo</span><button type="button">Add memo</button></div>
+    <hr class="sep"><div class="lrow"><span class="lab b" style="margin:0">Notes</span>${a.noteId ? `<button type="button" class="btn link small" id="popAddNote">Progress Note</button>` : `<button type="button" class="btn link small" id="popAddNote">+ Add Note</button>`}</div>
+    <hr class="sep"><div class="lab b">Services and modifiers</div><div class="row2"><select class="inp" style="flex:1" aria-label="Services" disabled><option>${a.code} ${svcName(a.code)}</option></select><span>Fee $0</span></div>
+    <button type="button" class="btn link small" style="padding:0;margin-top:8px">Add service</button>
+    <hr class="sep"><div class="lab b">Billing</div><div class="lrow"><label for="apptFee">Appointment Fee</label><span class="row2" style="gap:4px">$<input class="inp" id="apptFee" type="number" min="0" step="1" value="${ui.feeDraft && ui.feeDraft.id === a.id ? ui.feeDraft.v : (a.fee ?? 150)}" style="width:90px;text-align:right"></span></div><div class="lrow" style="margin-top:4px;color:var(--muted)"><span>Client balance: $0</span></div>
+    </div><div class="foot2"><button type="button" class="btn primary" id="popSave">Save</button><span class="sp"></span><button type="button" class="btn small" aria-label="Duplicate Appointment">Duplicate</button><button type="button" class="btn small" aria-label="Delete Appointment">Delete</button></div></div>`;
+  $('#layer').innerHTML = html; place($('#layer .pop'), anchor); L = { kind: 'appt', id }; ui.feeDraft = null;
+  emit('appt-open', { id }); highlight();
+}
+function timeOpts(sel) { let o = ''; for (let m = 6 * 60; m <= 21 * 60; m += 15) o += `<option value="${m}" ${m === sel ? 'selected' : ''}>${fmtTime(m)}</option>`; return o; }
+function newApptPopover(pre = {}, anchor) {
+  const st = { cid: pre.cid || null, date: pre.date || TK, start: pre.start ?? 600, rec: false };
+  L = { kind: 'new', st };
+  drawNew(anchor);
+  emit('appt-new', { fromSlot: !!pre.fromSlot });
+}
+function drawNew(anchor) {
+  const st = L.st, c = st.cid && C(st.cid);
+  const dow = parseDay(st.date).getDay();
+  const rv = st.recv && st.recv.date === st.date ? st.recv : null;
+  const html = `<div class="pop" role="dialog" aria-label="Create New Appointment"><button type="button" class="x" data-close aria-label="Close">×</button><div class="body">
+    <div class="ptabs"><button type="button" class="on">Appointment</button><button type="button">Event</button><button type="button">Out of office</button><button type="button">Availability</button></div>
+    <div class="seg2"><button type="button" class="on">Individual or couple</button><button type="button">Group</button></div>
+    <div class="ddwrap field"><div class="row2"><button type="button" class="ddbtn ${c ? '' : 'ph'}" id="naClient" style="flex:1">${c ? esc(nm(c)) : 'Search Client'}</button><button type="button" class="btn link small">+ Create client</button></div>
+      ${ui.dd === 'client' ? `<div class="ddlist"><div class="srch"><input class="inp" id="naClientQ" placeholder="Search" aria-label="Search client" value="${esc(ui.ncq || '')}" autocomplete="off"></div>${S.clients.filter(x => !ui.ncq || nm(x).toLowerCase().includes(ui.ncq.toLowerCase())).map(x => `<button type="button" data-pick-client="${x.id}">${esc(nm(x))}</button>`).join('')}</div>` : ''}</div>
+    <div class="lab b">Appointment details</div>
+    <div class="lrow" style="margin-bottom:10px"><label class="check"><input type="checkbox"> All day</label><button type="button" class="btn link small">Suggested times</button></div>
+    <div class="field"><input class="inp" type="date" id="naDate" value="${st.date}" aria-label="Start date" style="width:160px"></div>
+    <div class="row2 field"><select class="inp" id="naStart" style="width:130px" aria-label="Start time">${timeOpts(st.start)}</select><span>to</span><input class="inp" style="width:110px" value="${fmtTime(st.start + 53)}" readonly aria-label="End time"><input class="inp" style="width:48px" value="53" aria-label="Duration" readonly><span>min</span></div>
+    ${c ? `<div class="field"><span class="lab">Clinician</span><div class="nonedit"><span class="dot">ST</span>Sample Therapist (You)</div></div>` : ''}
+    <div class="field"><label class="lab" for="naLoc">Location</label><select class="inp" id="naLoc">${LOCATIONS.map((l, i) => `<option ${i === 1 ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+    <label class="check"><input type="checkbox" id="naRec" ${st.rec ? 'checked' : ''}> Recurring</label>
+    ${st.rec ? `<div style="padding:8px 0 4px 12px"><div class="row2"><span>Every</span><select class="inp" id="naEvery" style="width:64px">${[1, 2, 3, 4].map(n => `<option ${st.recv && st.recv.every === n ? 'selected' : ''}>${n}</option>`).join('')}</select><select class="inp" id="naPeriod" style="width:100px">${['week', 'month', 'year'].map(x => `<option ${st.recv && st.recv.period === x ? 'selected' : ''}>${x}</option>`).join('')}</select></div>
+      <div class="dows">${['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((l, i) => `<label>${l}<input type="checkbox" data-dow="${i}" aria-label="${DOW[i]}" ${(rv ? rv.days.includes(i) : i === dow) ? 'checked' : ''}></label>`).join('')}</div>
+      <div class="row2"><span>Ends</span><select class="inp" id="naEndType" style="width:100px"><option>After</option><option>On Date</option></select><select class="inp" id="naEndCount" style="width:84px">${Array.from({ length: 30 }, (_, i) => `<option ${i + 1 === (st.recv ? st.recv.count : 30) ? 'selected' : ''}>${i + 1}</option>`).join('')}</select><span>events</span></div></div>` : ''}
+    ${c ? `<div class="memo" style="margin-top:14px"><span>Memo</span><button type="button">Add memo</button></div>
+    <hr class="sep"><div class="lab b">Services and modifiers</div>
+    <select class="inp" id="naService" aria-label="Services"><option value="">Select service</option>${SERVICES.map(([k, n]) => `<option value="${k}">${k} ${n}</option>`).join('')}</select>
+    <div class="row2" style="margin-top:8px">${[1, 2, 3, 4].map(i => `<input class="inp" style="width:84px" placeholder="" aria-label="Modifier ${i}">`).join('')}</div>
+    <div class="row2" style="margin-top:8px"><span>Units</span><input class="inp" style="width:60px" value="1" aria-label="Number of Units"><span style="margin-left:auto">Fee</span></div>
+    <button type="button" class="btn link small" style="padding:0;margin-top:8px">Add service</button>
+    <hr class="sep"><div class="lrow"><span class="lab b" style="margin:0">Billing</span><span>${c.billing}</span></div><div class="lrow" style="margin-top:4px"><span>Appointment Fee</span><span>$150</span></div>` : ''}
+    <div id="naErr"></div></div>
+    <div class="foot2"><span class="sp"></span><button type="button" class="btn link" data-close>Cancel</button><button type="button" class="btn primary" id="naSave">Save</button></div></div>`;
+  const keepScroll = $('#layer .pop .body')?.scrollTop || 0;
+  const prevPos = $('#layer .pop') ? { l: $('#layer .pop').style.left, t: $('#layer .pop').style.top, h: $('#layer .pop').style.maxHeight } : null;
+  $('#layer').innerHTML = html;
+  const pop = $('#layer .pop');
+  if (prevPos) { pop.style.left = prevPos.l; pop.style.top = prevPos.t; pop.style.maxHeight = prevPos.h; } else place(pop, anchor);
+  fit(pop);
+  $('#layer .pop .body').scrollTop = keepScroll;
+  if (ui.dd === 'client') { const q = $('#naClientQ'); q.focus(); q.setSelectionRange(q.value.length, q.value.length); }
+  highlight();
+}
+function readNew() {
+  const st = L.st, oldDate = st.date;
+  st.date = $('#naDate').value || st.date; st.start = +$('#naStart').value;
+  st.loc = $('#naLoc').value; st.code = $('#naService')?.value || '';
+  if (st.rec) st.recv = { every: +$('#naEvery').value, period: $('#naPeriod').value, days: $$('[data-dow]').filter(x => x.checked).map(x => +x.dataset.dow), endType: $('#naEndType').value, count: +$('#naEndCount').value, date: oldDate };
+}
+function saveNew() {
+  readNew(); const st = L.st, err = $('#naErr');
+  const probs = []; if (!st.cid) probs.push('choose a client'); if (!st.code) probs.push('select a service');
+  if (probs.length) { err.innerHTML = `<div class="err">To save, ${probs.join(' and ')}.</div>`; return; }
+  const rec = st.rec ? st.recv : null;
+  const Ls = ui.lesson && LESSONS.find(l => l.id === ui.lesson), lst = Ls && Ls.steps[ui.step];
+  if (lst && lst.on === 'appt-saved') {
+    const v = lst.test({ appt: { clientId: st.cid, date: st.date, start: st.start, code: st.code }, rec });
+    if (v !== true) { ui.fb = v; renderGuide(); err.innerHTML = `<div class="err">${esc(v)}</div>`; return; }
+  }
+  const made = [];
+  if (rec) {
+    const days = rec.days.length ? rec.days : [parseDay(st.date).getDay()];
+    let d = parseDay(st.date), guard = 0;
+    while (made.length < rec.count && guard++ < 800) {
+      const ws = weekStart(d), wk = Math.round((ws - weekStart(parseDay(st.date))) / 6048e5);
+      if (days.includes(d.getDay()) && dayKey(d) >= st.date && (rec.period !== 'week' || wk % rec.every === 0)) made.push(dayKey(d));
+      d = addDays(d, 1);
+      if (rec.period !== 'week') break;
+    }
+    if (!made.length) made.push(st.date);
+  } else made.push(st.date);
+  const sid = rec ? uid('s') : null;
+  made.forEach((k, i) => S.appts.push({ id: uid('a'), clientId: st.cid, date: k, start: st.start, dur: 53, code: i && st.code === '90791' ? '90837' : st.code, location: st.loc, status: 'Show', series: sid }));
+  const first = S.appts[S.appts.length - made.length];
+  const c = C(st.cid); if (c.status === 'Prospective') c.status = 'Active';
+  closeLayer(); ui.page = 'calendar'; showDate(st.date); render();
+  toast(made.length > 1 ? `${made.length} appointments scheduled for ${nm(c)}` : `Appointment scheduled for ${nm(c)}`);
+  emit('appt-saved', { appt: first, rec: rec ? { ...rec, count: made.length } : null });
+}
+function toast(t) { $('#toastRoot').innerHTML = `<div class="toast">${esc(t)}</div>`; clearTimeout(toast.t); toast.t = setTimeout(() => $('#toastRoot').innerHTML = '', 2600); }
+
+/* ---------- note actions ---------- */
+function readNoteDraft() {
+  const d = ui.ndraft; if (!d || d.tpl !== 'Tangible Progress Note') return;
+  $$('[data-nf]').forEach(t => d.f[t.dataset.nf] = t.value.trim());
+  const ch = {}; $$('[data-nc]').forEach(x => { if (x.checked) { const [g, o] = x.dataset.nc.split('|'); (ch[g] = ch[g] || []).push(o); } }); d.f.checks = ch;
+}
+function signNote() {
+  readNoteDraft(); const d = ui.ndraft, err = $('#noteErr');
+  if (d.tpl !== 'Tangible Progress Note') { err.innerHTML = '<div class="err">Choose the Tangible Progress Note template before signing.</div>'; emit('signed', { tpl: d.tpl }); return; }
+  const f = d.f, miss = [];
+  if (!f.content) miss.push('Content or Topics Discussed'); if (!f.approach) miss.push('Approach for Next Session');
+  const risk = f.checks['Risk Factors'] || []; if (!risk.length) miss.push('a Risk Factors box (None if no risk)');
+  if (risk.some(r => r !== 'None') && !f.safety) miss.push('how safety factors were addressed');
+  if (!(f.checks.Interventions || []).length) miss.push('at least one Intervention');
+  if (miss.length) { err.innerHTML = `<div class="err">Still needed: ${miss.join(', ')}.</div>`; return; }
+  const a = A(ui.apptId);
+  const n = { id: uid('n'), apptId: a.id, clientId: a.clientId, tpl: d.tpl, f: JSON.parse(JSON.stringify(f)), date: a.date };
+  S.notes.push(n); a.noteId = n.id; ui.ndraft = null;
+  render(); toast('Note signed'); emit('signed', { tpl: n.tpl });
+}
+
+/* ---------- dx/tx actions ---------- */
+function readPlan() {
+  const D = ui.dxtx; if (!D || !D.plan) return;
+  const p = D.plan;
+  $$('[data-pf]').forEach(x => { p[x.dataset.pf] = x.value.trim(); });
+  $$('[data-prt]').forEach(x => { p[x.dataset.prt] = x.innerText.trim(); });
+}
+function saveDxTx() {
+  readPlan(); const D = ui.dxtx, err = $('#dxtxErr');
+  if (!D.dx.length && !D.tpl) { err.innerHTML = '<div class="err">Select a diagnosis or a treatment plan template before saving.</div>'; emit('dxtx-saved', { clientId: D.cid, dx: D.dx, plan: null }); return; }
+  const plan = D.tpl === 'Basic' ? D.plan : null;
+  const payload = { clientId: D.cid, dx: [...D.dx], plan };
+  const Ls = ui.lesson && LESSONS.find(l => l.id === ui.lesson), st = Ls && Ls.steps[ui.step];
+  if (st && st.on === 'dxtx-saved') { const v = st.test(payload); if (v !== true) { ui.fb = v; renderGuide(); err.innerHTML = `<div class="err">${esc(v)}</div>`; return; } }
+  S.dx[D.cid] = [...D.dx]; S.dxDate = S.dxDate || {}; S.dxDate[D.cid] = TK;
+  if (plan) S.plans[D.cid] = { tpl: D.tpl, ...plan, date: TK };
+  const cid = D.cid; ui.dxtx = null; ui.dd = null; ui.dxQ = '';
+  openClient(cid); toast('Diagnosis and treatment plan saved');
+  emit('dxtx-saved', payload);
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click', e => {
+  const t = e.target.closest('button, [data-close], a, label');
+  if (L && L.kind === 'menu' && !e.target.closest('.menu') && t?.id !== 'topCreate' && t?.id !== 'chartNew' && t?.id !== 'statusBtn') closeLayer();
+  if (!t) {
+    if (L && (L.kind === 'appt' || L.kind === 'new') && !e.target.closest('.pop')) { closeLayer(); highlight(); }
+    if (ui.dd && !e.target.closest('.ddwrap')) { ui.dd = null; L && L.kind === 'new' ? drawNew() : render(); }
+    return;
+  }
+  const d = t.dataset;
+  if (d.close !== undefined) { closeLayer(); ui.dd = null; return render(); }
+  if (d.nav) return go(d.nav);
+  if (d.openClient) return openClient(d.openClient);
+  if (d.ctab) { ui.ctab = d.ctab; render(); return emit('ctab', { tab: d.ctab }); }
+  if (d.lesson) return startLesson(d.lesson);
+  if (d.slot) { const [k, m] = d.slot.split('|'); ui.dd = null; return newApptPopover({ date: k, start: +m, fromSlot: true }, t); }
+  if (d.appt) { ui.dd = null; return apptPopover(d.appt, t); }
+  if (d.day) { ui.mday = d.day; return render(); }
+  if (d.view) { ui.view = d.view; return render(); }
+  if (d.openAppt) { ui.page = 'appt'; ui.apptId = d.openAppt; ui.ndraft = null; ui.psy = false; render(); return emit('note-page', { id: d.openAppt }); }
+  if (d.openDxtx) return openDxTx(d.openDxtx);
+  if (d.backCal) { ui.page = 'calendar'; return showDate(d.backCal), render(); }
+  if (d.schedule) return newApptPopover({ cid: d.schedule }, null);
+  if (d.create) { closeLayer(); if (d.create === 'appt') return newApptPopover({}, null); return toast('Not part of the practice sandbox'); }
+  if (d.new) { closeLayer(); if (d.new === 'dxtx') return openDxTx(ui.clientId); return toast('Not part of the practice sandbox'); }
+  if (d.status) {
+    const a = A(L.id); a.status = d.status; { const fv = $('#apptFee'); ui.feeDraft = fv && fv.value !== '' && !isNaN(+fv.value) ? { id: a.id, v: +fv.value } : null; } const id = a.id, anchor = $(`[data-appt="${id}"]`);
+    render(); apptPopover(id, $(`[data-appt="${id}"]`) || anchor); toast('Status changed to ' + d.status);
+    return emit('status', { id, status: d.status });
+  }
+  if (d.pickClient) { L.st.cid = d.pickClient; ui.dd = null; ui.ncq = ''; readNewSafe(); drawNew(); return emit('client-picked', { id: d.pickClient }); }
+  if (d.dx) { if (!ui.dxtx.dx.includes(d.dx)) ui.dxtx.dx.push(d.dx); readPlan(); ui.dd = null; ui.dxQ = ''; return render(); }
+  if (d.dxrm) { readPlan(); ui.dxtx.dx = ui.dxtx.dx.filter(x => x !== d.dxrm); return render(); }
+  if (d.rte) { e.preventDefault(); const ed = t.closest('.rte').querySelector('.rtein'); ed.focus(); document.execCommand(d.rte); return; }
+  if (d.ptpl) { readPlan(); ui.dxtx.tpl = d.ptpl; if (d.ptpl === 'Basic' && !ui.dxtx.plan) ui.dxtx.plan = blankPlan(); ui.dd = null; render(); return emit('plan-tpl', { tpl: d.ptpl }); }
+  if (d.ntpl) { readNoteDraft(); ui.ndraft.tpl = d.ntpl; ui.dd = null; render(); return emit('tpl', { tpl: d.ntpl }); }
+  if (d.quiz) { const [i, o] = d.quiz.split('|'); ui.quiz[i] = o; renderGuide(); if (QUIZ.every((q, j) => ui.quiz[j] === q.a)) emit('quiz', {}); return; }
+  switch (t.id) {
+    case 'navToggle': ui.navOpen = !ui.navOpen; render(); return emit('navtoggle', { open: ui.navOpen });
+    case 'topCreate': return L && L.kind === 'menu' ? closeLayer() : showMenu(t, '<button type="button" data-create="client">Create client</button><button type="button" data-create="appt">Schedule appointment</button><button type="button" data-create="avail">Add availability</button>');
+    case 'chartNew': return L && L.kind === 'menu' ? closeLayer() : showMenu(t, '<button type="button" data-new="dxtx">Diagnosis and treatment plan</button><button type="button" data-new="gfe">Good faith estimate</button><button type="button" data-new="mse">Mental status exam</button><button type="button" data-new="measure">Scored measure</button><button type="button" data-new="other">Other document</button>');
+    case 'statusBtn': { const a = A(L.id); const pop = $('#layer .pop'); const r = t.getBoundingClientRect(); const m = document.createElement('div'); m.className = 'menu'; m.setAttribute('role', 'menu'); m.innerHTML = STATUSES.map(s => `<button type="button" data-status="${s}" style="${s === a.status ? 'color:var(--ev-show-t);font-weight:600' : ''}">${s}</button>`).join(''); $$('#layer .menu').forEach(x => x.remove()); $('#layer').appendChild(m); m.style.top = (r.bottom + 4) + 'px'; m.style.left = r.left + 'px'; return highlight(); }
+    case 'popSave': { const a = A(L.id), v = +$('#apptFee').value;
+      { const Ls = ui.lesson && LESSONS.find(l => l.id === ui.lesson), st = Ls && Ls.steps[ui.step]; if (st && st.on === 'fee-saved') { const r = st.test({ id: a.id, status: a.status, fee: v }); if (r !== true) { ui.fb = r; renderGuide(); return highlight(); } } }
+      a.fee = isNaN(v) ? a.fee : v; const id = a.id; closeLayer(); render(); toast('Appointment saved'); return emit('fee-saved', { id, status: a.status, fee: a.fee }); }
+    case 'popAddNote': { const id = L.id; closeLayer(); ui.page = 'appt'; ui.apptId = id; ui.ndraft = null; ui.psy = false; render(); return emit('note-page', { id }); }
+    case 'wkPrev': ui.weekOff--; render(); return emit('week', { off: ui.weekOff });
+    case 'wkNext': ui.weekOff++; render(); return emit('week', { off: ui.weekOff });
+    case 'wkToday': ui.weekOff = 0; ui.mday = TK; render(); return emit('week', { off: 0 });
+    case 'sideSchedule': return newApptPopover({ cid: ui.clientId }, null);
+    case 'sendReminder': S.reminders[ui.clientId] = true; render(); toast('Reminder sent (sandbox only)'); return emit('reminder', { id: ui.clientId });
+    case 'naClient': readNewSafe(); ui.dd = ui.dd === 'client' ? null : 'client'; return drawNew();
+    case 'naSave': return saveNew();
+    case 'dxSelect': readPlan(); ui.dd = ui.dd === 'dx' ? null : 'dx'; return render();
+    case 'tplBtn': readPlan(); ui.dd = ui.dd === 'tpl' ? null : 'tpl'; return render();
+    case 'dxtxSave': return saveDxTx();
+    case 'loadLastPlan': { readPlan(); const prev = S.plans[ui.dxtx.cid]; if (!prev) return toast('There is no previous plan for this client.'); ui.dxtx.tpl = 'Basic'; ui.dxtx.plan = JSON.parse(JSON.stringify({ ...blankPlan(), ...prev })); render(); return emit('plan-tpl', { tpl: 'Basic' }); }
+    case 'noteTplBtn': readNoteDraft(); ui.dd = ui.dd === 'ntpl' ? null : 'ntpl'; return render();
+    case 'loadLast': {
+      readNoteDraft(); const a = A(ui.apptId);
+      const prev = S.notes.filter(n => n.clientId === a.clientId && n.tpl === 'Tangible Progress Note').sort((x, y) => y.date.localeCompare(x.date))[0];
+      if (!prev) return toast('No previous note for this client yet.');
+      ui.ndraft = { tpl: 'Tangible Progress Note', f: JSON.parse(JSON.stringify(prev.f)) }; render(); toast('Loaded the ' + fmtShort(prev.date) + ' note. Update it for today.');
+      return emit('tpl', { tpl: 'Tangible Progress Note' });
+    }
+    case 'signNote': return signNote();
+    case 'addPsy': ui.psy = !ui.psy; readNoteDraft(); return render();
+    case 'resetBtn':
+      if (!t.classList.contains('armed')) { t.classList.add('armed'); t.textContent = 'Click again to reset'; setTimeout(() => { t.classList.remove('armed'); t.textContent = 'Reset sandbox'; }, 3500); return; }
+      S = seed(); P = { done: {} }; Object.assign(ui, { page: 'calendar', clientId: null, ctab: 'overview', apptId: null, weekOff: 0, mday: TK, lesson: null, step: 0, fb: null, quiz: {}, dxtx: null, ndraft: null, dd: null });
+      t.classList.remove('armed'); t.textContent = 'Reset sandbox'; closeLayer(); render(); return toast('Sandbox reset with fresh sample clients');
+    case 'guideMin': ui.guideMin = !ui.guideMin; renderGuide(); { const pp = $('#layer .pop'); if (pp) fit(pp); } return;
+    case 'gExit': ui.lesson = null; ui.fb = null; renderGuide(); return highlight();
+    case 'gSkip': return advance();
+    case 'gShow': { const st = LESSONS.find(l => l.id === ui.lesson).steps[ui.step]; if (st.go) st.go(); render(); if (!curTarget()) toast('Close the open window first, then try again.'); return highlight(true); }
+  }
+});
+function readNewSafe() { try { readNew(); } catch (e) {} }
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.id === 'naRec') { readNewSafe(); L.st.rec = t.checked; return drawNew(); }
+  if (t.id === 'naDate' || t.id === 'naStart') { readNewSafe(); return drawNew(); }
+});
+document.addEventListener('mousedown', e => { if (e.target.closest('.rtebar button')) e.preventDefault(); });
+document.addEventListener('input', e => {
+  const t = e.target;
+  if (t.id === 'dxSearch') { ui.dxQ = t.value; $('#dxResults').innerHTML = dxResults(); return highlight(); }
+  if (t.id === 'naClientQ') { ui.ncq = t.value; readNewSafe(); return drawNew(); }
+  if (t.id === 'clientSearch') { ui.clientQ = t.value; const pos = t.selectionStart; render(); const s = $('#clientSearch'); s.focus(); s.setSelectionRange(pos, pos); }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (ui.dd) { ui.dd = null; L && L.kind === 'new' ? drawNew() : render(); } else if (L) { closeLayer(); highlight(); } } });
+let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (ui.page === 'calendar') render(); const pp = $('#layer .pop'); if (pp) fit(pp); }, 150); });
+
+render();
+})();
+</script>
+</body>
+</html>
