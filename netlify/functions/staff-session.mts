@@ -1,37 +1,41 @@
-// POST /api/staff-session  { token }  — called by /staff-login after "Sign in with Google".
-// Checks the Google sign-in with Netlify Identity, only accepts @tangiblementalhealth.com accounts,
-// adds unknown work accounts to the staff list as "pending", and sets the staff session cookie.
+// POST /.netlify/functions/staff-session  (Authorization: Bearer <Identity token>)
+// Called by /staff-login after "Sign in with Google". Netlify checks the Identity token before this runs
+// and hands us the verified user (context.clientContext.user), so we never have to call Identity ourselves.
+// Only @tangiblementalhealth.com Google accounts are accepted; unknown work accounts are added as "pending".
+// This is a classic (v1) function on purpose: v1 is what receives the verified Identity user.
+import { connectLambda } from '@netlify/blobs';
 import { createSession, getPerson, savePerson, sessionCookieHeader } from '../lib/staff-session.ts';
 import { isWorkEmail } from '../../src/data/staff-access.ts';
 
-const json = (body: unknown, status = 200, headers: Record<string, string> = {}) =>
-  new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', ...headers } });
+const reply = (statusCode: number, body: unknown, cookie?: string) => ({
+  statusCode,
+  headers: { 'content-type': 'application/json', 'cache-control': 'no-store', ...(cookie ? { 'set-cookie': cookie } : {}) },
+  body: JSON.stringify(body),
+});
 
-export default async (req: Request) => {
-  if (req.method !== 'POST') return json({ error: 'method' }, 405);
-  const origin = new URL(req.url).origin;
-  if (req.headers.get('origin') !== origin) return json({ error: 'origin' }, 403);
+export const handler = async (event: any, context: any) => {
+  try {
+    if (event.httpMethod !== 'POST') return reply(405, { error: 'method' });
+    const host = event.headers?.host;
+    const origin = event.headers?.origin || '';
+    if (!host || origin !== `https://${host}`) return reply(403, { error: 'origin' });
 
-  const { token } = await req.json().catch(() => ({}) as any);
-  if (!token || typeof token !== 'string') return json({ error: 'missing' }, 400);
+    const user = context?.clientContext?.user;
+    if (!user) return reply(401, { error: 'invalid' });
+    const email = String(user.email || '').toLowerCase();
+    if (!isWorkEmail(email)) return reply(403, { error: 'domain' });
+    const provider = user.app_metadata?.provider;
+    if (provider && provider !== 'google') return reply(403, { error: 'provider' });
 
-  // Ask Netlify Identity who this token belongs to (this is what proves the Google sign-in).
-  const res = await fetch(`${origin}/.netlify/identity/user`, { headers: { authorization: `Bearer ${token}` } });
-  if (!res.ok) return json({ error: 'invalid' }, 401);
-  const user = await res.json();
-  const email = String(user.email || '').toLowerCase();
-  if (!isWorkEmail(email)) return json({ error: 'domain' }, 403);
-  if (user.app_metadata?.provider && user.app_metadata.provider !== 'google') return json({ error: 'provider' }, 403);
+    connectLambda(event);
+    const name = String(user.user_metadata?.full_name || user.user_metadata?.name || '');
+    const p = (await getPerson(email)) || { email, name, roles: [], office: 'orem' as const, status: 'pending' as const };
+    await savePerson({ ...p, name: p.name || name, lastSignIn: new Date().toISOString() });
 
-  const name = String(user.user_metadata?.full_name || user.user_metadata?.name || '');
-  let p = await getPerson(email);
-  if (!p) {
-    p = { email, name, roles: [], office: 'orem', status: 'pending' };
+    const s = await createSession(email);
+    return reply(200, { ok: true, status: p.status }, sessionCookieHeader(s.value, s.maxAge));
+  } catch (e) {
+    console.error('staff-session failed', e);
+    return reply(500, { error: 'server' });
   }
-  await savePerson({ ...p, name: p.name || name, lastSignIn: new Date().toISOString() });
-
-  const s = await createSession(email);
-  return json({ ok: true, status: p.status }, 200, { 'set-cookie': sessionCookieHeader(s.value, s.maxAge) });
 };
-
-export const config = { path: '/api/staff-session' };
