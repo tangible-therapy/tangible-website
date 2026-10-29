@@ -7,6 +7,7 @@ import { getFinderData, LOCATIONS, AGES, SEES, SPECIALTIES, APPROACHES, INSURERS
 import { site, nav } from '../data/site';
 import pageSchema from '../data/page-schema.json';
 import { insurance, inNetworkText } from '../data/insurance';
+import { checkPublicOnly } from '../lib/chat-safety';
 
 const STATUS: Record<string, string> = {
   open: 'Accepting new clients',
@@ -98,7 +99,10 @@ export const GET: APIRoute = async () => {
   }));
   const options = { locations: LOCATIONS, ages: AGES, sees: SEES, specialties: SPECIALTIES, approaches: APPROACHES, insurance: INSURERS.filter((i) => therapists.some((t) => t.insurance.includes(i))) };
 
-  return new Response(JSON.stringify({ updated: sheetUpdated || '', text, therapists: people, options }), {
+  const body = JSON.stringify({ updated: sheetUpdated || '', text, therapists: people, options });
+  // Safety net: stop the build if anything staff-only ever ends up in what Tangie knows (src/lib/chat-safety.ts).
+  checkPublicOnly(body);
+  return new Response(body, {
     headers: { 'Content-Type': 'application/json; charset=utf-8' },
   });
 };
