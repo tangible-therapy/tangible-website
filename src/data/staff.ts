@@ -16,6 +16,7 @@ export const employeeLinks: StaffLink[] = [
   { label: 'Shared Google Drive', href: 'https://drive.google.com/drive/folders/0ANHdYds9dSG-Uk9PVA' },
   { label: 'Orem Team Dashboard', href: 'https://drive.google.com/drive/folders/0ANHdYds9dSG-Uk9PVA' },
   // Courses now live on the course portal; update these if the addresses change.
+  { label: 'Hours Tracker', href: '/hours', roles: ['therapist', 'supervisor', 'director'] },
   { label: 'Supervisor Training', href: 'https://academy.tangiblementalhealth.com', roles: ['supervisor', 'director'] },
   { label: 'Trainings', href: '/ceu' },
 ];
@@ -41,7 +42,7 @@ export const learningSites = [
 
 // Header menu shown on every staff page instead of the public menu.
 // Pages listed in staffPaths get this header automatically.
-export const staffPaths = ['/orientation', '/employeeportal', '/digital-products-2', '/onboarding', '/reception-portal', '/reception-onboarding', '/scheduling-new-client', '/scheduling-new-client-1', '/reception-onboarding-1', '/crisis-call', '/staff-admin'];
+export const staffPaths = ['/orientation', '/employeeportal', '/digital-products-2', '/onboarding', '/reception-portal', '/reception-onboarding', '/scheduling-new-client', '/scheduling-new-client-1', '/reception-onboarding-1', '/crisis-call', '/staff-admin', '/hours'];
 
 export const staffNav = [
   // Pulls from the Employee Links list above (blank links are skipped)
