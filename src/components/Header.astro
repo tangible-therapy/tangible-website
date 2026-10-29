@@ -8,6 +8,8 @@ const cta = staff ? { href: '/staff-logout', label: 'Sign Out', ext: false } : {
 const tgt = (h: string) => (h.startsWith('http') ? { target: '_blank', rel: 'noopener' } : {});
 const home = staff ? '/employeeportal' : '/';
 const isActive = (href: string) => href !== '/' && (path === href || path.startsWith(href + '/'));
+// Staff menus: items tagged with roles are hidden for other roles by /scripts/site.js (data-roles).
+const r = (x: any) => (x?.roles?.length ? { 'data-roles': x.roles.join(' ') } : {});
 ---
 <header class:list={["site-header", { staff }]}>
   <div class="bar">
@@ -18,10 +20,10 @@ const isActive = (href: string) => href !== '/' && (path === href || path.starts
     <nav class="nav" aria-label="Main">
       {nav.map((item) =>
         'children' in item ? (
-          <div class:list={['item', { active: item.children.some((c: any) => isActive(c.href)) }]}>
+          <div class:list={['item', { active: item.children.some((c: any) => isActive(c.href)) }]} {...r(item)}>
             <button class="folder" type="button" aria-haspopup="true" aria-expanded="false">{item.label}</button>
             <div class="dropdown">
-              {item.children.map((c: any) => <a href={c.href} {...tgt(c.href)} aria-current={isActive(c.href) ? 'page' : undefined}>{c.label}</a>)}
+              {item.children.map((c: any) => <a href={c.href} {...tgt(c.href)} {...r(c)} aria-current={isActive(c.href) ? 'page' : undefined}>{c.label}</a>)}
             </div>
           </div>
         ) : (
@@ -44,9 +46,9 @@ const isActive = (href: string) => href !== '/' && (path === href || path.starts
     <nav>
       {nav.map((item) =>
         'children' in item ? (
-          <details>
+          <details {...r(item)}>
             <summary>{item.label}</summary>
-            {item.children.map((c: any) => <a href={c.href} {...tgt(c.href)}>{c.label}</a>)}
+            {item.children.map((c: any) => <a href={c.href} {...tgt(c.href)} {...r(c)}>{c.label}</a>)}
           </details>
         ) : (
           <a href={item.href}>{item.label}</a>

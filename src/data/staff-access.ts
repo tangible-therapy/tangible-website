@@ -19,10 +19,11 @@ export const ROLES: { id: Role; label: string }[] = [
 
 export type Office = 'orem' | 'provo' | 'sandy';
 // director = who gets that office's orientation-completion emails. Telehealth-only staff use Orem.
-export const OFFICES: { id: Office; label: string; director: string; directorEmail: string }[] = [
-  { id: 'orem', label: 'Orem (and telehealth)', director: 'Skyler', directorEmail: 'skyler@tangiblementalhealth.com' },
-  { id: 'provo', label: 'Provo', director: 'Hannah', directorEmail: 'hannah@tangiblementalhealth.com' },
-  { id: 'sandy', label: 'Sandy', director: 'Arianne', directorEmail: 'arianne@tangiblementalhealth.com' },
+// dashboard = that office's Team Dashboard sheet is connected to the website (docs/office-dashboards).
+export const OFFICES: { id: Office; label: string; director: string; directorEmail: string; dashboard: boolean }[] = [
+  { id: 'orem', label: 'Orem (and telehealth)', director: 'Skyler', directorEmail: 'skyler@tangiblementalhealth.com', dashboard: true },
+  { id: 'provo', label: 'Provo', director: 'Hannah', directorEmail: 'hannah@tangiblementalhealth.com', dashboard: false },
+  { id: 'sandy', label: 'Sandy', director: 'Arianne', directorEmail: 'arianne@tangiblementalhealth.com', dashboard: false },
 ];
 
 export type StaffRecord = {
@@ -52,6 +53,11 @@ const RESTRICTED: { paths: string[]; roles: Role[] }[] = [
   },
   { paths: ['/staff-admin'], roles: ['director'] },
 ];
+
+// Menu/link visibility: a link with roles is shown only to those roles (owners see everything).
+// This is only for tidy menus — the pages themselves are protected by canOpen() in the gate.
+export const canSee = (linkRoles: Role[] | undefined, r: StaffRecord | null) =>
+  !linkRoles || !linkRoles.length || (!!r && (isOwner(r.email) || linkRoles.some((x) => r.roles.includes(x))));
 
 const matches = (path: string, p: string) => path === p || path === p + '.html' || path.startsWith(p + '/');
 

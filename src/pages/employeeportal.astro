@@ -1,34 +1,290 @@
 ---
-// Staff-only page (password-protected by netlify/edge-functions/staff-gate.ts)
+// Staff-only page (protected by netlify/edge-functions/staff-gate.ts).
+// With Google sign-in on, the top shows the person's office dashboard (data: /api/dashboard, from the office's
+// Team Dashboard sheet — see docs/office-dashboards) and the link cards hide links that aren't for their role.
 import Base from '../layouts/Base.astro';
 import Divider from '../components/Divider.astro';
 import { employeeLinks, newEmployeeLinks, managementLinks, type StaffLink } from '../data/staff';
+import { OFFICES } from '../data/staff-access';
 const show = (l: StaffLink[]) => l.filter((x) => x.href);
 const ext = (h: string) => h.startsWith('http');
 const cards = [
   { title: 'Employee Links', links: show(employeeLinks) },
   { title: 'New Employee Links', links: show(newEmployeeLinks) },
-  { title: 'Management Portal', links: show(managementLinks) },
+  { title: 'Management Portal', links: show(managementLinks), roles: ['director'] },
 ];
+const offices = OFFICES.map((o) => ({ id: o.id, label: o.label.replace(/ \(.*\)/, '') }));
 ---
 <Base title="Employee Portal | Tangible Therapy" description="Tangible Therapy employee portal." noindex>
   <section class="sec t-black h-medium has-bg has-div" style="--divh:6vw">
     <div class="sec-bg"><img src="/images/309a7727-712d27.jpg" alt="" loading="eager" /><div class="sec-ov" style="opacity:.15"></div></div>
-    <div class="sec-in"><div class="wrap"><h1 class="ta-center">Welcome to your<br />Employee Portal</h1></div></div>
+    <div class="sec-in"><div class="wrap"><h1 class="ta-center" id="pd-hello">Welcome to your<br />Employee Portal</h1></div></div>
     <Divider type="wavy" height={6} width={100} fill="#565d57" />
   </section>
+
+  <section class="sec t-light pd" id="pd" hidden>
+    <div class="sec-in"><div class="wrap pd-wrap">
+      <div class="pd-top">
+        <div>
+          <p class="pd-eyebrow" id="pd-office">Your office</p>
+          <h2 class="pd-title">Office dashboard</h2>
+        </div>
+        <label class="pd-switch" id="pd-switch" hidden>View office
+          <select id="pd-office-pick">{offices.map((o) => <option value={o.id}>{o.label}</option>)}</select>
+        </label>
+      </div>
+      <p class="pd-soon" id="pd-soon" hidden>This office's dashboard isn't connected yet. It's coming soon.</p>
+      <p class="pd-soon" id="pd-error" hidden></p>
+
+      <div class="pd-grid" id="pd-grid" hidden>
+        <article class="pd-card pd-training">
+          <h3>Next training meeting</h3>
+          <div id="pd-next"></div>
+          <h4 class="pd-sub">Coming up</h4>
+          <ul class="pd-upcoming" id="pd-upcoming"></ul>
+        </article>
+
+        <article class="pd-card pd-rooms">
+          <h3>Find an open room</h3>
+          <div class="pd-controls">
+            <div class="pd-seg" id="pd-floor" role="tablist" aria-label="Office"></div>
+            <label>Day<select id="pd-day"></select></label>
+            <label>Time<select id="pd-time"></select></label>
+          </div>
+          <p class="pd-summary" id="pd-summary" aria-live="polite"></p>
+          <ul class="pd-roomlist" id="pd-roomlist"></ul>
+        </article>
+
+        <article class="pd-card pd-suggest">
+          <h3>Suggest a training topic</h3>
+          <p>Have an idea for a future training meeting? It goes straight to your director's list.</p>
+          <form id="pd-suggest">
+            <label class="sr-only" for="pd-topic">Training topic</label>
+            <textarea id="pd-topic" rows="3" maxlength="500" placeholder="e.g. Working with teens and their parents" required></textarea>
+            <button type="submit" class="pd-btn">Send suggestion</button>
+            <p class="pd-msg" id="pd-suggest-msg" role="status"></p>
+          </form>
+        </article>
+      </div>
+      <p class="pd-updated" id="pd-updated"></p>
+    </div></div>
+  </section>
+
   <section class="sec t-light">
     <div class="sec-in">
       <div class="wrap staff-cards">
         {cards.map((c) => (
-          <div class="staff-card">
+          <div class="staff-card" data-role-group {...(c.roles ? { 'data-roles': c.roles.join(' ') } : {})}>
             <h2>{c.title}</h2>
             {c.links.map((l) => (
-              <a class="staff-btn" href={l.href} target={ext(l.href) ? '_blank' : undefined} rel={ext(l.href) ? 'noopener' : undefined}>{l.label}</a>
+              <a class="staff-btn" href={l.href} target={ext(l.href) ? '_blank' : undefined} rel={ext(l.href) ? 'noopener' : undefined} {...(l.roles ? { 'data-roles': l.roles.join(' ') } : {})}>{l.label}</a>
             ))}
           </div>
         ))}
       </div>
     </div>
   </section>
+
+  <script is:inline>
+    (function () {
+      var DAYS = [['M', 'Monday'], ['T', 'Tuesday'], ['W', 'Wednesday'], ['Th', 'Thursday'], ['F', 'Friday'], ['S', 'Saturday']];
+      var $ = function (id) { return document.getElementById(id); };
+      var me = null, data = null, floor = 0;
+
+      function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+      function nowParts() {
+        // Current day/time in Utah
+        var f = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Denver', weekday: 'short', hour: 'numeric', minute: 'numeric', hour12: false, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date());
+        var g = {}; f.forEach(function (p) { g[p.type] = p.value; });
+        return { wd: g.weekday, mins: (+g.hour % 24) * 60 + +g.minute, date: g.year + '-' + g.month + '-' + g.day };
+      }
+      function label12(m) { var h = Math.floor(m / 60), mm = m % 60; return ((h + 11) % 12 + 1) + ':' + ('0' + mm).slice(-2) + ' ' + (h < 12 ? 'AM' : 'PM'); }
+      function mins(hhmm) { var p = hhmm.split(':'); return +p[0] * 60 + +p[1]; }
+      function niceDate(iso) { var d = new Date(iso + 'T12:00:00'); return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }); }
+      function shortDate(iso) { var d = new Date(iso + 'T12:00:00'); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); }
+      function isMe(names) {
+        if (!me || !names) return false;
+        var first = (me.firstName || '').toLowerCase();
+        return !!first && names.toLowerCase().split(/[^a-z]+/).indexOf(first) >= 0;
+      }
+
+      // ----- training -----
+      function renderTraining() {
+        var today = nowParts().date;
+        var next = (data.training || []).filter(function (t) { return t.date >= today && (t.topic || t.skill || t.dsm || t.trainer); });
+        var box = $('pd-next'); box.innerHTML = '';
+        if (!next.length) { box.appendChild(el('p', 'pd-muted', 'No upcoming meetings are on the schedule yet.')); $('pd-upcoming').innerHTML = ''; return; }
+        var n = next[0];
+        box.appendChild(el('p', 'pd-date', niceDate(n.date)));
+        box.appendChild(el('p', 'pd-topic', n.topic || 'Topic to be announced'));
+        var mine = [];
+        var dl = el('dl', 'pd-facts');
+        [['Trainer', n.trainer], ['Skill assignment', n.skill], ['DSM', n.dsm]].forEach(function (f) {
+          if (!f[1]) return;
+          var you = isMe(f[1]); if (you) mine.push(f[0] === 'Trainer' ? 'the trainer' : f[0] === 'DSM' ? 'DSM' : 'skill assignment');
+          var dd = el('dd', you ? 'you' : '', f[1]);
+          dl.appendChild(el('dt', null, f[0])); dl.appendChild(dd);
+        });
+        box.appendChild(dl);
+        if (n.extra) { var ex = el('p', 'pd-extra'); ex.appendChild(el('strong', null, 'Also: ')); ex.appendChild(document.createTextNode(n.extra)); box.appendChild(ex); }
+        if (mine.length) box.insertBefore(el('p', 'pd-you', 'You’re on ' + mine.join(' and ') + ' for this meeting.'), box.firstChild);
+
+        var ul = $('pd-upcoming'); ul.innerHTML = '';
+        next.slice(1, 5).forEach(function (t) {
+          var li = el('li', isMe([t.trainer, t.skill, t.dsm].join(' ')) ? 'you' : '');
+          li.appendChild(el('span', 'when', shortDate(t.date)));
+          var what = el('span', 'what', t.topic || 'Topic to be announced');
+          var who = [t.skill && 'Skill: ' + t.skill, t.dsm && 'DSM: ' + t.dsm].filter(Boolean).join(' · ');
+          li.appendChild(what);
+          if (who) li.appendChild(el('span', 'who', who));
+          ul.appendChild(li);
+        });
+        if (!ul.children.length) ul.appendChild(el('li', 'pd-muted', 'Nothing else scheduled yet.'));
+      }
+
+      // ----- rooms -----
+      function setupRooms() {
+        var seg = $('pd-floor'); seg.innerHTML = '';
+        (data.schedules || []).forEach(function (s, i) {
+          var b = el('button', null, s.name); b.type = 'button'; b.setAttribute('role', 'tab');
+          b.onclick = function () { floor = i; renderRooms(); };
+          seg.appendChild(b);
+        });
+        var day = $('pd-day'), time = $('pd-time'), now = nowParts();
+        day.innerHTML = ''; time.innerHTML = '';
+        DAYS.forEach(function (d) { var o = el('option', null, d[1]); o.value = d[0]; day.appendChild(o); });
+        for (var m = 7 * 60; m <= 21 * 60 + 30; m += 30) { var o = el('option', null, label12(m)); o.value = m; time.appendChild(o); }
+        var map = { Mon: 'M', Tue: 'T', Wed: 'W', Thu: 'Th', Fri: 'F', Sat: 'S' };
+        day.value = map[now.wd] || 'M';
+        var slot = Math.min(Math.max(Math.floor(now.mins / 30) * 30, 420), 1290);
+        if (!map[now.wd]) slot = 540;
+        time.value = String(slot);
+        day.onchange = time.onchange = renderRooms;
+      }
+      function renderRooms() {
+        var s = (data.schedules || [])[floor];
+        Array.prototype.forEach.call($('pd-floor').children, function (b, i) { b.setAttribute('aria-selected', String(i === floor)); });
+        var list = $('pd-roomlist'); list.innerHTML = '';
+        if (!s) { $('pd-summary').textContent = 'No room schedules found in the sheet.'; return; }
+        var d = $('pd-day').value, t = +$('pd-time').value, free = 0;
+        s.rooms.forEach(function (room) {
+          var blocks = room.days[d] || [];
+          var busy = blocks.filter(function (b) { return mins(b.start) <= t && t < mins(b.end); })[0];
+          var li = el('li', busy ? 'busy' : 'free');
+          li.appendChild(el('span', 'room', room.label));
+          if (busy) {
+            li.appendChild(el('span', 'state', busy.who + ' until ' + label12(mins(busy.end))));
+          } else {
+            free++;
+            var nextB = blocks.filter(function (b) { return mins(b.start) > t; })[0];
+            li.appendChild(el('span', 'state', nextB ? 'Free until ' + label12(mins(nextB.start)) : 'Free the rest of the day'));
+          }
+          list.appendChild(li);
+        });
+        $('pd-summary').textContent = free + ' of ' + s.rooms.length + ' rooms free in ' + s.name + ' at ' + label12(t) + '.';
+      }
+
+      // ----- suggestions -----
+      $('pd-suggest').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var msg = $('pd-suggest-msg'), btn = this.querySelector('button'), topic = $('pd-topic').value.trim();
+        if (topic.length < 3) { msg.textContent = 'Please type a topic first.'; return; }
+        btn.disabled = true; msg.textContent = 'Sending…';
+        fetch('/api/dashboard?office=' + encodeURIComponent(currentOffice), { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ topic: topic }) })
+          .then(function (r) { return r.json(); })
+          .then(function (b) { if (b.ok) { msg.textContent = 'Thanks! Your suggestion was added.'; $('pd-topic').value = ''; } else msg.textContent = b.error || 'Something went wrong.'; })
+          .catch(function () { msg.textContent = 'Something went wrong. Please try again.'; })
+          .finally(function () { btn.disabled = false; });
+      });
+
+      var currentOffice = null;
+      function load(office) {
+        currentOffice = office;
+        ['pd-grid', 'pd-soon', 'pd-error'].forEach(function (id) { $(id).hidden = true; });
+        $('pd-updated').textContent = 'Loading…';
+        fetch('/api/dashboard?office=' + encodeURIComponent(office), { credentials: 'same-origin' })
+          .then(function (r) { return r.json(); })
+          .then(function (b) {
+            $('pd-updated').textContent = '';
+            if (b.available === false) { $('pd-soon').hidden = false; return; }
+            if (b.error) { $('pd-error').textContent = b.error; $('pd-error').hidden = false; return; }
+            data = b; floor = 0;
+            renderTraining(); setupRooms(); renderRooms();
+            $('pd-grid').hidden = false;
+            var mins_ago = Math.round((Date.now() - b.fetchedAt) / 60000);
+            $('pd-updated').textContent = 'From the ' + ($('pd-office-pick').selectedOptions[0] || {}).textContent + ' Team Dashboard sheet · updated ' + (mins_ago < 2 ? 'just now' : mins_ago + ' minutes ago') + (b.stale ? ' (the sheet couldn’t be reached just now)' : '') + '.';
+          })
+          .catch(function () { $('pd-updated').textContent = ''; $('pd-error').textContent = 'The dashboard couldn’t load. Please refresh the page.'; $('pd-error').hidden = false; });
+      }
+
+      function start(m) {
+        me = m;
+        $('pd').hidden = false;
+        $('pd-hello').innerHTML = '';
+        $('pd-hello').appendChild(document.createTextNode('Welcome back, ' + (me.firstName ? me.firstName.charAt(0).toUpperCase() + me.firstName.slice(1) : 'there')));
+        $('pd-office').textContent = 'Your office: ' + (me.officeLabel || me.office);
+        $('pd-office-pick').value = me.office;
+        if (me.manage) { $('pd-switch').hidden = false; $('pd-office-pick').onchange = function () { load(this.value); }; }
+        load(me.office);
+      }
+      if (window.tangibleStaff) start(window.tangibleStaff);
+      else document.addEventListener('tangible:staff', function (e) { start(e.detail); }, { once: true });
+    })();
+  </script>
 </Base>
+
+<style is:global>
+  .pd [hidden], .pd[hidden] { display: none !important; }
+  .pd .pd-wrap { max-width: 1150px; }
+  .pd-top { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+  .pd-eyebrow { text-transform: uppercase; letter-spacing: .12em; font-size: .75rem; font-weight: 500; margin: 0 0 .3rem; color: #dfe5df; }
+  .pd-title { color: #fff; margin: 0; font-size: clamp(1.8rem, 3.5vw, 2.4rem); }
+  .pd-switch { display: flex; flex-direction: column; gap: .3rem; font-size: .8rem; color: #e8ece8; }
+  .pd select, .pd textarea { font: inherit; font-size: .92rem; padding: .6rem .8rem; border: 1px solid #c9cfca; border-radius: 10px; background: #fff; color: var(--charcoal); max-width: 100%; }
+  .pd-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; align-items: start; }
+  .pd-card { background: #fff; color: var(--charcoal); border-radius: 28px; padding: 1.75rem 2rem; }
+  .pd-card h3 { font-size: 1.3rem; margin: 0 0 1rem; color: var(--charcoal); }
+  .pd-training { grid-row: span 2; }
+  .pd-date { font-size: .85rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 500; color: var(--slate); margin: 0 0 .25rem; }
+  .pd-topic { font-size: 1.35rem; font-weight: 500; line-height: 1.3; margin: 0 0 1rem; }
+  .pd-you { background: #fdf3d8; color: #6b4e00; border-radius: 12px; padding: .6rem .9rem; font-size: .9rem; font-weight: 500; margin: 0 0 1rem; }
+  .pd-facts { display: grid; grid-template-columns: max-content 1fr; gap: .45rem 1rem; margin: 0 0 1rem; font-size: .95rem; }
+  .pd-facts dt { color: #6b716c; } .pd-facts dd { margin: 0; font-weight: 400; }
+  .pd-facts dd.you { font-weight: 500; color: #6b4e00; }
+  .pd-extra { font-size: .9rem; background: #f3f5f3; border-radius: 12px; padding: .7rem .9rem; margin: 0; }
+  .pd-sub { font-size: .8rem; text-transform: uppercase; letter-spacing: .1em; margin: 1.5rem 0 .5rem; color: #6b716c; font-weight: 500; }
+  .pd-upcoming { list-style: none; margin: 0; padding: 0; }
+  .pd-upcoming li { display: grid; grid-template-columns: 4.2rem 1fr; gap: 0 .75rem; padding: .7rem 0; border-top: 1px solid #e6e9e6; font-size: .9rem; }
+  .pd-upcoming .when { grid-row: span 2; font-weight: 500; color: var(--slate); }
+  .pd-upcoming .who { color: #6b716c; font-size: .82rem; }
+  .pd-upcoming li.you .who, .pd-upcoming li.you .when { color: #6b4e00; }
+  .pd-muted { color: #6b716c; font-size: .9rem; }
+  .pd-controls { display: flex; flex-wrap: wrap; gap: .75rem; align-items: flex-end; margin-bottom: 1rem; }
+  .pd-controls label { display: flex; flex-direction: column; gap: .3rem; font-size: .8rem; }
+  .pd-seg { display: inline-flex; border: 1px solid #c9cfca; border-radius: 300px; padding: 3px; }
+  .pd-seg button { font: inherit; font-size: .85rem; border: 0; background: none; border-radius: 300px; padding: .45rem .9rem; cursor: pointer; color: var(--charcoal); }
+  .pd-seg button[aria-selected=true] { background: var(--charcoal); color: #fff; }
+  .pd-summary { font-size: .88rem; color: #5d635e; margin: 0 0 .5rem; }
+  .pd-roomlist { list-style: none; margin: 0; padding: 0; display: grid; gap: .45rem; }
+  .pd-roomlist li { display: flex; justify-content: space-between; gap: .75rem; align-items: center; border-radius: 12px; padding: .6rem .85rem; font-size: .9rem; }
+  .pd-roomlist li.free { background: #e7f2e9; }
+  .pd-roomlist li.busy { background: #f3f4f3; color: #6b716c; }
+  .pd-roomlist .room { font-weight: 500; }
+  .pd-roomlist li.free .state { color: #2f6b3a; font-weight: 500; }
+  .pd-roomlist .state { text-align: right; font-size: .84rem; }
+  .pd-suggest p { font-size: .9rem; margin: 0 0 .8rem; }
+  .pd-suggest textarea { width: 100%; box-sizing: border-box; resize: vertical; }
+  .pd-btn { margin-top: .7rem; font: inherit; font-size: .9rem; font-weight: 500; border-radius: 300px; padding: .65rem 1.3rem; border: 0; background: var(--charcoal); color: #fff; cursor: pointer; }
+  .pd-btn:disabled { opacity: .5; }
+  .pd-suggest .pd-msg { margin: .6rem 0 0; font-size: .85rem; min-height: 1.2em; }
+  .pd-soon { background: #fff; color: var(--charcoal); border-radius: 20px; padding: 1.2rem 1.5rem; }
+  .pd-updated { font-size: .78rem; color: #dfe5df; margin: 1rem 0 0; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  @media (max-width: 900px) {
+    .pd-grid { grid-template-columns: 1fr; }
+    .pd-training { grid-row: auto; }
+    .pd-card { padding: 1.4rem 1.2rem; border-radius: 22px; }
+    .pd-roomlist li { flex-direction: column; align-items: flex-start; gap: .1rem; }
+    .pd-roomlist .state { text-align: left; }
+  }
+</style>
