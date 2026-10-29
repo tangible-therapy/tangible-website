@@ -1,6 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import Divider from '../components/Divider.astro';
+import { inNetworkText } from '../data/insurance';
 ---
 <Base title={"Insurance We Accept | Tangible Therapy"} description={"Insurance We Accept at Tangible Mental Health: In-network with BCBS, SelectHealth, PEHP, TRICARE, United Healthcare, DMBA & more in Provo & Utah.  Schedule today!"}>
 <section class="sec t-bright h-medium has-bg has-div" style="--divh:6vw">
@@ -14,7 +15,7 @@ import Divider from '../components/Divider.astro';
 
 <section class="sec t-bright-inverse h-small">
 <div class="sec-in">
-<div class="fe" style="--rows:14;--mrows:23">
+<div class="fe" style="--rows:14;--mrows:25">
   <div class="b b-html" style="--d:2/9/4/19;--m:3/2/6/10;--dz:2;--mz:2"><div class="rte"><h3 class="ta-center">In-network providers</h3></div></div>
   <div class="b b-html" style="--d:4/9/5/19;--m:5/2/7/10;--dz:3;--mz:3"><div class="rte"><p class="ta-center">We currently accept the following insurance plans:</p></div></div>
   <div class="b b-image jc" style="--d:5/2/8/5;--m:8/2/10/5;--dz:5;--mz:5"><figure class="img fill" style="--fit:contain"><img src="/images/image-32f408.png" alt="EMI Health insurance logo with stylized green human figure between the words &#x27;EMI&#x27; and &#x27;Health&#x27; under insurances accepted at Tangible" width="441" height="114" loading="lazy" decoding="async"></figure></div>
@@ -26,7 +27,9 @@ import Divider from '../components/Divider.astro';
   <div class="b b-image jc" style="--d:8/8/11/11;--m:10/7/12/10;--dz:11;--mz:11"><figure class="img fill" style="--fit:contain"><img src="/images/image-10-66f693.png" alt="Logo featuring a blue cross symbol with a human figure at the center and a separate blue shield with a snake wrapped around a staff, representing Blue Cross and Blue Shield insurance under insurances accepted at Tangible." width="600" height="600" loading="lazy" decoding="async"></figure></div>
   <div class="b b-image jc" style="--d:8/12/11/16;--m:12/2/14/5;--dz:12;--mz:12"><figure class="img fill" style="--fit:contain"><img src="/images/image-11-22f532.png" alt="Regence logo with a shield containing a caduceus symbol and the word &#x27;Regence&#x27; in black text under insurances accepted at Tangible" width="1449" height="387" loading="lazy" decoding="async"></figure></div>
   <div class="b b-image jc" style="--d:8/17/11/20;--m:14/2/16/5;--dz:13;--mz:13"><figure class="img fill" style="--fit:contain"><img src="/images/image-12-d170b6.png" alt="Logo for PEHP Health &amp; Benefits with the text &#x27;PEHP&#x27; in oversized blue letters and &#x27;Health &amp; Benefits&#x27; in smaller blue letters underneath under insurances accepted at Tangible" width="2399" height="1158" loading="lazy" decoding="async"></figure></div>
-  <div class="b b-html" style="--d:12/6/15/24;--m:19/2/23/10;--dz:4;--mz:4"><div class="rte"><p class="ta-center">If your provider is listed, your sessions may be partially or fully covered, depending on your plan. We encourage you to verify the specifics with your insurance company before your first session.</p></div></div>
+  <div class="b b-html jc" style="--d:8/3/11/7;--m:14/7/16/10;--dz:15;--mz:15"><p class="ins-word" style="color:#7d1f7d">Aetna</p></div>
+  <div class="b b-html jc" style="--d:8/21/11/25;--m:18/4/20/8;--dz:16;--mz:16"><p class="ins-word" style="color:#0a7bb5">Cigna</p></div>
+  <div class="b b-html" style="--d:12/6/15/24;--m:21/2/25/10;--dz:4;--mz:4"><div class="rte"><p class="ta-center">If your provider is listed, your sessions may be partially or fully covered, depending on your plan. We encourage you to verify the specifics with your insurance company before your first session.</p></div></div>
 </div>
 </div>
 </section>
@@ -76,9 +79,14 @@ import Divider from '../components/Divider.astro';
 <div class="sec-in">
 <div class="fe" style="--rows:13;--mrows:20">
   <div class="b b-html" style="--d:2/2/4/26;--m:1/2/4/10"><div class="rte"><h2 class="ta-center">✺ Frequently asked questions ✺</h2></div></div>
-  <div class="b b-accordion" style="--d:6/2/14/13;--m:5/2/13/10"><div class="accordion"><details><summary>Whats the cost of sessions if I don&#x27;t have insurance?</summary><div class="rte"><p>Our cash pay discount is one of the lowest around. We charge $115 per session for clients without insurance. </p></div></details><details><summary>What if my insurance only covers part of the cost?</summary><div class="rte"><p>If your plan includes coinsurance or you haven’t met your deductible, you may be responsible for part of the session cost. We’ll let you know what your estimated out-of-pocket amount is so you’re not caught off guard.</p></div></details><details><summary>Which Insurances do you accept?</summary><div class="rte"><p>We accept many of Utah’s largest insurance providers, including: Selecthealth, DMBA, EMI, BCBS, PEHP, Tricare, United Healthcare, UMR.</p></div></details></div></div>
+  <div class="b b-accordion" style="--d:6/2/14/13;--m:5/2/13/10"><div class="accordion"><details><summary>Whats the cost of sessions if I don&#x27;t have insurance?</summary><div class="rte"><p>Our cash pay discount is one of the lowest around. We charge $115 per session for clients without insurance. </p></div></details><details><summary>What if my insurance only covers part of the cost?</summary><div class="rte"><p>If your plan includes coinsurance or you haven’t met your deductible, you may be responsible for part of the session cost. We’ll let you know what your estimated out-of-pocket amount is so you’re not caught off guard.</p></div></details><details><summary>Which Insurances do you accept?</summary><div class="rte"><p>We accept many of Utah’s largest insurance providers, including {inNetworkText()}.</p></div></details></div></div>
   <div class="b b-accordion" style="--d:6/15/14/26;--m:13/2/21/10;--dz:2;--mz:2"><div class="accordion"><details><summary>What&#x27;s the cost of sessions with insurance?</summary><div class="rte"><p>The cost of a session with insurance depends on a variety of things determined by your insurance plan. Our average client with insurance pays around $25 per session. If you’d like to know the cost of a session for you, give us a call, and our billing team would be happy to help.</p></div></details><details><summary>How often will insurance cover my sessions?</summary><div class="rte"><p>Most plans allow up to two sessions a week, while others set limits on how many visits are covered per year. You can call your insurance provider or ask us for help reviewing your plan details.</p></div></details><details><summary>Why did I get a bill even though I have insurance?</summary><div class="rte"><p>This usually happens when a deductible hasn’t been met or when the insurance plan only covers part of the session cost. If you ever receive an unexpected bill, contact us — we’ll help explain it and make sure it’s accurate.</p></div></details></div></div>
 </div>
 </div>
 </section>
 </Base>
+
+<style>
+  /* Plan names shown as text until official logo files are added (then swap for an <img> like the others) */
+  .ins-word { margin: 0; width: 100%; text-align: center; font-size: clamp(1.4rem, 2.4vw, 2.1rem); font-weight: 600; letter-spacing: .01em; line-height: 1; }
+</style>

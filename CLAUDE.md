@@ -9,4 +9,5 @@ Key rules:
 - Keep existing URLs; add a 301 in netlify.toml if a page moves or is removed.
 - `npm run build` must pass. Check 1440, ~1280, ~1024 and 390px wide before sharing a preview.
 - Explain changes in plain, non-technical language.
+- Keep Tangie (the chatbot) in sync: if a change affects practice facts (prices, hours, offices, phone, booking, policies), update the PRACTICE text in src/pages/chat-knowledge.json.ts in the same pull request. Insurance plans live in src/data/insurance.ts (feeds the insurance page, its Google FAQ data and Tangie). See docs/context/chatbot.md.
 - If a change alters how the site works (forms, staff pages, alert recipients, registration flows...), update docs/context/website-context.md in the same pull request and tell the owner to refresh the project file "Website context - read first".

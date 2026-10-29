@@ -23,6 +23,7 @@ This is the context for editing the live website for Tangible Therapy (tangiblem
 
 ## Folder map
 - Header menu, phone, email, offices, tracking IDs: src/data/site.ts
+- Insurance plans accepted / not accepted (insurance page FAQ + its Google FAQ data + Tangie): src/data/insurance.ts. Logos on /insurance-we-accept are placed by hand; Aetna and Cigna show as text until logo files are added.
 - Staff menu, Employee Portal links, staff page list: src/data/staff.ts
 - Page shell (head, SEO meta, schema, tracking scripts): src/layouts/Base.astro
 - Extra structured data (FAQ / LocalBusiness) per URL: src/data/page-schema.json

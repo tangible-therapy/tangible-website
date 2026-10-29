@@ -6,6 +6,7 @@ import type { APIRoute } from 'astro';
 import { getFinderData, LOCATIONS, AGES, SEES, SPECIALTIES, APPROACHES, INSURERS } from '../lib/therapist-sheet';
 import { site, nav } from '../data/site';
 import pageSchema from '../data/page-schema.json';
+import { insurance, inNetworkText } from '../data/insurance';
 
 const STATUS: Record<string, string> = {
   open: 'Accepting new clients',
@@ -24,13 +25,15 @@ Telehealth (video) sessions are available with most therapists for clients in Ut
 Booking: open a therapist's profile and click "Book online" (shown for therapists accepting new clients), or call ${site.phone}. New clients get a free 15-minute consult with their therapist before booking. Existing clients use the client portal: ${site.clientPortal}
 Find a therapist: the therapist finder at /ourteam filters by office, specialty, approach, age, insurance and who is accepting new clients.
 Cost: $115 per session without insurance (one of the lowest cash rates in the area). Clients with insurance pay about $25 per session on average; the exact cost depends on the plan, deductible and coinsurance. Call and the billing team can estimate it.
-In-network insurance (from /insurance-we-accept): SelectHealth, DMBA, EMI Health, BCBS, Regence, PEHP, TRICARE, United Healthcare and UMR. Not every therapist takes every plan; each therapist's plans are listed below and on their profile. Benefits vary, so suggest calling to confirm coverage.
+In-network insurance (from /insurance-we-accept): ${inNetworkText()}. Not every therapist takes every plan; each therapist's plans are listed below and on their profile. Benefits vary, so suggest calling to confirm coverage.
+NOT accepted at this time: ${inNetworkText(insurance.notAccepted)}. If a visitor has one of these, say kindly that we don't currently accept it, and mention the $115 cash rate (out-of-network superbills are available for other plans) or calling ${site.phone} with questions. Don't suggest therapists for these plans.
 Out of network: the office can provide a superbill to submit for reimbursement.
 For professionals: free CEU trainings at /ceu; job openings at /careers.
 Crisis: Tangible is not a crisis service. In an emergency call 911. For a mental health crisis call or text 988 (Suicide & Crisis Lifeline), or use the SafeUT app (Utah).
 `.trim();
 
-const stripTags = (s: unknown) => String(s ?? '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+const stripTags = (s: unknown) =>
+  String(s ?? '').replaceAll('{{INSURANCE_IN_NETWORK}}', inNetworkText()).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 
 export const GET: APIRoute = async () => {
   const { therapists, sheetUpdated } = await getFinderData();
@@ -93,7 +96,7 @@ export const GET: APIRoute = async () => {
     times: t.times, ages: t.ages, sees: t.sees, specialties: t.specialties, approaches: t.approaches,
     insurance: t.insurance, gender: t.gender, languages: t.languages, booking: t.booking,
   }));
-  const options = { locations: LOCATIONS, ages: AGES, sees: SEES, specialties: SPECIALTIES, approaches: APPROACHES, insurance: INSURERS };
+  const options = { locations: LOCATIONS, ages: AGES, sees: SEES, specialties: SPECIALTIES, approaches: APPROACHES, insurance: INSURERS.filter((i) => therapists.some((t) => t.insurance.includes(i))) };
 
   return new Response(JSON.stringify({ updated: sheetUpdated || '', text, therapists: people, options }), {
     headers: { 'Content-Type': 'application/json; charset=utf-8' },

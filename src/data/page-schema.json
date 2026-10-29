@@ -789,7 +789,7 @@
      "name": "Which insurance plans does Tangible Therapy accept?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "Tangible Therapy is in-network with SelectHealth, DMBA, EMI, Blue Cross Blue Shield (BCBS), PEHP, Tricare, United Healthcare, and UMR. If you don't see your plan listed, contact us and we'll help figure out your options."
+      "text": "Tangible Therapy is in-network with {{INSURANCE_IN_NETWORK}}. If you don't see your plan listed, contact us and we'll help figure out your options."
      }
     },
     {

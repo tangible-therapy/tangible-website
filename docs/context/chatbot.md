@@ -12,6 +12,17 @@
 
 - **Nudge:** 10 seconds after a page loads, a small "Hi, I'm Tangie! How can I help?" bubble pops up above the "Ask Tangie" button, once per visit (sessionStorage key tc.prompted), and not if the visitor already opened the chat. Clicking it opens the chat; the x dismisses it. Change the wait with PROMPT_DELAY and the wording in the .tc-prompt markup in ChatWidget.astro.
 
+## What updates Tangie automatically (and what doesn't)
+Tangie's information is rebuilt on every site build, so it follows these automatically:
+- **Therapists** (status, openings, offices, ages, specialties, approaches, insurance per therapist) from the sheet; sheet edits trigger a rebuild.
+- **Insurance plans** from src/data/insurance.ts (`inNetwork` and `notAccepted`, e.g. Medicaid). The same list fills the FAQ answer on /insurance-we-accept and its Google FAQ data (`{{INSURANCE_IN_NETWORK}}` in page-schema.json, filled in Base.astro). The logo grid on that page is still placed by hand.
+- **FAQs** in src/data/page-schema.json and the **menu** in src/data/site.ts.
+- **New insurance in the sheet:** the finder and Tangie only offer plans at least one therapist takes. If the Insurances tab gets a new column for a plan already known in INSURER_NAMES (src/lib/therapist-sheet.ts, includes Medicaid), it appears in both automatically; a brand-new plan needs one line added there.
+
+NOT automatic: the PRACTICE text in src/pages/chat-knowledge.json.ts (phone, hours, offices, booking, costs, crisis line) and the general paragraphs on pages (Tangie does not read whole pages). When a change touches practice facts, update PRACTICE in the same pull request (rule in CLAUDE.md).
+
+When Medicaid (or another plan) becomes accepted: move it from `notAccepted` to `inNetwork` in src/data/insurance.ts, add a logo to /insurance-we-accept, and add a column for it in the sheet's Insurances tab with the therapists who take it.
+
 ## Privacy
 - The function does not log or store what visitors type; it only logs token counts per reply ([chat] lines in Netlify > Logs > Functions). Netlify says AI Gateway does not store prompts or outputs.
 - The conversation lives only in the visitor's browser tab (sessionStorage key tc.chat.v1) so it survives clicking to another page; it is gone when the tab closes.
