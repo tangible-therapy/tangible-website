@@ -2,7 +2,27 @@
 import Base from '../layouts/Base.astro';
 
 // Live CEU registration happens on Teachable (Tangible Academy). The Zoom link is inside the course.
-const registerUrl = 'https://academy.tangiblementalhealth.com/l/pdp/what-we-re-getting-wrong-with-pornography-treatment';
+// Upcoming live trainings, soonest first. Remove a training once it has happened.
+const trainings = [
+  {
+    registerUrl: 'https://academy.tangiblementalhealth.com/l/pdp/what-we-re-getting-wrong-with-pornography-treatment',
+    image: '/images/what-we-re-getting-wrong-with-pornography-treatmen-f76584.jpg',
+    imageAlt: "Free CEU flyer: What We're Getting Wrong With Pornography Treatment, presented by Michael Anderson, LMFT, Friday October 30, 12:30-2pm, in person and virtual.",
+    title: "What We're Getting Wrong With Pornography Treatment",
+    subtitle: 'How to Move Beyond Behavior Management and Towards Attachment Healing',
+    when: 'Friday, October 30, 12:30–2pm',
+    presenter: 'Michael Anderson, LMFT &amp; Founder, Empowered Families',
+  },
+  {
+    registerUrl: 'https://academy.tangiblementalhealth.com/l/pdp/ifs-therapy-for-intimate-relationships',
+    image: '/images/ifs-for-intimate-relationships-flyer.jpg',
+    imageAlt: 'Free CEU flyer: IFS for Intimate Relationships, presented by Connor Barham, LMFT, Friday November 13, 12:30-2pm MST, in person and virtual.',
+    title: 'IFS for Intimate Relationships',
+    subtitle: 'An Internal Family Systems Approach to Couples Work',
+    when: 'Friday, November 13, 12:30–2pm MST',
+    presenter: 'Connor Barham, LMFT',
+  },
+];
 ---
 <Base title={"Free CEUs for Therapists | Tangible Therapy"} description={"Free monthly CEUs for mental health professionals. Topics ranging from OCD, imposter syndrome to ethics and suicide prevention CEU's. Join Tangible Mental Health for in-person or virtual continuing education events."}>
 <section class="sec t-white h-custom">
@@ -16,24 +36,26 @@ const registerUrl = 'https://academy.tangiblementalhealth.com/l/pdp/what-we-re-g
 </section>
 
 <section class="sec t-white-bold ceu-live" id="register">
+  {trainings.map((t, i) => (
   <div class="wrap ceu-live-in">
-    <a class="ceu-live-img" href={registerUrl} target="_blank" rel="noopener">
-      <img src="/images/what-we-re-getting-wrong-with-pornography-treatmen-f76584.jpg" alt="Free CEU flyer: What We're Getting Wrong With Pornography Treatment, presented by Michael Anderson, LMFT, Friday October 30, 12:30-2pm, in person and virtual." width="1545" height="2000" loading="lazy" decoding="async">
+    <a class="ceu-live-img" href={t.registerUrl} target="_blank" rel="noopener">
+      <img src={t.image} alt={t.imageAlt} width="1545" height="2000" loading="lazy" decoding="async">
     </a>
     <div class="ceu-live-info">
-      <p class="ceu-live-tag">Our Next Live Training</p>
-      <h2>What We're Getting Wrong With Pornography Treatment</h2>
-      <p class="ceu-live-sub">How to Move Beyond Behavior Management and Towards Attachment Healing</p>
+      <p class="ceu-live-tag">{i === 0 ? 'Our Next Live Training' : 'Also Coming Up'}</p>
+      <h2>{t.title}</h2>
+      {t.subtitle && <p class="ceu-live-sub">{t.subtitle}</p>}
       <ul class="ceu-live-facts">
-        <li><strong>When:</strong> Friday, October 30, 12:30–2pm</li>
-        <li><strong>Presenter:</strong> Michael Anderson, LMFT &amp; Founder, Empowered Families</li>
+        <li><strong>When:</strong> {t.when}</li>
+        <li><strong>Presenter:</strong> <Fragment set:html={t.presenter} /></li>
         <li><strong>Where:</strong> Live on Zoom, or in person at our Orem office B, 230 N Orem Boulevard, Orem, Utah 84057 (in-person seating is limited)</li>
         <li><strong>Cost:</strong> Free</li>
       </ul>
-      <a class="btn btn-primary btn-medium" href={registerUrl} target="_blank" rel="noopener">Register</a>
+      <a class="btn btn-primary btn-medium" href={t.registerUrl} target="_blank" rel="noopener">Register</a>
       <p class="ceu-live-note">Registration is through Tangible Academy. Once you're registered, the Zoom link is waiting inside the course. If you're coming in person, please arrive 5–10 minutes early.</p>
     </div>
   </div>
+  ))}
 </section>
 
 <section class="sec t-white h-medium">
@@ -65,6 +87,7 @@ const registerUrl = 'https://academy.tangiblementalhealth.com/l/pdp/what-we-re-g
 .ceu-live { background: #fff; }
 .ceu-live-in { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: clamp(2rem, 5vw, 5rem); align-items: center; padding-top: 3.5rem; padding-bottom: 3.5rem; max-width: 1200px; }
 .ceu-live-img img { width: 100%; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,.08); transition: transform .2s; }
+.ceu-live-in + .ceu-live-in { border-top: 1px solid #e3e7e2; }
 .ceu-live-img:hover img { transform: translateY(-3px); }
 .ceu-live-tag { text-transform: uppercase; letter-spacing: .14em; font-size: .78rem; font-weight: 500; color: var(--forest); margin: 0 0 .8rem; }
 .ceu-live-info h2 { color: var(--charcoal); margin-bottom: .4rem; }
