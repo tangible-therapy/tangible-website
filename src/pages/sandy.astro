@@ -1,6 +1,7 @@
 ---
 import BookCTA from '../components/BookCTA.astro';
 import Base from '../layouts/Base.astro';
+import Reviews from '../components/Reviews.astro';
 import Divider from '../components/Divider.astro';
 ---
 <Base title={"Therapy in Sandy, UT | Tangible Therapy"} description={"Therapy in Sandy, UT at Tangible Therapy — EMDR, anxiety, trauma specialists. Insurance accepted, avg $25/session. Book a free 15-min consult."}>
@@ -84,14 +85,9 @@ import Divider from '../components/Divider.astro';
 </div>
 <Divider type="scalloped" height={8} width={100} fill="#acb9ac" flipX /></section>
 
-<section class="sec t-black h-small">
+<section class="sec t-black">
 <div class="sec-in">
-<div class="fe" style="--rows:4;--mrows:8">
-  <div class="b b-html" style="--d:1/7/3/21;--m:1/2/3/10;--dz:2;--mz:2"><div class="rte"><h2 class="ta-center"><strong>What our clients say</strong></h2></div></div>
-  <div class="b b-code" style="--d:4/4/5/24;--m:3/2/9/10"><!-- Elfsight Google Reviews | Tangible Reviews -->
-<script is:inline async="" src="https://elfsightcdn.com/platform.js"></script>
-<div class="elfsight-app-299117ef-b3ca-4f85-b852-48a645b1a46a" data-elfsight-app-lazy=""></div></div>
-</div>
+<Reviews />
 </div>
 </section>
 

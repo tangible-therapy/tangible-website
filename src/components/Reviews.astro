@@ -1,0 +1,110 @@
+---
+// "What our clients say" – client reviews from our Google listings, built into the site
+// (replaced the Elfsight widget in Oct 2026). Reviews live in src/data/reviews.json.
+import data from '../data/reviews.json';
+
+interface Props { title?: string; subtitle?: string; }
+const { title = 'What our clients say', subtitle } = Astro.props;
+const stars = '★★★★★';
+---
+<div class="wrap rv">
+  <div class="rv-head">
+    <h2>{title}</h2>
+    {subtitle && <p class="rv-sub">{subtitle}</p>}
+    <p class="rv-score"><span class="rv-stars" aria-hidden="true">{stars}</span> <strong>{data.summary.rating}</strong> from {data.summary.countLabel}</p>
+  </div>
+
+  <div class="rv-carousel">
+    <ul class="rv-track" tabindex="0" aria-label="Client reviews">
+      {data.reviews.map((r) => (
+        <li class="rv-card">
+          <p class="rv-card-stars" aria-label="5 out of 5 stars">{stars}</p>
+          <blockquote class="rv-text"><p>{r.text}</p></blockquote>
+          <button class="rv-more" type="button" hidden>Read more</button>
+          <p class="rv-who"><strong>{r.name}</strong><span>{r.office} office · Google review</span></p>
+        </li>
+      ))}
+    </ul>
+    <div class="rv-arrows">
+      <button class="rv-prev" type="button" aria-label="Previous reviews">‹</button>
+      <button class="rv-next" type="button" aria-label="Next reviews">›</button>
+    </div>
+  </div>
+
+  <div class="rv-links">
+    <span>Read all our reviews on Google:</span>
+    {data.listings.map((l) => (
+      <a class="rv-link" href={l.url} target="_blank" rel="noopener">{l.office}</a>
+    ))}
+  </div>
+</div>
+
+<script is:inline>
+(function () {
+  document.querySelectorAll('.rv').forEach(function (root) {
+    var track = root.querySelector('.rv-track');
+    var prev = root.querySelector('.rv-prev');
+    var next = root.querySelector('.rv-next');
+    if (!track) return;
+    function step() { var c = track.querySelector('.rv-card'); return c ? c.getBoundingClientRect().width + 20 : 300; }
+    function update() {
+      prev.disabled = track.scrollLeft < 5;
+      next.disabled = track.scrollLeft + track.clientWidth > track.scrollWidth - 5;
+    }
+    prev.addEventListener('click', function () { track.scrollBy({ left: -step(), behavior: 'smooth' }); });
+    next.addEventListener('click', function () { track.scrollBy({ left: step(), behavior: 'smooth' }); });
+    track.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    update();
+    // "Read more" only on reviews that are cut off
+    root.querySelectorAll('.rv-card').forEach(function (card) {
+      var text = card.querySelector('.rv-text p');
+      var btn = card.querySelector('.rv-more');
+      if (text.scrollHeight > text.clientHeight + 4) btn.hidden = false;
+      btn.addEventListener('click', function () {
+        var open = card.classList.toggle('open');
+        btn.textContent = open ? 'Show less' : 'Read more';
+      });
+    });
+  });
+})();
+</script>
+
+<style>
+.rv { padding-top: 10px; padding-bottom: 10px; }
+.rv-head { text-align: center; max-width: 760px; margin: 0 auto 28px; }
+.rv-head h2 { margin: 0 0 8px; color: var(--heading); }
+.rv-sub { margin: 0 0 14px; color: var(--text); font-size: 1.15rem; }
+.rv-score { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; margin: 0; padding: 8px 18px; border-radius: 999px; background: #fff; color: var(--charcoal); font-size: .95rem; }
+.rv-score strong { font-weight: 600; }
+.rv-stars, .rv-card-stars { color: #d9a441; letter-spacing: 2px; }
+
+.rv-carousel { position: relative; }
+.rv-track { list-style: none; margin: 0; padding: 4px 2px 18px; display: flex; gap: 20px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.rv-track::-webkit-scrollbar { display: none; }
+.rv-track:focus-visible { outline: 2px solid #fff; outline-offset: 4px; border-radius: 20px; }
+.rv-card { flex: 0 0 calc((100% - 40px) / 3); scroll-snap-align: start; display: flex; flex-direction: column; background: #fff; color: var(--charcoal); border-radius: 20px; padding: 26px 26px 22px; box-shadow: 0 10px 30px rgba(0,0,0,.08); }
+.rv-card-stars { margin: 0 0 10px; font-size: 1.1rem; }
+.rv-text { margin: 0; flex: 1; }
+.rv-text p { margin: 0; font-size: .98rem; line-height: 1.65; display: -webkit-box; -webkit-line-clamp: 7; -webkit-box-orient: vertical; overflow: hidden; }
+.rv-card.open .rv-text p { -webkit-line-clamp: unset; display: block; }
+.rv-more { align-self: flex-start; margin-top: 6px; padding: 0; background: none; border: 0; font: inherit; font-size: .9rem; color: var(--forest); text-decoration: underline; cursor: pointer; }
+.rv-who { margin: 16px 0 0; padding-top: 14px; border-top: 1px solid #e6e9e6; display: flex; flex-direction: column; gap: 2px; font-size: .95rem; }
+.rv-who span { color: var(--slate); font-size: .85rem; }
+
+.rv-arrows { display: flex; justify-content: center; gap: 12px; margin-top: 6px; }
+.rv-arrows button { width: 44px; height: 44px; border-radius: 50%; border: 0; background: #fff; color: var(--charcoal); font-size: 1.6rem; line-height: 1; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.1); }
+.rv-arrows button:disabled { opacity: .4; cursor: default; }
+
+.rv-links { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px; margin-top: 26px; color: var(--text); font-size: .95rem; }
+.rv-link { display: inline-block; padding: 8px 18px; border: 1.5px solid #fff; border-radius: 999px; color: #fff; text-decoration: none; font-weight: 500; }
+.rv-link:hover { background: #fff; color: var(--charcoal); }
+
+@media (max-width: 1024px) { .rv-card { flex-basis: calc((100% - 20px) / 2); } }
+@media (max-width: 640px) {
+  .rv-card { flex-basis: 86%; padding: 22px 20px 18px; }
+  .rv-links span { flex-basis: 100%; text-align: center; }
+  .rv-score { gap: 6px; padding: 7px 14px; font-size: .85rem; }
+  .rv-score .rv-stars { letter-spacing: 1px; }
+}
+</style>
