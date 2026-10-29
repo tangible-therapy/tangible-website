@@ -1,7 +1,7 @@
 ---
 title: "Navigating Sexual Trauma: A Therapist's Guide to Healing as a Survivor"
 date: "2023-09-22T12:13:24.347000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/image-asset-928c1a.jpeg"
 imageAlt: "Golden grasses blowing beside a sparkling lake"
 excerpt: ""

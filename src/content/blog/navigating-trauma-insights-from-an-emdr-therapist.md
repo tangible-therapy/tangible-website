@@ -1,7 +1,7 @@
 ---
 title: "Navigating Trauma: Insights from an EMDR Therapist"
 date: "2025-04-27T12:03:56.680000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/unsplash-image-cpi46uotdjg-cc5624.jpg"
 imageAlt: "A single white daisy in a vase in a dark room"
 excerpt: ""

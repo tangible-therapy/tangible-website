@@ -1,7 +1,7 @@
 ---
 title: "Trauma and Therapy"
 date: "2023-09-14T15:00:00.481000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/image-asset-93efb8.jpeg"
 imageAlt: "Pink and orange smiley-face balloons against a blue sky"
 excerpt: ""

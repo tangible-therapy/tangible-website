@@ -1,7 +1,7 @@
 ---
 title: "Telehealth: Getting the Most our of Virtual Sessions"
 date: "2024-01-11T09:57:59.488000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/image-asset-6a1699.jpeg"
 imageAlt: "A smiling woman on a sofa talks on a video call on her laptop"
 excerpt: ""

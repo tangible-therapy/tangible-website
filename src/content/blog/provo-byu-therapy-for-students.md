@@ -1,7 +1,7 @@
 ---
 title: "Therapy & BYU: Finding Strength within you"
 date: "2026-04-10T14:47:57.580000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/xdo5ntqlfnut2rwx0ogju2ahozchxofknhfqg1o2-c4e636.webp"
 imageAlt: "BYU's LaVell Edwards Stadium in Provo, Utah, with Y Mountain behind it"
 excerpt: ""

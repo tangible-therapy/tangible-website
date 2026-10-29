@@ -1,7 +1,7 @@
 ---
 title: "The Anxiety Therapist: 10 Tips for Dealing With Anxiety"
 date: "2023-09-18T10:00:00.735000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/image-asset-edfb84.jpeg"
 imageAlt: "A neon sign reading and breathe on a wall of green leaves"
 excerpt: ""

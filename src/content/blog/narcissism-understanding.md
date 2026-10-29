@@ -1,7 +1,7 @@
 ---
 title: "Narcissism: A therapist’s insights"
 date: "2023-12-01T10:20:00.808000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/image-asset-3623fe.jpeg"
 imageAlt: "A man holds a mirror that reflects him upside down against a blue sky"
 excerpt: ""

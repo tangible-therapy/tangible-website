@@ -1,7 +1,7 @@
 ---
 title: "The Role of Counseling in Managing Life Transitions"
 date: "2025-10-15T19:00:00.373000-06:00"
-author: "Kelsee Stevens"
+author: "Brady Clegg, LCSW"
 image: "/images/a-graduate-in-a-cap-and-gown-stands-facing-a-unive-90f9a8.jpg"
 imageAlt: "A graduate in a cap and gown faces a university building at sunset"
 excerpt: ""

@@ -1,7 +1,7 @@
 ---
 title: "Tips for Navigating Life with Autism: Insights from a Therapist"
 date: "2023-09-22T12:05:04.048000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/image-asset-2613ff.jpeg"
 imageAlt: "The word autism surrounded by scattered colorful letters"
 excerpt: ""

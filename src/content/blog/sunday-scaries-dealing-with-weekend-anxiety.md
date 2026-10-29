@@ -1,7 +1,7 @@
 ---
 title: "Sunday Scaries: Dealing with Weekend Anxiety"
 date: "2023-12-04T10:00:00.206000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/image-asset-77e14a.jpeg"
 imageAlt: "A pink flamingo pool float drifting on turquoise water"
 excerpt: ""

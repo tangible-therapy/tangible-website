@@ -1,7 +1,7 @@
 ---
 title: "How Parents Can Get the Most Out of Their Child’s Therapy"
 date: "2025-05-22T09:00:00.428000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/tangible-287-29-88eea2.jpg"
 imageAlt: "Parents and their young daughter meet with a child therapist in a cozy office"
 excerpt: ""

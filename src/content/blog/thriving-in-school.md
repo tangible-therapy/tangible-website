@@ -1,7 +1,7 @@
 ---
 title: "Thriving in School"
 date: "2023-09-12T21:49:38.449000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/image-asset-36a3d4.jpeg"
 imageAlt: "A long, bright school hallway with windows along one side"
 excerpt: ""

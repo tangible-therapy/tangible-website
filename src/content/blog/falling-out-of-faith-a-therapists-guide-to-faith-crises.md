@@ -1,7 +1,7 @@
 ---
 title: "Falling out of Faith: A therapist’s guide to faith crises"
 date: "2023-09-28T10:31:30.452000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/image-asset-2e289a.jpeg"
 imageAlt: "The spires of the Salt Lake Temple in Salt Lake City, Utah, against a blue sky"
 excerpt: ""

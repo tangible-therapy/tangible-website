@@ -1,7 +1,7 @@
 ---
 title: "10 Mental Health Goals to Set for the New Year"
 date: "2025-12-17T19:00:00.762000-06:00"
-author: "Kelsee Stevens"
+author: "Brady Clegg, LCSW"
 image: "/images/open-notebook-with-new-year-s-goals-list-checked-b-15ae63.jpg"
 imageAlt: "A notebook titled New Year's Goals with Goals, Plan and Action checked off, beside coffee and a laptop"
 excerpt: ""

@@ -1,7 +1,7 @@
 ---
 title: "Navigating OCPD: Insights from a Therapist"
 date: "2024-02-07T17:14:44.073000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/image-asset-7e1e97.jpeg"
 imageAlt: "An alarm clock on a split pink and teal background"
 excerpt: ""

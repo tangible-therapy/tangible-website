@@ -1,7 +1,7 @@
 ---
 title: "What is too close? The danger of enmeshment"
 date: "2024-10-22T08:39:08.714000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/tanny-do-2ifsrkky7nw-unsplash-8a869e.jpg"
 imageAlt: "Close-up of two people holding hands"
 excerpt: ""

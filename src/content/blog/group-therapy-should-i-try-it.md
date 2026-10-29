@@ -1,7 +1,7 @@
 ---
 title: "Group Therapy: Should I try it?"
 date: "2025-05-14T15:47:04.217000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/tangible-285-29-db185c.jpg"
 imageAlt: "A therapy group sits in a circle of chairs in a bright, airy room"
 excerpt: ""

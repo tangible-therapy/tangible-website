@@ -1,7 +1,7 @@
 ---
 title: "EMDR: Does it Work?"
 date: "2023-11-28T14:25:09.255000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/image-asset-fe3e04.jpeg"
 imageAlt: "Close-up of a blue eye"
 excerpt: ""

@@ -1,7 +1,7 @@
 ---
 title: "Cultivating Self Compassion: A therapist’s guide to loving yourself"
 date: "2023-09-26T13:37:10.247000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/image-asset-934628.jpeg"
 imageAlt: "A woman throws a burst of colorful confetti into a blue sky"
 excerpt: ""

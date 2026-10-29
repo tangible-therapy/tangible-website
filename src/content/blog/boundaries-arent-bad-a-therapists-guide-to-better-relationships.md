@@ -1,7 +1,7 @@
 ---
 title: "Boundaries Aren’t Bad: A Therapist’s guide to better relationships"
 date: "2023-09-27T12:44:15.402000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/image-asset-54002f.jpeg"
 imageAlt: "Silhouette of a couple holding hands while riding bikes at sunset"
 excerpt: ""

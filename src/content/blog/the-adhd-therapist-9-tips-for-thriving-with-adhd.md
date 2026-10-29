@@ -1,7 +1,7 @@
 ---
 title: "The ADHD Therapist: 9 Tips for Thriving with ADHD"
 date: "2023-09-17T08:00:00.321000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/image-asset-66f049.jpeg"
 imageAlt: "A man stands on a rocky cliff by the sea with his arms raised"
 excerpt: ""

@@ -1,7 +1,7 @@
 ---
 title: "My child has ADHD"
 date: "2023-11-28T16:30:14.655000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/image-asset-f947b8.jpeg"
 imageAlt: "A grinning boy stands in front of a field of sunflowers"
 excerpt: ""

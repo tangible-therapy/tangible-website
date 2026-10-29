@@ -1,7 +1,7 @@
 ---
 title: "“Do I Actually Have OCD?” The Quiet Confusion Many People Carry"
 date: "2026-03-23T16:23:49.578000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/do-you-still-love-me-281-29-92820d.jpg"
 imageAlt: "A tired woman rests her head on her hand while reading at her desk"
 excerpt: ""

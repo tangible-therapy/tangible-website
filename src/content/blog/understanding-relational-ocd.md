@@ -1,7 +1,7 @@
 ---
 title: "Doubting Love? Understanding Relationship OCD"
 date: "2025-03-29T07:06:24.612000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/unsplash-image-3camue3yao8-3640e8.jpg"
 imageAlt: "Two women laugh together on a bed with a fluffy dog"
 excerpt: ""

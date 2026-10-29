@@ -1,7 +1,7 @@
 ---
 title: "EMDR: What is it?"
 date: "2023-12-15T10:22:41.273000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/image-asset-fe3e04.jpeg"
 imageAlt: "Close-up of a blue eye"
 excerpt: ""

@@ -1,7 +1,7 @@
 ---
 title: "Couples Therapy: Why Every Relationship Can Benefit"
 date: "2025-05-05T09:44:54.363000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/unsplash-image-8ob43mw658c-9399a6.jpg"
 imageAlt: "Two hands with linked pinky fingers"
 excerpt: ""
