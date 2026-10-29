@@ -1,7 +1,7 @@
 ---
 title: "A Guide to Navigating Family Dynamics With Therapy This Holiday Season"
 date: "2025-11-19T19:00:00.983000-06:00"
-author: "Kelsee Stevens"
+author: "Brady Clegg, LCSW"
 image: "/images/family-selfie-at-thanksgiving-dinner-with-roasted--51b12a.jpg"
 imageAlt: "A smiling family takes a selfie around a holiday dinner table"
 excerpt: ""

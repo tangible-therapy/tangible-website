@@ -1,7 +1,7 @@
 ---
 title: "How to Support a Partner with Relationship OCD Without Losing Yourself"
 date: "2026-02-18T19:00:45.012000-06:00"
-author: "Kelsee Stevens"
+author: "Brady Clegg, LCSW"
 image: "/images/a-man-and-woman-standing-together-each-holding-one-ed0d5f.jpg"
 imageAlt: "A couple holds a red paper heart between them"
 excerpt: ""

@@ -1,7 +1,7 @@
 ---
 title: "How Individual Counseling Can Enhance Your Relationship"
 date: "2026-01-20T19:00:11.910000-06:00"
-author: "Kelsee Stevens"
+author: "Brady Clegg, LCSW"
 image: "/images/a-close-up-of-a-man-and-woman-holding-hands-while--9d6c8d.jpg"
 imageAlt: "A couple holds hands while walking down a sunny dirt road"
 excerpt: ""
