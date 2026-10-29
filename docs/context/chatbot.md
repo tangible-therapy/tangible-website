@@ -1,4 +1,4 @@
-# Website chatbot (test version, added 28 Oct 2026)
+# Website chatbot "Tangie" (launched 29 Oct 2026, labeled Beta)
 
 "Tangie", a chat assistant opened from an "Ask Tangie" button (charcoal pill like the site's primary buttons) in the bottom-right corner; the toucan avatar (public/images/tangie-avatar.webp) shows only inside the open chat window of every public page. Visitors ask practical questions (who has openings, insurance, cost, offices, booking) and an AI model answers from the website's own information.
 
