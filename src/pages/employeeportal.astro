@@ -1,20 +1,19 @@
 ---
 // Staff-only page (protected by netlify/edge-functions/staff-gate.ts).
-// Layout: PortalShell (sidebar with every portal link) + the person's dashboard.
+// Layout: the Employee Portal sidebar is added by Base.astro (PortalShell); content sits in .pt-page.
 // With Google sign-in on, the dashboard shows: quick numbers (rooms open now, next training, your part in it),
 // the training meetings and "Suggest a training topic" from the office's Team Dashboard sheet
 // (/api/dashboard — see docs/office-dashboards), room claims (/api/rooms) for the rooms count, and for
 // associates their supervised hours (/api/hours, the same data as the Hours Tracker page).
 // Find a Room is its own page: src/pages/employeeportal/rooms.astro.
 import Base from '../layouts/Base.astro';
-import PortalShell from '../components/PortalShell.astro';
 import { OFFICES } from '../data/staff-access';
 import { LICENSES } from '../data/hours';
 const offices = OFFICES.map((o) => ({ id: o.id, label: o.label.replace(/ \(.*\)/, '') }));
 const defaultTargets = JSON.stringify(LICENSES[0].targets);
 ---
 <Base title="Employee Portal | Tangible Therapy" description="Tangible Therapy employee portal." noindex>
-  <PortalShell active="/employeeportal">
+  <div class="pt-page">
     <div class="pt-head">
       <div>
         <p class="pt-eyebrow" id="pd-date">Employee Portal</p>
@@ -83,7 +82,7 @@ const defaultTargets = JSON.stringify(LICENSES[0].targets);
       </div>
       <p class="pt-note" id="pd-updated"></p>
     </div>
-  </PortalShell>
+  </div>
 
   <script is:inline>
     (function () {

@@ -744,3 +744,8 @@ del.chg-del { color: #a33b3b; text-decoration-thickness: 1.5px; background: #fbe
 .hide-marks mark.chg-add { background: none; padding: 0; }
 .hide-marks del.chg-del { display: none; }
 .hide-marks .chg-block { border: 0; background: none; padding: 0; }
+
+/* ---------- staff courses: "Back to dashboard" bar (Base.astro, /orientation…) ---------- */
+.course-back { background: var(--charcoal); padding: .55rem var(--gutter); }
+.course-back a { display: inline-flex; align-items: center; gap: .35rem; color: #fff; text-decoration: none; font-size: .88rem; font-weight: 500; border-radius: 300px; padding: .3rem .8rem .3rem .5rem; }
+.course-back a:hover { background: rgba(255,255,255,.12); color: #fff; }

@@ -3,6 +3,8 @@ import '../styles/global.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import ChatWidget from '../components/ChatWidget.astro';
+import PortalShell from '../components/PortalShell.astro';
+import { staffPaths, isCoursePath } from '../data/staff';
 import { site } from '../data/site';
 import pageSchema from '../data/page-schema.json';
 import { inNetworkText } from '../data/insurance';
@@ -19,6 +21,10 @@ const { title, description: rawDescription, image = site.socialImage, noindex = 
 const description = rawDescription?.trim() || site.defaultDescription;
 const path = Astro.url.pathname.replace(/\.html$/, '').replace(/\/$/, '') || '/';
 const canonical = new URL(path, site.url).href;
+// Staff pages sit beside the Employee Portal sidebar; courses (/orientation…) get a "Back to dashboard" bar instead.
+const isStaffPage = staffPaths.some((p) => path === p || path.startsWith(p + '/'));
+const course = isStaffPage && isCoursePath(path);
+const portal = isStaffPage && !course;
 const ogImage = new URL(image, site.url).href;
 const t = site.tracking;
 
@@ -101,7 +107,16 @@ const orgSchema = {
   <a class="skip" href="#main">Skip to content</a>
   <Header />
   <main id="main">
-    <slot />
+    {portal ? (
+      <PortalShell active={path}><slot /></PortalShell>
+    ) : course ? (
+      <>
+        <div class="course-back"><a href="/employeeportal"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Back to dashboard</a></div>
+        <slot />
+      </>
+    ) : (
+      <slot />
+    )}
   </main>
   <Footer />
   {site.chatbot && !noindex && <ChatWidget />}

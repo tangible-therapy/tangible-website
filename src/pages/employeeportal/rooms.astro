@@ -5,12 +5,11 @@
 // Claims last from the chosen time until the room's next booking on the schedule (or closing time) and only
 // for today; the person who claimed it, front desk, directors and the owner can release one.
 import Base from '../../layouts/Base.astro';
-import PortalShell from '../../components/PortalShell.astro';
 import { OFFICES } from '../../data/staff-access';
 const offices = OFFICES.map((o) => ({ id: o.id, label: o.label.replace(/ \(.*\)/, '') }));
 ---
 <Base title="Find a Room | Employee Portal | Tangible Therapy" description="Find an open room at your Tangible Therapy office." noindex>
-  <PortalShell active="/employeeportal/rooms">
+  <div class="pt-page">
     <div class="pt-head">
       <div>
         <p class="pt-eyebrow" id="rm-office">Employee Portal</p>
@@ -47,7 +46,7 @@ const offices = OFFICES.map((o) => ({ id: o.id, label: o.label.replace(/ \(.*\)/
       <p class="pt-note" id="rm-updated"></p>
       <p class="pt-note">Tap <strong>Use this room</strong> and everyone else sees it as taken until its next booking (or closing time). Rooms can be claimed for today only, and you can release a room if your plans change. Claims show here only; they aren't added to the Google Sheet.</p>
     </div>
-  </PortalShell>
+  </div>
 
   <script is:inline>
     (function () {

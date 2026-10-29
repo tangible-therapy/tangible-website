@@ -1,0 +1,26 @@
+---
+// Staff-only (staff gate covers /employeeportal/*). The "Submit Hours" Google Form, embedded so staff stay in the
+// portal (sidebar added by Base.astro). Form ID: SUBMIT_HOURS_FORM in src/data/staff.ts.
+// Supervised hours toward licensure are logged separately in the Hours Tracker (/hours).
+import Base from '../../layouts/Base.astro';
+import GoogleForm from '../../components/GoogleForm.astro';
+import { SUBMIT_HOURS_FORM } from '../../data/staff';
+---
+<Base title="Submit Hours | Employee Portal | Tangible Therapy" description="Submit your hours." noindex>
+  <div class="pt-page">
+    <div class="pt-head">
+      <div>
+        <p class="pt-eyebrow">Employee Portal</p>
+        <h1>Submit hours</h1>
+      </div>
+    </div>
+    <div class="pt-card sh-card">
+      <GoogleForm id={SUBMIT_HOURS_FORM} title="Submit Hours" height={1200} />
+    </div>
+  </div>
+</Base>
+
+<style is:global>
+  .sh-card { padding: .75rem; }
+  .sh-card .gform { max-width: 760px; margin: 0 auto; }
+</style>
