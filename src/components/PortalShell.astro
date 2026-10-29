@@ -1,0 +1,191 @@
+---
+// Employee Portal layout: a sidebar with every portal link, and the page content beside it.
+// Added automatically by src/layouts/Base.astro to every staff page except the courses (/orientation…).
+// New-style portal pages put their content in <div class="pt-page"> (padding + max width); older staff pages
+// (Fluid Engine sections) fill the space beside the sidebar as they are.
+// The sidebar can be collapsed to icons on desktop (remembered per browser, localStorage "tt.portalCollapsed").
+// Links come from src/data/staff.ts (blank links are hidden; links with roles are hidden for other roles
+// by public/scripts/site.js — pages are protected separately by the staff gate).
+// On phones the sidebar turns into a scrollable row of buttons above the content.
+import { employeeLinks, newEmployeeLinks, managementLinks, receptionLinks, type StaffLink } from '../data/staff';
+
+interface Props { active?: string }
+const { active = '/employeeportal' } = Astro.props;
+
+const show = (l: StaffLink[]) => l.filter((x) => x.href);
+const ext = (h: string) => h.startsWith('http');
+const groups: { title?: string; links: StaffLink[]; roles?: string[] }[] = [
+  { links: [{ label: 'Dashboard', href: '/employeeportal' }, ...show(employeeLinks)] },
+  { title: 'New employees', links: show(newEmployeeLinks) },
+  { title: 'Reception', links: show(receptionLinks), roles: ['frontdesk', 'director'] },
+  { title: 'Management', links: show(managementLinks), roles: ['director'] },
+];
+const isActive = (h: string) => h === active || (h !== '/employeeportal' && !h.startsWith('http') && active.startsWith(h + '/'));
+
+// Simple line icons (by link address, then label). Anything not listed gets the generic "link" icon.
+const ICONS: Record<string, string> = {
+  dashboard: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+  rooms: '<path d="M4 21V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v17"/><path d="M2 21h20"/><path d="M16 7h3a1 1 0 0 1 1 1v13"/><circle cx="12.5" cy="12" r=".9" fill="currentColor"/>',
+  policies: '<path d="M6 3h9l4 4v14H6z"/><path d="M9 11h7M9 15h5"/>',
+  submit: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  tracker: '<path d="M4 20V11M10 20V5M16 20v-6M2 20h20"/>',
+  learning: '<path d="M2 8l10-4 10 4-10 4z"/><path d="M6 10v5c3.5 2.5 8.5 2.5 12 0v-5"/>',
+  drive: '<path d="M3 7h6l2 2h10v10H3z"/>',
+  calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  supervisor: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><path d="M16 11l2 2 4-4"/>',
+  people: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><circle cx="17" cy="9" r="2.5"/><path d="M17 14.5c2.3.3 4 1.9 4.5 5"/>',
+  compass: '<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
+  clipboard: '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9z"/><path d="M9 12h6M9 16h4"/>',
+  pay: '<rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/>',
+  desk: '<path d="M3 10h18v3H3z"/><path d="M5 13v7M19 13v7"/><path d="M9 10V7a3 3 0 0 1 6 0v3"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  calendarPlus: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M12 13v5M9.5 15.5h5"/>',
+  phone: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>',
+  link: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
+};
+function icon(l: StaffLink) {
+  const h = l.href, t = l.label.toLowerCase();
+  if (h === '/employeeportal') return ICONS.dashboard;
+  if (h.includes('/rooms')) return ICONS.rooms;
+  if (h.includes('policies')) return ICONS.policies;
+  if (h === '/hours') return ICONS.tracker;
+  if (t.includes('submit hours')) return ICONS.submit;
+  if (t.includes('supervisor')) return ICONS.supervisor;
+  if (t.includes('learning')) return ICONS.learning;
+  if (t.includes('drive') || t.includes('team dashboard')) return ICONS.drive;
+  if (t.includes('training') || h === '/ceu') return ICONS.calendar;
+  if (t.includes('staff accounts')) return ICONS.people;
+  if (t.includes('orientation')) return ICONS.compass;
+  if (t.includes('onboarding')) return ICONS.clipboard;
+  if (t.includes('pay')) return ICONS.pay;
+  if (t.includes('reception')) return ICONS.desk;
+  if (t.includes('check-in')) return ICONS.sun;
+  if (t.includes('scheduling')) return ICONS.calendarPlus;
+  if (t.includes('crisis')) return ICONS.phone;
+  return ICONS.link;
+}
+---
+<div class="portal" id="portal">
+  <script is:inline>try{if(localStorage.getItem('tt.portalCollapsed')==='1')document.getElementById('portal').classList.add('is-collapsed')}catch(e){}</script>
+  <aside class="portal-side" aria-label="Employee Portal menu">
+    <div class="portal-top">
+      <a class="portal-brand" href="/employeeportal">
+        <span>Employee Portal</span>
+        <span class="portal-office" data-portal-office></span>
+      </a>
+      <button type="button" class="portal-toggle" id="portal-toggle" aria-controls="portal" aria-expanded="true" aria-label="Collapse menu" title="Collapse menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/><path d="M15.5 10l-2 2 2 2"/></svg>
+      </button>
+    </div>
+    {groups.filter((g) => g.links.length).map((g) => (
+      <nav class="portal-group" aria-label={g.title || 'Employee links'} {...(g.roles ? { 'data-roles': g.roles.join(' ') } : {})}>
+        {g.title && <p class="portal-group-title">{g.title}</p>}
+        {g.links.map((l) => (
+          <a
+            class={'portal-link' + (isActive(l.href) ? ' is-active' : '')}
+            title={l.label}
+            href={l.href}
+            target={ext(l.href) ? '_blank' : undefined}
+            rel={ext(l.href) ? 'noopener' : undefined}
+            aria-current={isActive(l.href) ? 'page' : undefined}
+            {...(l.roles ? { 'data-roles': l.roles.join(' ') } : {})}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={icon(l)} />
+            <span class="portal-label">{l.label}</span>
+            {ext(l.href) && <span class="portal-ext" aria-label="(opens in a new tab)">↗</span>}
+          </a>
+        ))}
+      </nav>
+    ))}
+  </aside>
+  <div class="portal-main">
+    <slot />
+  </div>
+</div>
+<script is:inline>
+  (function () {
+    var root = document.getElementById('portal'), btn = document.getElementById('portal-toggle');
+    function sync() {
+      var c = root.classList.contains('is-collapsed');
+      btn.setAttribute('aria-expanded', String(!c));
+      btn.setAttribute('aria-label', c ? 'Expand menu' : 'Collapse menu');
+      btn.title = c ? 'Expand menu' : 'Collapse menu';
+    }
+    btn.addEventListener('click', function () {
+      root.classList.toggle('is-collapsed');
+      try { localStorage.setItem('tt.portalCollapsed', root.classList.contains('is-collapsed') ? '1' : '0'); } catch (e) {}
+      sync();
+    });
+    sync();
+    // Phones: the menu is a sideways row — scroll it so the current page's button is visible.
+    var act = root.querySelector('.portal-link.is-active'), side = root.querySelector('.portal-side');
+    if (act && side && window.matchMedia('(max-width: 900px)').matches) side.scrollLeft = Math.max(0, act.offsetLeft - 16);
+  })();
+</script>
+
+<style is:global>
+  .portal { display: flex; align-items: stretch; min-height: 75vh; background: #eef0ed; color: var(--charcoal); }
+  .portal [hidden] { display: none !important; }
+  .portal-side { flex: 0 0 250px; width: 250px; background: var(--charcoal); color: #fff; padding: 1.4rem 1rem; box-sizing: border-box; display: flex; flex-direction: column; gap: 1.2rem; transition: flex-basis .2s, width .2s; }
+  .portal-top { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+  .portal-brand { padding: 0 .75rem; display: flex; flex-direction: column; color: #fff !important; text-decoration: none !important; min-width: 0; }
+  .portal-toggle { flex: none; width: 36px; height: 36px; border: 0; border-radius: 10px; background: none; color: #fff; cursor: pointer; display: grid; place-items: center; padding: 0; }
+  .portal-toggle:hover { background: rgba(255,255,255,.1); }
+  .portal-toggle svg { width: 20px; height: 20px; transition: transform .2s; }
+  .portal.is-collapsed .portal-side { flex-basis: 72px; width: 72px; padding-left: .75rem; padding-right: .75rem; }
+  .portal.is-collapsed .portal-brand, .portal.is-collapsed .portal-label, .portal.is-collapsed .portal-ext, .portal.is-collapsed .portal-group-title { display: none; }
+  .portal.is-collapsed .portal-top { justify-content: center; }
+  .portal.is-collapsed .portal-toggle svg { transform: scaleX(-1); }
+  .portal.is-collapsed .portal-link { justify-content: center; padding: .6rem 0; }
+  .portal.is-collapsed .portal-group + .portal-group { border-top: 1px solid rgba(255,255,255,.15); padding-top: .8rem; }
+  .portal-brand span:first-child { font-weight: 600; font-size: 1.05rem; }
+  .portal-office { font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: #c9d1c9; }
+  .portal-group { display: flex; flex-direction: column; gap: 2px; }
+  .portal-group-title { margin: 0 0 .3rem; padding: 0 .75rem; font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: #c9d1c9; font-weight: 500; }
+  .portal-link { display: flex; align-items: center; gap: .7rem; padding: .55rem .75rem; border-radius: 10px; color: #fff !important; text-decoration: none !important; font-size: .9rem; font-weight: 400; line-height: 1.3; }
+  .portal-link svg { width: 18px; height: 18px; flex: none; opacity: .85; }
+  .portal-link:hover { background: rgba(255,255,255,.08); }
+  .portal-link.is-active { background: rgba(255,255,255,.16); font-weight: 500; }
+  .portal-link.is-active svg { opacity: 1; }
+  .portal-ext { margin-left: auto; font-size: .8rem; opacity: .6; }
+  .portal-main { flex: 1 1 auto; min-width: 0; box-sizing: border-box; --side: 250px; }
+  .portal.is-collapsed .portal-main { --side: 72px; }
+  /* Older staff pages (Fluid Engine grid) size rows from the window width; take the sidebar off that width. */
+  .portal-main .fe { --cw: min(var(--max), calc(100vw - var(--side) - var(--gutter) * 2)); }
+  .pt-page { padding: 2rem clamp(1rem, 3vw, 2.5rem) 3rem; max-width: 1180px; box-sizing: border-box; }
+
+  /* Shared pieces for portal pages */
+  .pt-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.4rem; }
+  .pt-head h1 { margin: 0; font-size: clamp(1.6rem, 2.6vw, 2.1rem); font-weight: 600; color: var(--charcoal); line-height: 1.2; }
+  .pt-eyebrow { margin: 0 0 .2rem; font-size: .82rem; color: #5d635e; }
+  .pt-card { background: #fff; border-radius: 20px; padding: 1.3rem 1.5rem; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+  .pt-card h2 { font-size: 1.1rem; font-weight: 600; margin: 0 0 .8rem; color: var(--charcoal); line-height: 1.3; }
+  .pt-muted { color: #5d635e; font-size: .9rem; margin: 0; }
+  .pt-note { font-size: .78rem; color: #5d635e; margin: 1rem 0 0; }
+  .pt-soon { background: #fff; border-radius: 16px; padding: 1rem 1.3rem; margin: 0 0 1rem; }
+  .pt-btn { font: inherit; font-size: .85rem; font-weight: 500; border-radius: 300px; padding: .55rem 1.1rem; border: 0; background: var(--charcoal); color: #fff; cursor: pointer; min-height: 36px; }
+  .pt-btn:disabled { opacity: .5; cursor: default; }
+  .pt-btn.ghost { background: #fff; color: var(--charcoal); border: 1px solid #c9cfca; }
+  .pt-seg { display: inline-flex; border: 1px solid #c9cfca; border-radius: 300px; padding: 3px; background: #fff; flex-wrap: wrap; }
+  .pt-seg button { font: inherit; font-size: .85rem; border: 0; background: none; border-radius: 300px; padding: .4rem .95rem; cursor: pointer; color: var(--charcoal); }
+  .pt-seg button[aria-selected=true] { background: var(--charcoal); color: #fff; }
+  .portal select, .portal textarea, .portal input[type=text] { font: inherit; font-size: .9rem; padding: .5rem .75rem; border: 1px solid #c9cfca; border-radius: 10px; background: #fff; color: var(--charcoal); max-width: 100%; }
+  .pt-field { display: flex; flex-direction: column; gap: .25rem; font-size: .78rem; color: #5d635e; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  @media (max-width: 900px) {
+    .portal { flex-direction: column; }
+    .portal-side, .portal.is-collapsed .portal-side { flex: none; width: auto; padding: .75rem 0 .75rem 1rem; flex-direction: row; gap: .4rem; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    .portal-side::-webkit-scrollbar { display: none; }
+    .portal-top, .portal-group-title, .portal-ext { display: none; }
+    .portal.is-collapsed .portal-label { display: inline; }
+    .portal.is-collapsed .portal-link { padding: .5rem .9rem; }
+    .portal.is-collapsed .portal-group + .portal-group { border: 0; padding-top: 0; }
+    .portal-group { flex-direction: row; gap: .4rem; }
+    .portal-group:last-child { padding-right: 1rem; }
+    .portal-link { white-space: nowrap; background: rgba(255,255,255,.08); border-radius: 300px; padding: .5rem .9rem; font-size: .85rem; }
+    .portal-link svg { width: 16px; height: 16px; }
+    .pt-page { padding: 1.4rem 1rem 2.5rem; }
+    .portal-main, .portal.is-collapsed .portal-main { --side: 0px; }
+  }
+</style>

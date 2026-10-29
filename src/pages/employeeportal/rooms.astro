@@ -1,0 +1,243 @@
+---
+// Staff-only (staff gate covers /employeeportal/*). "Find a Room": the office's room schedules from the Team
+// Dashboard sheet (/api/dashboard, read from cell colours — see docs/office-dashboards) plus today's
+// "use this room" claims (/api/rooms, kept in Netlify Blobs, not in the sheet).
+// Claims last from the chosen time until the room's next booking on the schedule (or closing time) and only
+// for today; the person who claimed it, front desk, directors and the owner can release one.
+import Base from '../../layouts/Base.astro';
+import { OFFICES } from '../../data/staff-access';
+const offices = OFFICES.map((o) => ({ id: o.id, label: o.label.replace(/ \(.*\)/, '') }));
+---
+<Base title="Find a Room | Employee Portal | Tangible Therapy" description="Find an open room at your Tangible Therapy office." noindex>
+  <div class="pt-page">
+    <div class="pt-head">
+      <div>
+        <p class="pt-eyebrow" id="rm-office">Employee Portal</p>
+        <h1>Find a room</h1>
+      </div>
+      <label class="pt-field" id="rm-switch" hidden>View office
+        <select id="rm-office-pick">{offices.map((o) => <option value={o.id}>{o.label}</option>)}</select>
+      </label>
+    </div>
+
+    <p class="pt-soon" id="rm-signin">Sign in with your work Google account to see the room schedules.</p>
+    <p class="pt-soon" id="rm-soon" hidden>This office's room schedule isn't connected yet. It's coming soon.</p>
+    <p class="pt-soon" id="rm-error" hidden></p>
+
+    <div id="rm" hidden>
+      <div class="rm-mine" id="rm-mine" hidden></div>
+
+      <section class="pt-card">
+        <div class="rm-controls">
+          <div class="pt-seg" id="rm-building" role="tablist" aria-label="Building"></div>
+          <label class="pt-field">Day<select id="rm-day"></select></label>
+          <label class="pt-field">Time<select id="rm-time"></select></label>
+          <label class="rm-check"><input type="checkbox" id="rm-only-open" checked /> Only show open rooms</label>
+        </div>
+        <p class="rm-summary" id="rm-summary" aria-live="polite"></p>
+        <p class="rm-msg" id="rm-msg" role="status"></p>
+        <ul class="rm-board" id="rm-board"></ul>
+        <div class="rm-legend">
+          <span><i class="lg free"></i>Open</span>
+          <span><i class="lg busy"></i>Booked on the schedule</span>
+          <span><i class="lg claimed"></i>Claimed today on this page</span>
+        </div>
+      </section>
+      <p class="pt-note" id="rm-updated"></p>
+      <p class="pt-note">Tap <strong>Use this room</strong> and everyone else sees it as taken until its next booking (or closing time). Rooms can be claimed for today only, and you can release a room if your plans change. Claims show here only; they aren't added to the Google Sheet.</p>
+    </div>
+  </div>
+
+  <script is:inline>
+    (function () {
+      var DAYS = [['M', 'Monday'], ['T', 'Tuesday'], ['W', 'Wednesday'], ['Th', 'Thursday'], ['F', 'Friday'], ['S', 'Saturday']];
+      var MAP = { Mon: 'M', Tue: 'T', Wed: 'W', Thu: 'Th', Fri: 'F', Sat: 'S' };
+      var CLOSE = 1320;
+      var $ = function (id) { return document.getElementById(id); };
+      var me = null, data = null, claims = [], building = 0, office = null, busyAction = false;
+
+      function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+      function nowParts() {
+        var f = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Denver', weekday: 'short', hour: 'numeric', minute: 'numeric', hour12: false }).formatToParts(new Date());
+        var g = {}; f.forEach(function (p) { g[p.type] = p.value; });
+        return { day: MAP[g.weekday] || '', mins: (+g.hour % 24) * 60 + +g.minute };
+      }
+      function label12(m) { if (m >= 1440) m = 1439; var h = Math.floor(m / 60), mm = m % 60; return ((h + 11) % 12 + 1) + (mm ? ':' + ('0' + mm).slice(-2) : '') + ' ' + (h < 12 ? 'AM' : 'PM'); }
+      function mins(hhmm) { var p = hhmm.split(':'); return +p[0] * 60 + +p[1]; }
+
+      function setupControls() {
+        var seg = $('rm-building'); seg.innerHTML = '';
+        (data.schedules || []).forEach(function (s, i) {
+          var b = el('button', null, s.name); b.type = 'button'; b.setAttribute('role', 'tab');
+          b.onclick = function () { building = i; render(); };
+          seg.appendChild(b);
+        });
+        seg.hidden = (data.schedules || []).length < 2;
+        var day = $('rm-day'), time = $('rm-time'), now = nowParts();
+        day.innerHTML = ''; time.innerHTML = '';
+        DAYS.forEach(function (d) { var o = el('option', null, d[1] + (d[0] === now.day ? ' (today)' : '')); o.value = d[0]; day.appendChild(o); });
+        for (var m = 420; m <= 1290; m += 30) { var o = el('option', null, label12(m)); o.value = m; time.appendChild(o); }
+        day.value = now.day || 'M';
+        var slot = Math.min(Math.max(Math.floor(now.mins / 30) * 30, 420), 1290);
+        if (!now.day || now.mins >= CLOSE) slot = 540;
+        time.value = String(slot);
+        day.onchange = time.onchange = $('rm-only-open').onchange = render;
+      }
+
+      function claimFor(s, room, t, isToday) {
+        if (!isToday) return null;
+        return claims.filter(function (c) { return c.building === s.name && c.room === room.label && c.start <= t && t < c.end; })[0] || null;
+      }
+
+      function render() {
+        var s = (data.schedules || [])[building];
+        Array.prototype.forEach.call($('rm-building').children, function (b, i) { b.setAttribute('aria-selected', String(i === building)); });
+        var board = $('rm-board'); board.innerHTML = '';
+        renderMine();
+        if (!s || !s.rooms.length) { $('rm-summary').textContent = 'No room schedules were found in the sheet.'; return; }
+        var now = nowParts(), d = $('rm-day').value, t = +$('rm-time').value, isToday = d === now.day;
+        var canClaimNow = isToday && t + 30 > now.mins;
+        var onlyOpen = $('rm-only-open').checked, free = 0, hidden = 0;
+
+        s.rooms.forEach(function (room) {
+          var blocks = room.days[d] || [];
+          var busy = blocks.filter(function (b) { return mins(b.start) <= t && t < mins(b.end); })[0];
+          var claim = busy ? null : claimFor(s, room, t, isToday);
+          var state = busy ? 'busy' : claim ? 'claimed' : 'free';
+          if (state === 'free') free++;
+          if (onlyOpen && state === 'busy' && !(claim && claim.mine)) { hidden++; return; }
+          var li = el('li', 'rm-tile ' + state + (claim && claim.mine ? ' mine' : ''));
+          li.appendChild(el('span', 'rm-room', room.label));
+          if (state === 'busy') {
+            li.appendChild(el('span', 'rm-state', busy.who + ' until ' + label12(mins(busy.end))));
+          } else if (state === 'claimed') {
+            li.appendChild(el('span', 'rm-state', (claim.mine ? 'You' : claim.name) + ' · claimed until ' + label12(claim.end)));
+            if (claim.canRelease) {
+              var rb = el('button', 'pt-btn ghost', claim.mine ? 'Release' : 'Release (' + claim.name + ')'); rb.type = 'button';
+              rb.onclick = function () { act({ action: 'release', id: claim.id }, room.label + ' was released.'); };
+              li.appendChild(rb);
+            }
+          } else {
+            var nextB = blocks.map(function (b) { return mins(b.start); }).concat(isToday ? claims.filter(function (c) { return c.building === s.name && c.room === room.label; }).map(function (c) { return c.start; }) : [])
+              .filter(function (m) { return m > t; }).sort(function (a, z) { return a - z; })[0];
+            var until = nextB != null ? nextB : CLOSE;
+            li.appendChild(el('span', 'rm-state', nextB != null ? 'Open until ' + label12(until) : 'Open the rest of the day'));
+            if (canClaimNow) {
+              var cb = el('button', 'pt-btn', 'Use this room'); cb.type = 'button';
+              cb.setAttribute('aria-label', 'Use this room: ' + room.label + ' from ' + label12(t) + ' until ' + label12(until));
+              cb.onclick = function () { act({ action: 'claim', building: s.name, room: room.label, start: t }, room.label + ' is yours until ' + label12(until) + '. Everyone else now sees it as taken.'); };
+              li.appendChild(cb);
+            }
+          }
+          board.appendChild(li);
+        });
+
+        var sum = free + ' of ' + s.rooms.length + ' rooms open' + (s.name ? ' in ' + s.name : '') + ' at ' + label12(t) + (isToday ? ' today' : ' on ' + DAYS.filter(function (x) { return x[0] === d; })[0][1]) + '.';
+        if (hidden) sum += ' ' + hidden + ' booked ' + (hidden === 1 ? 'room is' : 'rooms are') + ' hidden.';
+        if (!isToday) sum += ' Rooms can be claimed for today only.';
+        else if (!canClaimNow) sum += ' That time has passed.';
+        $('rm-summary').textContent = sum;
+        if (!board.children.length) board.appendChild(el('li', 'rm-empty', 'No open rooms at this time. Untick “Only show open rooms” to see when each one frees up.'));
+      }
+
+      function renderMine() {
+        var mine = claims.filter(function (c) { return c.mine; });
+        var box = $('rm-mine'); box.innerHTML = '';
+        box.hidden = !mine.length;
+        if (!mine.length) return;
+        box.appendChild(el('strong', null, 'Your rooms today: '));
+        box.appendChild(document.createTextNode(mine.map(function (c) { return c.room + (data.schedules.length > 1 ? ' (' + c.building + ')' : '') + ', ' + label12(c.start) + '–' + label12(c.end); }).join(' · ')));
+      }
+
+      function act(body, okText) {
+        if (busyAction) return;
+        busyAction = true; $('rm-msg').textContent = 'Saving…';
+        fetch('/api/rooms?office=' + encodeURIComponent(office), { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
+          .then(function (r) { return r.json(); })
+          .then(function (b) {
+            if (b.ok) { claims = b.claims || []; $('rm-msg').textContent = okText; }
+            else { $('rm-msg').textContent = b.error || 'Something went wrong.'; refreshClaims(); }
+            render();
+          })
+          .catch(function () { $('rm-msg').textContent = 'Something went wrong. Please try again.'; })
+          .finally(function () { busyAction = false; });
+      }
+
+      function refreshClaims() {
+        return fetch('/api/rooms?office=' + encodeURIComponent(office), { credentials: 'same-origin' })
+          .then(function (r) { return r.ok ? r.json() : { claims: claims }; })
+          .then(function (b) { claims = b.claims || []; })
+          .catch(function () {});
+      }
+
+      function load(o) {
+        office = o;
+        ['rm-soon', 'rm-error', 'rm'].forEach(function (id) { $(id).hidden = true; });
+        $('rm-msg').textContent = '';
+        var q = '?office=' + encodeURIComponent(o);
+        Promise.all([
+          fetch('/api/dashboard' + q, { credentials: 'same-origin' }).then(function (r) { return r.json(); }),
+          refreshClaims(),
+        ]).then(function (res) {
+          var b = res[0];
+          if (b.available === false) { $('rm-soon').hidden = false; return; }
+          if (b.error) { $('rm-error').textContent = b.error; $('rm-error').hidden = false; return; }
+          data = b; building = 0;
+          setupControls(); render();
+          $('rm').hidden = false;
+          var ago = Math.round((Date.now() - b.fetchedAt) / 60000);
+          $('rm-updated').textContent = 'Schedules from the ' + ($('rm-office-pick').selectedOptions[0] || {}).textContent + ' Team Dashboard sheet · updated ' + (ago < 2 ? 'just now' : ago + ' minutes ago') + (b.stale ? ' (the sheet couldn’t be reached just now)' : '') + '. Claims update every minute.';
+        }).catch(function () { $('rm-error').textContent = 'The room schedule couldn’t load. Please refresh the page.'; $('rm-error').hidden = false; });
+      }
+
+      // Keep claims fresh while the page is open
+      setInterval(function () { if (office && data && !document.hidden) refreshClaims().then(render); }, 60000);
+
+      function start(m) {
+        me = m;
+        $('rm-signin').hidden = true;
+        var label = (me.officeLabel || me.office || '').replace(/ \(.*\)/, '');
+        $('rm-office').textContent = label ? label + ' office' : 'Employee Portal';
+        var tag = document.querySelector('[data-portal-office]'); if (tag && label) tag.textContent = label;
+        $('rm-office-pick').value = me.office;
+        if (me.manage) { $('rm-switch').hidden = false; $('rm-office-pick').onchange = function () { load(this.value); }; }
+        load(me.office);
+      }
+      if (window.tangibleStaff) start(window.tangibleStaff);
+      else document.addEventListener('tangible:staff', function (e) { start(e.detail); }, { once: true });
+    })();
+  </script>
+</Base>
+
+<style is:global>
+  .rm-mine { background: #fdf3d8; color: #5a4100; border-radius: 14px; padding: .7rem 1rem; margin-bottom: 1rem; font-size: .9rem; }
+  .rm-mine strong { font-weight: 600; }
+  .rm-controls { display: flex; flex-wrap: wrap; gap: .8rem 1rem; align-items: flex-end; margin-bottom: .9rem; }
+  .rm-check { display: flex; align-items: center; gap: .45rem; font-size: .88rem; padding-bottom: .5rem; cursor: pointer; }
+  .rm-check input { width: 18px; height: 18px; accent-color: var(--charcoal); }
+  .rm-summary { font-size: .9rem; color: #5d635e; margin: 0; }
+  .rm-msg { font-size: .88rem; font-weight: 500; color: var(--forest); margin: .2rem 0 .8rem; min-height: 1.2em; }
+  .rm-board { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: .7rem; }
+  .rm-tile { border-radius: 14px; padding: .8rem .95rem; display: flex; flex-direction: column; gap: .3rem; min-height: 104px; box-sizing: border-box; border: 1px solid transparent; }
+  .rm-tile .rm-room { font-weight: 600; font-size: 1rem; }
+  .rm-tile .rm-state { font-size: .82rem; line-height: 1.4; flex: 1; }
+  .rm-tile .pt-btn { align-self: flex-start; font-size: .8rem; padding: .4rem .9rem; min-height: 34px; }
+  .rm-tile.free { background: #dcebdd; border-color: #c3dbc5; }
+  .rm-tile.free .rm-state { color: #2a5230; font-weight: 500; }
+  .rm-tile.busy { background: #f6f7f6; border-color: #e4e7e4; }
+  .rm-tile.busy .rm-state { color: #5d635e; }
+  .rm-tile.claimed { background: #fdf3d8; border-color: #f0dc9c; }
+  .rm-tile.claimed .rm-state { color: #5a4100; }
+  .rm-tile.claimed .pt-btn.ghost { border-color: #c9a94a; color: #5a4100; }
+  .rm-empty { grid-column: 1 / -1; font-size: .9rem; color: #5d635e; background: #f6f7f6; border-radius: 14px; padding: 1rem; }
+  .rm-legend { display: flex; flex-wrap: wrap; gap: .5rem 1.2rem; margin-top: 1rem; font-size: .78rem; color: #5d635e; }
+  .rm-legend span { display: flex; align-items: center; gap: .4rem; }
+  .rm-legend .lg { width: 12px; height: 12px; border-radius: 4px; display: inline-block; }
+  .lg.free { background: #dcebdd; border: 1px solid #c3dbc5; }
+  .lg.busy { background: #f6f7f6; border: 1px solid #d5dad5; }
+  .lg.claimed { background: #fdf3d8; border: 1px solid #f0dc9c; }
+  @media (max-width: 600px) {
+    .rm-board { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .rm-controls .pt-field { flex: 1 1 40%; }
+  }
+</style>
