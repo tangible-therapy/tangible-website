@@ -542,6 +542,12 @@
     X-Robots-Tag = "noindex, nofollow"
 
 
+# Tangie's background data file: usable by the chatbot, kept out of search results
+[[headers]]
+  for = "/chat-knowledge.json"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+
 [[headers]]
   for = "/images/*"
   [headers.values]
