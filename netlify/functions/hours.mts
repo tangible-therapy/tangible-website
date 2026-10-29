@@ -1,8 +1,8 @@
 // /api/hours — supervision hours tracker (page: /hours).
 // Who can see what:
-//   - a supervisee: their own log
-//   - a supervisor: the logs of supervisees linked to them (they link people themselves)
-//   - directors and the owner: every log (oversight), and can move a supervisee between supervisors
+//   - an associate (role "associate"): logs their own hours ("My hours")
+//   - a supervisor (role "supervisor"): links associates as their supervisees and reviews their hours ("My supervisees")
+//   - the owner: every log, and can move an associate between supervisors
 // GET  ?view=mine | team | log&email=
 // POST { action: 'add' | 'edit' | 'delete' | 'review' | 'link' | 'unlink' | 'settings', ... }
 import { currentPerson, listPeople } from '../lib/staff-session.ts';
@@ -11,8 +11,9 @@ import { isOwner, type StaffRecord } from '../../src/data/staff-access.ts';
 import { LICENSES, type LicenseId } from '../../src/data/hours.ts';
 
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', 'cache-control': 'private, no-store' } });
-const isOverseer = (me: StaffRecord) => isOwner(me.email) || me.roles.includes('director');
+const isOverseer = (me: StaffRecord) => isOwner(me.email);
 const canSupervise = (me: StaffRecord) => isOverseer(me) || me.roles.includes('supervisor');
+const canLog = (me: StaffRecord) => isOverseer(me) || me.roles.includes('associate');
 const canView = (me: StaffRecord, log: Log) => log.supervisee === me.email || log.link?.supervisor === me.email || isOverseer(me);
 const canReview = (me: StaffRecord, log: Log) => (log.link?.supervisor === me.email || isOverseer(me)) && log.supervisee !== me.email;
 const licenseOk = (x: any): x is LicenseId => LICENSES.some((l) => l.id === x);
@@ -45,7 +46,7 @@ export default async (req: Request) => {
     const { people, name } = await names();
     if (view === 'mine') {
       const { log } = await readLog(me.email);
-      return json({ me: me.email, canSupervise: canSupervise(me), log, ...summary(log, name) });
+      return json({ me: me.email, canSupervise: canSupervise(me), canLog: canLog(me), log, ...summary(log, name) });
     }
     if (view === 'log') {
       const email = (url.searchParams.get('email') || '').toLowerCase();
@@ -58,9 +59,9 @@ export default async (req: Request) => {
       const logs = await allLogs();
       const linked = new Map(logs.filter((l) => l.link).map((l) => [l.supervisee, l]));
       const mine = logs.filter((l) => l.link && (l.link.supervisor === me.email || isOverseer(me)));
-      // People a supervisor could add: approved staff, not themselves, not already supervised by someone else.
+      // People a supervisor could add: approved associates, not themselves, not already supervised by someone else.
       const available = people
-        .filter((p) => p.status === 'approved' && p.email !== me.email && (!linked.has(p.email) || isOverseer(me)))
+        .filter((p) => p.status === 'approved' && p.roles.includes('associate') && p.email !== me.email && (!linked.has(p.email) || isOverseer(me)))
         .filter((p) => linked.get(p.email)?.link?.supervisor !== me.email)
         .map((p) => ({ email: p.email, name: p.name || p.email, supervisor: linked.get(p.email)?.link?.supervisor || null, supervisorName: name(linked.get(p.email)?.link?.supervisor) }));
       return json({ me: me.email, overseer: isOverseer(me), supervisees: mine.map((l) => summary(l, name)), available });
@@ -77,6 +78,7 @@ export default async (req: Request) => {
 
   // ----- a supervisee's own entries -----
   if (action === 'add' || action === 'edit' || action === 'delete') {
+    if (!canLog(me)) return json({ error: 'Only associates log hours. Ask a director to add the Associate role to your account.' }, 403);
     const c = action === 'delete' ? null : cleanEntry(b.entry);
     if (c?.error) return json({ error: c.error }, 400);
     return done(await updateLog(me.email, (log) => {
@@ -121,12 +123,16 @@ export default async (req: Request) => {
   if (action === 'link' || action === 'settings') {
     if (!canSupervise(me)) return json({ error: 'Only supervisors can do this.' }, 403);
     if (target === me.email) return json({ error: "You can't supervise yourself." }, 400);
+    if (action === 'link') {
+      const person = (await listPeople()).find((p) => p.email === target);
+      if (!person || person.status !== 'approved' || !person.roles.includes('associate')) return json({ error: 'Only staff with the Associate role can be added as supervisees.' }, 400);
+    }
     const license = licenseOk(b.license) ? b.license : 'acmhc';
     const startDate = /^\d{4}-\d{2}-\d{2}$/.test(String(b.startDate || '')) ? String(b.startDate) : undefined;
     return done(await updateLog(target, (log) => {
       const now = new Date().toISOString();
       if (action === 'link') {
-        if (log.link && log.link.supervisor !== me.email && !isOverseer(me)) return `Already supervised by ${name(log.link.supervisor)}. Ask a director to move them.`;
+        if (log.link && log.link.supervisor !== me.email && !isOverseer(me)) return `Already supervised by ${name(log.link.supervisor)}. Their current supervisor can remove them first, then you can add them.`;
         const supervisor = isOverseer(me) && b.supervisor ? String(b.supervisor).toLowerCase() : me.email;
         log.link = { supervisor, license, targets: b.targets ? cleanTargets(b.targets, license) : defaultTargets(license), startDate, linkedAt: now, linkedBy: me.email };
         return;

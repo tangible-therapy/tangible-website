@@ -11,7 +11,7 @@ import { LICENSES } from '../data/hours';
       <header class="hr-head">
         <p class="hr-eyebrow">Licensure</p>
         <h1>Hours tracker</h1>
-        <p class="hr-lede">Log your supervised hours toward licensure. Your supervisor approves them, and only approved hours count toward your totals.</p>
+        <p class="hr-lede" >Log your supervised hours toward licensure. Your supervisor approves them, and only approved hours count toward your totals.</p>
         <div class="hr-tabs" role="tablist" id="hr-tabs" hidden>
           <button type="button" role="tab" data-tab="mine" aria-selected="true">My hours</button>
           <button type="button" role="tab" data-tab="team" aria-selected="false">My supervisees</button>
@@ -61,7 +61,7 @@ import { LICENSES } from '../data/hours';
           <div class="hr-row-head">
             <h2>My supervisees</h2>
             <form id="hr-add" class="hr-add">
-              <select name="email" aria-label="Choose a supervisee" required><option value="">Add a supervisee…</option></select>
+              <select name="email" aria-label="Choose a supervisee" required><option value="">Add an associate…</option></select>
               <select name="license" aria-label="License">{LICENSES.map((l) => <option value={l.id}>{l.label} → {l.goal}</option>)}</select>
               <button class="hr-btn primary small" type="submit">Add</button>
             </form>
@@ -256,11 +256,11 @@ import { LICENSES } from '../data/hours';
       }
       function renderTeam() {
         var sel = $('hr-add').elements.email; sel.innerHTML = '';
-        var o0 = el('option', null, 'Add a supervisee…'); o0.value = ''; sel.appendChild(o0);
+        var o0 = el('option', null, team.available.length ? 'Add an associate…' : 'No associates to add'); o0.value = ''; sel.appendChild(o0);
         team.available.forEach(function (p) { var o = el('option', null, p.name + (p.supervisor ? ' (now with ' + p.supervisorName + ')' : '')); o.value = p.email; sel.appendChild(o); });
 
         var box = $('hr-team'); box.innerHTML = '';
-        if (!team.supervisees.length) { box.appendChild(el('p', 'hr-muted', 'No supervisees yet. Choose someone above to add them.')); return; }
+        if (!team.supervisees.length) { box.appendChild(el('p', 'hr-muted', 'No supervisees yet. Choose an associate above to add them. Only staff with the Associate role are listed.')); return; }
         var grid = el('div', 'hr-team');
         team.supervisees.sort(function (a, b) { return b.pendingCount - a.pendingCount || a.superviseeName.localeCompare(b.superviseeName); }).forEach(function (s) {
           var card = el('button', 'hr-person'); card.type = 'button';
@@ -342,11 +342,18 @@ import { LICENSES } from '../data/hours';
       document.querySelectorAll('#hr-tabs [data-tab]').forEach(function (b) { b.onclick = function () { tab(b.dataset.tab); }; });
       resetForm();
       call('GET', '?view=mine').then(function (b) {
-        mine = b; renderMine();
-        if (b.canSupervise) {
+        mine = b;
+        // Associates get "My hours", supervisors get "My supervisees"; people with both roles get both tabs.
+        if (b.canLog) renderMine();
+        if (b.canLog && b.canSupervise) {
           $('hr-tabs').hidden = false;
           var saved = null; try { saved = sessionStorage.getItem('hr-tab'); } catch (e) {}
-          tab(saved === 'mine' ? 'mine' : (b.log.entries.length || b.link) && saved !== 'team' ? 'mine' : 'team');
+          tab(saved === 'team' ? 'team' : 'mine');
+        } else if (b.canSupervise) {
+          document.querySelector('.hr-lede').textContent = 'See your supervisees\u2019 progress toward licensure and approve the hours they log.';
+          tab('team');
+        } else if (!b.canLog) {
+          $('hr-status').innerHTML = ''; $('hr-status').appendChild(el('p', 'hr-muted', 'The hours tracker is for associates and supervisors. Ask a director to update your role if you need it.'));
         }
       }).catch(function (e) { $('hr-status').innerHTML = ''; $('hr-status').appendChild(el('p', 'hr-err', e.message === 'Please sign in.' ? 'The hours tracker needs Google sign-in, which isn’t switched on here yet.' : e.message)); });
     })();

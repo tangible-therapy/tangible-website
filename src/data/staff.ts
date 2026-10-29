@@ -16,7 +16,7 @@ export const employeeLinks: StaffLink[] = [
   { label: 'Shared Google Drive', href: 'https://drive.google.com/drive/folders/0ANHdYds9dSG-Uk9PVA' },
   { label: 'Orem Team Dashboard', href: 'https://drive.google.com/drive/folders/0ANHdYds9dSG-Uk9PVA' },
   // Courses now live on the course portal; update these if the addresses change.
-  { label: 'Hours Tracker', href: '/hours', roles: ['therapist', 'supervisor', 'director'] },
+  { label: 'Hours Tracker', href: '/hours', roles: ['associate', 'supervisor'] },
   { label: 'Supervisor Training', href: 'https://academy.tangiblementalhealth.com', roles: ['supervisor', 'director'] },
   { label: 'Trainings', href: '/ceu' },
 ];

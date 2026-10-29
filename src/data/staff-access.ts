@@ -8,9 +8,10 @@ export const WORK_DOMAIN = 'tangiblementalhealth.com';
 // Owners always have full access and can't be removed or edited by directors.
 export const OWNER_EMAILS = ['brady@tangiblementalhealth.com'];
 
-export type Role = 'therapist' | 'supervisor' | 'director' | 'frontdesk' | 'billing';
+export type Role = 'therapist' | 'associate' | 'supervisor' | 'director' | 'frontdesk' | 'billing';
 export const ROLES: { id: Role; label: string }[] = [
   { id: 'therapist', label: 'Therapist' },
+  { id: 'associate', label: 'Associate (pre-licensed)' },
   { id: 'supervisor', label: 'Clinical supervisor' },
   { id: 'director', label: 'Director' },
   { id: 'frontdesk', label: 'Admin / front desk' },
@@ -52,6 +53,7 @@ const RESTRICTED: { paths: string[]; roles: Role[] }[] = [
     roles: ['frontdesk', 'director'],
   },
   { paths: ['/staff-admin'], roles: ['director'] },
+  { paths: ['/hours'], roles: ['associate', 'supervisor'] },
 ];
 
 // Menu/link visibility: a link with roles is shown only to those roles (owners see everything).
