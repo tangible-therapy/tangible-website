@@ -9,6 +9,8 @@ export type StaffLink = { label: string; href: string; roles?: Role[] };
 
 export const employeeLinks: StaffLink[] = [
   { label: 'Policies & Procedures', href: '/employeeportal/policies' },
+  // Room finder + "use this room today" claims (src/pages/employeeportal/rooms.astro, /api/rooms)
+  { label: 'Find a Room', href: '/employeeportal/rooms' },
   { label: 'Submit Hours', href: 'https://docs.google.com/forms/d/e/1FAIpQLScqzjlYy0R3CTIllUWeO3S8ZrC0JPiHJVtlYSYKlogd3t_dYg/viewform' },
   { label: 'Online Learning', href: '/digital-products-2' },
   // TODO: add the paystub portal address (left blank = button hidden)

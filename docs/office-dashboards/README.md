@@ -5,11 +5,15 @@ The Employee Portal (/employeeportal) shows each person their home office's dash
 - **Next training meeting** (and the next few) from the **Training Meeting** tab — date, topic, trainer,
   skill assignment, DSM and "Additional Items". If the signed-in person's first name is in the trainer,
   skill assignment or DSM column, it's highlighted for them.
-- **Find an open room** from the **… Master Schedule** tabs (one per building, e.g. Office A, Office B).
+- **Find a Room** (separate page) from the **… Master Schedule** tabs (one per building, e.g. Office A, Office B).
   The schedules are read from the cell **colors**: the key in the top rows (a name next to a colored square)
   says whose color is whose. Text typed in a schedule cell (e.g. "group") is used instead of the color.
   A color that isn't in the key shows as "Booked". So keep every color in the key.
 - **Suggest a training topic**: adds a row to the **Training Suggestions** tab (topic, "Name (email)").
+
+Find a Room is its own page, /employeeportal/rooms. There, staff can also tap **Use this room** to claim a room for today; claims are
+saved by the website (Netlify Blobs store "room-claims", /api/rooms), not written into the sheet, so the Master Schedule is
+never changed. Associates also see their supervised hours on the dashboard (from the Hours Tracker).
 
 Only Orem is connected so far (`dashboard: true` in `src/data/staff-access.ts`). Directors and the owner
 can view other offices with the "View office" picker.
