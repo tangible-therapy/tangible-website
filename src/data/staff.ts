@@ -2,7 +2,10 @@
 // These pages sit behind the staff password (see netlify/edge-functions/staff-gate.ts).
 // Never put usernames or passwords in this file — it is part of the website.
 
-export type StaffLink = { label: string; href: string };
+import type { Role } from './staff-access';
+
+// roles: show the link only to these roles (everyone if left out). Pages are protected separately (staff-access.ts).
+export type StaffLink = { label: string; href: string; roles?: Role[] };
 
 export const employeeLinks: StaffLink[] = [
   { label: 'Policies & Procedures', href: '/employeeportal/policies' },
@@ -13,7 +16,8 @@ export const employeeLinks: StaffLink[] = [
   { label: 'Shared Google Drive', href: 'https://drive.google.com/drive/folders/0ANHdYds9dSG-Uk9PVA' },
   { label: 'Orem Team Dashboard', href: 'https://drive.google.com/drive/folders/0ANHdYds9dSG-Uk9PVA' },
   // Courses now live on the course portal; update these if the addresses change.
-  { label: 'Supervisor Training', href: 'https://academy.tangiblementalhealth.com' },
+  { label: 'Hours Tracker', href: '/hours', roles: ['associate', 'supervisor'] },
+  { label: 'Supervisor Training', href: 'https://academy.tangiblementalhealth.com', roles: ['supervisor', 'director'] },
   { label: 'Trainings', href: '/ceu' },
 ];
 
@@ -23,7 +27,8 @@ export const newEmployeeLinks: StaffLink[] = [
 ];
 
 export const managementLinks: StaffLink[] = [
-  { label: 'Orientation', href: 'https://academy.tangiblementalhealth.com' },
+  { label: 'Orientation', href: 'https://academy.tangiblementalhealth.com', roles: ['director'] },
+  { label: 'Staff Accounts', href: '/staff-admin', roles: ['director'] },
 ];
 
 // Outside learning sites listed on /digital-products-2.
@@ -37,13 +42,13 @@ export const learningSites = [
 
 // Header menu shown on every staff page instead of the public menu.
 // Pages listed in staffPaths get this header automatically.
-export const staffPaths = ['/orientation', '/employeeportal', '/digital-products-2', '/onboarding', '/reception-portal', '/reception-onboarding', '/scheduling-new-client', '/scheduling-new-client-1', '/reception-onboarding-1', '/crisis-call'];
+export const staffPaths = ['/orientation', '/employeeportal', '/digital-products-2', '/onboarding', '/reception-portal', '/reception-onboarding', '/scheduling-new-client', '/scheduling-new-client-1', '/reception-onboarding-1', '/crisis-call', '/staff-admin', '/hours'];
 
 export const staffNav = [
   // Pulls from the Employee Links list above (blank links are skipped)
   { label: 'Employees', children: [{ label: 'Orientation', href: '/orientation' }, ...employeeLinks.filter((l) => l.href)] },
-  { label: 'Directors', children: managementLinks.filter((l) => l.href) },
-  { label: 'Reception', children: [
+  { label: 'Directors', roles: ['director'], children: managementLinks.filter((l) => l.href) },
+  { label: 'Reception', roles: ['frontdesk', 'director'], children: [
     { label: 'Reception Portal', href: '/reception-portal' },
     { label: 'Reception Onboarding', href: '/reception-onboarding' },
     { label: 'Start of Day Check-in', href: '/scheduling-new-client-1' },

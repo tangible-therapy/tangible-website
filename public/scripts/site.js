@@ -83,3 +83,27 @@
     });
   });
 })();
+
+// Staff pages: hide menu items and links that aren't part of the signed-in person's role (data-roles="director frontdesk").
+// Pages are protected on the server; this only keeps menus tidy. With the old shared password (/api/me unavailable) nothing is hidden.
+(function () {
+  if (!document.querySelector('.site-header.staff') && !document.querySelector('[data-roles]')) return;
+  fetch('/api/me', { credentials: 'same-origin' })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (me) {
+      if (!me) return;
+      window.tangibleStaff = me;
+      document.dispatchEvent(new CustomEvent('tangible:staff', { detail: me }));
+      if (me.owner) return;
+      document.querySelectorAll('[data-roles]').forEach(function (el) {
+        var need = el.getAttribute('data-roles').split(/\s+/);
+        if (!need.some(function (x) { return me.roles.indexOf(x) >= 0; })) el.remove();
+      });
+      // Remove menus / cards left empty
+      document.querySelectorAll('.nav .item, .mobile-menu details, [data-role-group]').forEach(function (g) {
+        if (g.querySelector('.dropdown, a, .staff-btn') === null || (g.matches('.nav .item') && g.querySelector('.dropdown') && !g.querySelector('.dropdown a'))) g.remove();
+        else if (g.matches('[data-role-group]') && !g.querySelector('a')) g.remove();
+      });
+    })
+    .catch(function () {});
+})();

@@ -45,6 +45,7 @@ const orgSchema = {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script is:inline>/* staff Google sign-in: if Netlify returns to another page, finish on /staff-login */(function(h){if(/^#(access_token|error)=/.test(h)&&location.pathname!=='/staff-login')location.replace('/staff-login'+h)})(location.hash)</script>
   <title>{title}</title>
   <meta name="description" content={description} />
   <link rel="canonical" href={canonical} />

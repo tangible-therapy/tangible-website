@@ -1,0 +1,442 @@
+---
+// Supervision hours tracker (staff-only; data from /api/hours, see netlify/functions/hours.mts).
+// Supervisees log weekly totals or single sessions; their supervisor approves them.
+// Supervisors link their own supervisees and see everyone's progress. No client information is stored.
+import Base from '../layouts/Base.astro';
+import { LICENSES } from '../data/hours';
+---
+<Base title="Hours Tracker | Tangible Therapy" description="Supervision hours tracker." noindex>
+  <section class="sec t-light hr">
+    <div class="sec-in"><div class="wrap hr-wrap">
+      <header class="hr-head">
+        <p class="hr-eyebrow">Licensure</p>
+        <h1>Hours tracker</h1>
+        <p class="hr-lede" >Log your supervised hours toward licensure. Your supervisor approves them, and only approved hours count toward your totals.</p>
+        <div class="hr-tabs" role="tablist" id="hr-tabs" hidden>
+          <button type="button" role="tab" data-tab="mine" aria-selected="true">My hours</button>
+          <button type="button" role="tab" data-tab="team" aria-selected="false">My supervisees</button>
+        </div>
+      </header>
+      <div id="hr-alert" class="hr-alert" role="status" hidden></div>
+
+      <!-- ===== My hours ===== -->
+      <div data-pane="mine">
+        <div class="hr-card hr-status" id="hr-status"><p class="hr-muted">Loading…</p></div>
+
+        <div class="hr-cols">
+          <article class="hr-card">
+            <h2 id="hr-form-title">Log hours</h2>
+            <form id="hr-form" novalidate>
+              <div class="hr-seg" role="radiogroup" aria-label="Entry type">
+                <label><input type="radio" name="kind" value="week" checked /> A whole week</label>
+                <label><input type="radio" name="kind" value="session" /> One session</label>
+              </div>
+              <label class="hr-field"><span id="hr-date-label">Week of (any day that week)</span><input type="date" name="date" required /></label>
+              <div class="hr-nums">
+                <label class="hr-field"><span>Direct client care</span><input type="number" name="direct" min="0" max="168" step="0.25" inputmode="decimal" placeholder="0" /></label>
+                <label class="hr-field"><span>Individual supervision</span><input type="number" name="individual" min="0" max="168" step="0.25" inputmode="decimal" placeholder="0" /></label>
+                <label class="hr-field"><span>Group supervision</span><input type="number" name="group" min="0" max="168" step="0.25" inputmode="decimal" placeholder="0" /></label>
+                <label class="hr-field"><span>…of which direct observation</span><input type="number" name="observation" min="0" max="168" step="0.25" inputmode="decimal" placeholder="0" /></label>
+                <label class="hr-field hr-wide"><span>Other work time <small>(notes, admin, trainings, consults…)</small></span><input type="number" name="other" min="0" max="168" step="0.25" inputmode="decimal" placeholder="0" /></label>
+              </div>
+              <p class="hr-muted small" id="hr-week-total" aria-live="polite"></p>
+              <p class="hr-err" id="hr-form-err" hidden></p>
+              <div class="hr-actions">
+                <button class="hr-btn primary" type="submit" id="hr-save">Add hours</button>
+                <button class="hr-btn" type="button" id="hr-cancel" hidden>Cancel edit</button>
+              </div>
+            </form>
+          </article>
+
+          <article class="hr-card">
+            <div class="hr-row-head"><h2>My entries</h2><button class="hr-btn small" type="button" id="hr-csv-mine">Download CSV</button></div>
+            <div id="hr-entries"></div>
+          </article>
+        </div>
+      </div>
+
+      <!-- ===== Supervisor view ===== -->
+      <div data-pane="team" hidden>
+        <div class="hr-card">
+          <div class="hr-row-head">
+            <h2>My supervisees</h2>
+            <form id="hr-add" class="hr-add">
+              <select name="email" aria-label="Choose a supervisee" required><option value="">Add an associate…</option></select>
+              <select name="license" aria-label="License">{LICENSES.map((l) => <option value={l.id}>{l.label} → {l.goal}</option>)}</select>
+              <button class="hr-btn primary small" type="submit">Add</button>
+            </form>
+          </div>
+          <div id="hr-team"><p class="hr-muted">Loading…</p></div>
+        </div>
+
+        <div class="hr-card" id="hr-detail" hidden>
+          <div class="hr-row-head">
+            <div><p class="hr-eyebrow dark" id="hr-d-license"></p><h2 id="hr-d-name"></h2></div>
+            <div class="hr-actions">
+              <button class="hr-btn small" type="button" id="hr-d-csv">Download CSV</button>
+              <button class="hr-btn small" type="button" id="hr-d-close">Close</button>
+            </div>
+          </div>
+          <div id="hr-d-progress"></div>
+          <div class="hr-row-head"><h3>Waiting for your approval</h3><button class="hr-btn primary small" type="button" id="hr-d-approve-all" hidden>Approve all</button></div>
+          <div id="hr-d-pending"></div>
+          <h3>All entries</h3>
+          <div id="hr-d-entries"></div>
+          <details class="hr-settings">
+            <summary>License and targets</summary>
+            <form id="hr-d-settings">
+              <div class="hr-nums">
+                <label class="hr-field"><span>License</span><select name="license">{LICENSES.map((l) => <option value={l.id}>{l.label} → {l.goal}</option>)}</select></label>
+                <label class="hr-field"><span>Supervision started</span><input type="date" name="startDate" /></label>
+                <label class="hr-field"><span>Total hours target</span><input type="number" name="total" min="0" step="1" /></label>
+                <label class="hr-field"><span>Direct client care target</span><input type="number" name="direct" min="0" step="1" /></label>
+                <label class="hr-field"><span>Supervision target</span><input type="number" name="supervision" min="0" step="1" /></label>
+                <label class="hr-field"><span>Direct observation target</span><input type="number" name="observation" min="0" step="1" /></label>
+                <label class="hr-field"><span>Group supervision that can count (max)</span><input type="number" name="groupMax" min="0" step="1" /></label>
+              </div>
+              <p class="hr-muted small">Defaults follow Utah Code 58-60-405 (July 2026). Requirements vary by license and issue date, so check with DOPL.</p>
+              <div class="hr-actions">
+                <button class="hr-btn primary small" type="submit">Save</button>
+                <button class="hr-btn small danger" type="button" id="hr-d-unlink">Stop supervising</button>
+              </div>
+            </form>
+          </details>
+        </div>
+      </div>
+    </div></div>
+  </section>
+
+  <script is:inline define:vars={{ LICENSES }}>
+    (function () {
+      var API = '/api/hours', $ = function (id) { return document.getElementById(id); };
+      var mine = null, team = null, detail = null, editing = null;
+      var LIC = {}; LICENSES.forEach(function (l) { LIC[l.id] = l; });
+
+      function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+      function h(n) { n = Math.round(n * 100) / 100; return n.toLocaleString('en-US') + (n === 1 ? ' hr' : ' hrs'); }
+      function fmtDate(iso) { return new Date(iso + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+      function notify(t, bad) { var a = $('hr-alert'); a.textContent = t; a.className = 'hr-alert' + (bad ? ' bad' : ''); a.hidden = false; clearTimeout(notify.t); notify.t = setTimeout(function () { a.hidden = true; }, 6000); }
+      function call(method, qs, body) {
+        return fetch(API + (qs || ''), { method: method, credentials: 'same-origin', headers: body ? { 'content-type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined })
+          .then(function (r) { return r.json().then(function (b) { if (!r.ok) throw new Error(b.error || 'Something went wrong.'); return b; }); });
+      }
+      var STATUS = { pending: 'Waiting for approval', approved: 'Approved', returned: 'Sent back' };
+
+      // ---------- progress ----------
+      function progress(link, approved, pending) {
+        var wrap = el('div', 'hr-progress');
+        var t = Object.assign({}, LICENSES[0].targets, link ? link.targets : {});
+        var groupCounted = Math.min(approved.group, t.groupMax);
+        var rows = [
+          ['Total hours', approved.total || 0, pending.total || 0, t.total],
+          ['Direct client care', approved.direct, pending.direct, t.direct],
+          ['Supervision', approved.individual + groupCounted, pending.individual + pending.group, t.supervision, approved.group > t.groupMax ? 'Only ' + t.groupMax + ' group supervision hours can count (' + h(approved.group) + ' logged).' : ''],
+          ['Direct observation', approved.observation, pending.observation, t.observation],
+        ];
+        rows.forEach(function (r) {
+          var pct = r[3] ? Math.min(100, (r[1] / r[3]) * 100) : 0, ppct = r[3] ? Math.min(100 - pct, (r[2] / r[3]) * 100) : 0;
+          var row = el('div', 'hr-bar');
+          var top = el('div', 'hr-bar-top');
+          top.appendChild(el('span', 'lab', r[0]));
+          top.appendChild(el('span', 'val', h(r[1]) + ' of ' + r[3].toLocaleString('en-US') + (r[2] ? '  ·  ' + h(r[2]) + ' waiting' : '')));
+          row.appendChild(top);
+          var track = el('div', 'hr-track'); track.setAttribute('role', 'progressbar'); track.setAttribute('aria-label', r[0]); track.setAttribute('aria-valuenow', String(Math.round(pct))); track.setAttribute('aria-valuemin', '0'); track.setAttribute('aria-valuemax', '100');
+          var f = el('span', 'fill'); f.style.width = pct + '%'; track.appendChild(f);
+          var p = el('span', 'pend'); p.style.width = ppct + '%'; track.appendChild(p);
+          row.appendChild(track);
+          if (r[4]) row.appendChild(el('p', 'hr-note', r[4]));
+          wrap.appendChild(row);
+        });
+        return wrap;
+      }
+
+      // ---------- entries table ----------
+      function entryList(entries, opts) {
+        var box = el('div', 'hr-list');
+        var list = entries.slice().sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : 0; });
+        if (!list.length) { box.appendChild(el('p', 'hr-muted', opts.empty || 'No entries yet.')); return box; }
+        list.forEach(function (e) {
+          var row = el('div', 'hr-entry ' + e.status);
+          var head = el('div', 'hr-entry-head');
+          head.appendChild(el('strong', null, (e.kind === 'week' ? 'Week of ' : '') + fmtDate(e.date)));
+          head.appendChild(el('span', 'hr-chip ' + e.status, STATUS[e.status]));
+          row.appendChild(head);
+          var parts = [];
+          if (e.direct) parts.push('Direct ' + h(e.direct));
+          if (e.individual) parts.push('Individual sup. ' + h(e.individual));
+          if (e.group) parts.push('Group sup. ' + h(e.group));
+          if (e.observation) parts.push('Observation ' + h(e.observation));
+          if (e.other) parts.push('Other ' + h(e.other));
+          var tot = e.direct + e.individual + e.group + (e.other || 0);
+          head.insertBefore(el('span', 'hr-entry-total', h(tot)), head.lastChild);
+          row.appendChild(el('p', 'hr-entry-hours', parts.join(' · ')));
+          if (e.supervisorNote && e.status === 'returned') row.appendChild(el('p', 'hr-entry-sup', 'Supervisor: ' + e.supervisorNote));
+          var btns = el('div', 'hr-actions');
+          (opts.buttons(e) || []).forEach(function (b) { var x = el('button', 'hr-btn small' + (b.cls ? ' ' + b.cls : ''), b.label); x.type = 'button'; x.onclick = b.go; btns.appendChild(x); });
+          if (btns.children.length) row.appendChild(btns);
+          box.appendChild(row);
+        });
+        return box;
+      }
+
+      // ---------- CSV ----------
+      function csv(log, who) {
+        var rows = [['Supervisee', 'Type', 'Date', 'Direct client care', 'Individual supervision', 'Group supervision', 'Direct observation', 'Other work time', 'Total', 'Status', 'Reviewed by', 'Reviewed at']];
+        log.entries.slice().sort(function (a, b) { return a.date < b.date ? -1 : 1; }).forEach(function (e) {
+          rows.push([who, e.kind === 'week' ? 'Week' : 'Session', e.date, e.direct, e.individual, e.group, e.observation, e.other || 0, e.direct + e.individual + e.group + (e.other || 0), STATUS[e.status], e.reviewedBy || '', e.reviewedAt ? e.reviewedAt.slice(0, 10) : '']);
+        });
+        var text = rows.map(function (r) { return r.map(function (c) { c = String(c); if (/^[=+\-@]/.test(c)) c = "'" + c; return /[",\n]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c; }).join(','); }).join('\n');
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([text], { type: 'text/csv' }));
+        a.download = 'supervision-hours-' + who.replace(/[^a-z0-9]+/gi, '-').toLowerCase() + '.csv';
+        document.body.appendChild(a); a.click(); a.remove();
+      }
+
+      // ---------- My hours ----------
+      function renderMine() {
+        var s = $('hr-status'); s.innerHTML = '';
+        var top = el('div', 'hr-row-head');
+        var who = el('div');
+        if (mine.link) {
+          var l = LIC[mine.link.license] || LICENSES[0];
+          who.appendChild(el('p', 'hr-eyebrow dark', l.label + ' → ' + l.goal));
+          who.appendChild(el('h2', null, 'Supervisor: ' + mine.supervisorName));
+        } else {
+          who.appendChild(el('h2', null, 'No supervisor linked yet'));
+          who.appendChild(el('p', 'hr-muted', 'You can start logging now. Ask your supervisor to add you in the Hours tracker; your entries will then go to them for approval.'));
+        }
+        top.appendChild(who); s.appendChild(top);
+        s.appendChild(progress(mine.link, mine.approved, mine.pending));
+
+        var box = $('hr-entries'); box.innerHTML = '';
+        box.appendChild(entryList(mine.log.entries, {
+          empty: 'Nothing logged yet. Add your first week on the left.',
+          buttons: function (e) {
+            if (e.status === 'approved') return [];
+            return [
+              { label: 'Edit', go: function () { startEdit(e); } },
+              { label: 'Delete', cls: 'danger', go: function () { if (confirm('Delete this entry?')) save({ action: 'delete', id: e.id }, 'Entry deleted.'); } },
+            ];
+          },
+        }));
+      }
+      function kindChanged() {
+        var k = $('hr-form').querySelector('[name=kind]:checked').value;
+        $('hr-date-label').textContent = k === 'week' ? 'Week of (any day that week)' : 'Date of the session';
+      }
+      function startEdit(e) {
+        editing = e; var f = $('hr-form');
+        f.querySelector('[name=kind][value=' + e.kind + ']').checked = true; kindChanged();
+        ['date', 'direct', 'individual', 'group', 'observation', 'other'].forEach(function (k) { f.elements[k].value = e[k] || ''; });
+        weekTotal();
+        f.elements.date.value = e.date;
+        $('hr-form-title').textContent = 'Edit entry'; $('hr-save').textContent = 'Save changes'; $('hr-cancel').hidden = false;
+        f.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+      function resetForm() {
+        editing = null; var f = $('hr-form'); f.reset(); kindChanged();
+        f.elements.date.value = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+        $('hr-form-title').textContent = 'Log hours'; $('hr-save').textContent = 'Add hours'; $('hr-cancel').hidden = true; $('hr-form-err').hidden = true;
+        weekTotal();
+      }
+      function weekTotal() {
+        var f = $('hr-form'), sum = 0;
+        ['direct', 'individual', 'group', 'other'].forEach(function (k) { sum += Number(f.elements[k].value) || 0; });
+        $('hr-week-total').textContent = sum ? 'Counts toward your total: ' + h(sum) : '';
+      }
+      ['direct', 'individual', 'group', 'other'].forEach(function (k) { $('hr-form').elements[k].addEventListener('input', weekTotal); });
+      function save(body, msg) {
+        return call('POST', '', body).then(function (b) { mine = Object.assign(mine, b); renderMine(); notify(msg); return b; }).catch(function (e) { notify(e.message, true); throw e; });
+      }
+      $('hr-form').addEventListener('submit', function (ev) {
+        ev.preventDefault();
+        var f = this, entry = { kind: f.querySelector('[name=kind]:checked').value, date: f.elements.date.value };
+        ['direct', 'individual', 'group', 'observation', 'other'].forEach(function (k) { entry[k] = f.elements[k].value === '' ? 0 : Number(f.elements[k].value); });
+        $('hr-save').disabled = true;
+        save(editing ? { action: 'edit', id: editing.id, entry: entry } : { action: 'add', entry: entry }, editing ? 'Entry updated and sent for approval.' : 'Hours added and sent for approval.')
+          .then(resetForm)
+          .catch(function (e) { $('hr-form-err').textContent = e.message; $('hr-form-err').hidden = false; })
+          .finally(function () { $('hr-save').disabled = false; });
+      });
+      $('hr-form').querySelectorAll('[name=kind]').forEach(function (r) { r.onchange = kindChanged; });
+      $('hr-cancel').onclick = resetForm;
+      $('hr-csv-mine').onclick = function () { csv(mine.log, mine.superviseeName || 'me'); };
+
+      // ---------- Supervisor ----------
+      function loadTeam() {
+        return call('GET', '?view=team').then(function (b) { team = b; renderTeam(); }).catch(function (e) { $('hr-team').innerHTML = ''; $('hr-team').appendChild(el('p', 'hr-err', e.message)); });
+      }
+      function renderTeam() {
+        var sel = $('hr-add').elements.email; sel.innerHTML = '';
+        var o0 = el('option', null, team.available.length ? 'Add an associate…' : 'No associates to add'); o0.value = ''; sel.appendChild(o0);
+        team.available.forEach(function (p) { var o = el('option', null, p.name + (p.supervisor ? ' (now with ' + p.supervisorName + ')' : '')); o.value = p.email; sel.appendChild(o); });
+
+        var box = $('hr-team'); box.innerHTML = '';
+        if (!team.supervisees.length) { box.appendChild(el('p', 'hr-muted', 'No supervisees yet. Choose an associate above to add them. Only staff with the Associate role are listed.')); return; }
+        var grid = el('div', 'hr-team');
+        team.supervisees.sort(function (a, b) { return b.pendingCount - a.pendingCount || a.superviseeName.localeCompare(b.superviseeName); }).forEach(function (s) {
+          var card = el('button', 'hr-person'); card.type = 'button';
+          var top = el('div', 'hr-person-top');
+          top.appendChild(el('strong', null, s.superviseeName));
+          if (s.pendingCount) top.appendChild(el('span', 'hr-chip pending', s.pendingCount + ' to review'));
+          card.appendChild(top);
+          var l = LIC[s.link.license] || LICENSES[0];
+          card.appendChild(el('span', 'hr-muted small', l.label + ' → ' + l.goal + (team.overseer && s.supervisor !== team.me ? ' · supervisor: ' + s.supervisorName : '')));
+          var t = Object.assign({}, LICENSES[0].targets, s.link.targets), pct = t.total ? Math.min(100, (s.approved.total || 0) / t.total * 100) : 0;
+          var track = el('div', 'hr-track thin'); var f = el('span', 'fill'); f.style.width = pct + '%'; track.appendChild(f); card.appendChild(track);
+          card.appendChild(el('span', 'hr-muted small', h(s.approved.total || 0) + ' of ' + t.total.toLocaleString('en-US') + ' total · ' + h(s.approved.direct) + ' of ' + t.direct.toLocaleString('en-US') + ' direct · ' + h(s.approved.individual + Math.min(s.approved.group, t.groupMax)) + ' of ' + t.supervision.toLocaleString('en-US') + ' supervision' + (s.lastEntry ? ' · last entry ' + fmtDate(s.lastEntry) : '')));
+          card.onclick = function () { openDetail(s.supervisee); };
+          grid.appendChild(card);
+        });
+        box.appendChild(grid);
+      }
+      $('hr-add').addEventListener('submit', function (ev) {
+        ev.preventDefault();
+        var email = this.elements.email.value, license = this.elements.license.value;
+        if (!email) return;
+        var pick = team.available.filter(function (p) { return p.email === email; })[0];
+        if (pick && pick.supervisor && !confirm(pick.name + ' is supervised by ' + pick.supervisorName + '. Move them to you?')) return;
+        call('POST', '', { action: 'link', email: email, license: license }).then(function () { notify('Added ' + (pick ? pick.name : email) + '.'); return loadTeam(); }).catch(function (e) { notify(e.message, true); });
+      });
+
+      function openDetail(email) {
+        call('GET', '?view=log&email=' + encodeURIComponent(email)).then(function (b) { detail = b; renderDetail(); $('hr-detail').hidden = false; $('hr-detail').scrollIntoView({ behavior: 'smooth', block: 'start' }); }).catch(function (e) { notify(e.message, true); });
+      }
+      function review(ids, decision, note) {
+        return call('POST', '', { action: 'review', email: detail.supervisee, ids: ids, decision: decision, note: note })
+          .then(function (b) { detail = Object.assign(detail, b); renderDetail(); loadTeam(); notify(decision === 'approve' ? 'Approved.' : decision === 'return' ? 'Sent back with your note.' : 'Reopened.'); })
+          .catch(function (e) { notify(e.message, true); });
+      }
+      function renderDetail() {
+        var l = LIC[detail.link ? detail.link.license : 'acmhc'] || LICENSES[0];
+        $('hr-d-license').textContent = l.label + ' → ' + l.goal + (detail.link && detail.link.startDate ? ' · since ' + fmtDate(detail.link.startDate) : '');
+        $('hr-d-name').textContent = detail.superviseeName;
+        var p = $('hr-d-progress'); p.innerHTML = ''; p.appendChild(progress(detail.link, detail.approved, detail.pending));
+        var pend = detail.log.entries.filter(function (e) { return e.status === 'pending'; });
+        $('hr-d-approve-all').hidden = !(pend.length > 1 && detail.canReview);
+        var buttons = function (e) {
+          if (!detail.canReview) return [];
+          if (e.status === 'approved') return [{ label: 'Reopen', go: function () { review([e.id], 'reopen'); } }];
+          if (e.status === 'returned') return [{ label: 'Approve', cls: 'primary', go: function () { review([e.id], 'approve'); } }];
+          return [
+            { label: 'Approve', cls: 'primary', go: function () { review([e.id], 'approve'); } },
+            { label: 'Send back', go: function () { var n = prompt('What should they fix? (No client details.)'); if (n !== null) review([e.id], 'return', n); } },
+          ];
+        };
+        $('hr-d-pending').innerHTML = ''; $('hr-d-pending').appendChild(entryList(pend, { empty: 'Nothing waiting. You’re all caught up.', buttons: buttons }));
+        $('hr-d-entries').innerHTML = ''; $('hr-d-entries').appendChild(entryList(detail.log.entries.filter(function (e) { return e.status !== 'pending'; }), { empty: 'No reviewed entries yet.', buttons: buttons }));
+        var f = $('hr-d-settings'), t = Object.assign({}, l.targets, detail.link ? detail.link.targets : {});
+        f.elements.license.value = detail.link ? detail.link.license : 'acmhc';
+        f.elements.startDate.value = (detail.link && detail.link.startDate) || '';
+        ['total', 'direct', 'supervision', 'observation', 'groupMax'].forEach(function (k) { f.elements[k].value = t[k]; });
+      }
+      $('hr-d-approve-all').onclick = function () { review(detail.log.entries.filter(function (e) { return e.status === 'pending'; }).map(function (e) { return e.id; }), 'approve'); };
+      $('hr-d-close').onclick = function () { $('hr-detail').hidden = true; detail = null; };
+      $('hr-d-csv').onclick = function () { csv(detail.log, detail.superviseeName); };
+      $('hr-d-settings').addEventListener('submit', function (ev) {
+        ev.preventDefault(); var f = this;
+        call('POST', '', { action: 'settings', email: detail.supervisee, license: f.elements.license.value, startDate: f.elements.startDate.value, targets: { total: f.elements.total.value, direct: f.elements.direct.value, supervision: f.elements.supervision.value, observation: f.elements.observation.value, groupMax: f.elements.groupMax.value } })
+          .then(function (b) { detail = Object.assign(detail, b); renderDetail(); loadTeam(); notify('Saved.'); }).catch(function (e) { notify(e.message, true); });
+      });
+      $('hr-d-settings').elements.license.onchange = function () { var t = (LIC[this.value] || LICENSES[0]).targets, f = $('hr-d-settings'); ['total', 'direct', 'supervision', 'observation', 'groupMax'].forEach(function (k) { f.elements[k].value = t[k]; }); };
+      $('hr-d-unlink').onclick = function () {
+        if (!confirm('Stop supervising ' + detail.superviseeName + '? Their logged hours are kept.')) return;
+        call('POST', '', { action: 'unlink', email: detail.supervisee }).then(function () { $('hr-detail').hidden = true; notify('Removed from your supervisees.'); loadTeam(); }).catch(function (e) { notify(e.message, true); });
+      };
+
+      // ---------- tabs + start ----------
+      function tab(name) {
+        document.querySelectorAll('#hr-tabs [data-tab]').forEach(function (b) { b.setAttribute('aria-selected', String(b.dataset.tab === name)); });
+        document.querySelectorAll('.hr [data-pane]').forEach(function (p) { p.hidden = p.dataset.pane !== name; });
+        if (name === 'team' && !team) loadTeam();
+        try { sessionStorage.setItem('hr-tab', name); } catch (e) {}
+      }
+      document.querySelectorAll('#hr-tabs [data-tab]').forEach(function (b) { b.onclick = function () { tab(b.dataset.tab); }; });
+      resetForm();
+      call('GET', '?view=mine').then(function (b) {
+        mine = b;
+        // Associates get "My hours", supervisors get "My supervisees"; people with both roles get both tabs.
+        if (b.canLog) renderMine();
+        if (b.canLog && b.canSupervise) {
+          $('hr-tabs').hidden = false;
+          var saved = null; try { saved = sessionStorage.getItem('hr-tab'); } catch (e) {}
+          tab(saved === 'team' ? 'team' : 'mine');
+        } else if (b.canSupervise) {
+          document.querySelector('.hr-lede').textContent = 'See your supervisees\u2019 progress toward licensure and approve the hours they log.';
+          tab('team');
+        } else if (!b.canLog) {
+          $('hr-status').innerHTML = ''; $('hr-status').appendChild(el('p', 'hr-muted', 'The hours tracker is for associates and supervisors. Ask a director to update your role if you need it.'));
+        }
+      }).catch(function (e) { $('hr-status').innerHTML = ''; $('hr-status').appendChild(el('p', 'hr-err', e.message === 'Please sign in.' ? 'The hours tracker needs Google sign-in, which isn’t switched on here yet.' : e.message)); });
+    })();
+  </script>
+</Base>
+
+<style is:global>
+  .hr [hidden] { display: none !important; }
+  .hr .hr-wrap { max-width: 1150px; }
+  .hr-head { margin-bottom: 1.5rem; }
+  .hr-eyebrow { text-transform: uppercase; letter-spacing: .12em; font-size: .75rem; font-weight: 500; margin: 0 0 .35rem; color: #dfe5df; }
+  .hr-eyebrow.dark { color: var(--slate); }
+  .hr-head h1 { color: #fff; margin: 0 0 .5rem; font-size: clamp(2rem, 4vw, 2.8rem); }
+  .hr-lede { color: #e8ece8; max-width: 62ch; margin: 0 0 1.25rem; }
+  .hr-tabs { display: inline-flex; background: rgba(255,255,255,.12); border-radius: 300px; padding: 4px; gap: 2px; }
+  .hr-tabs button { font: inherit; font-size: .92rem; border: 0; background: none; color: #fff; padding: .55rem 1.2rem; border-radius: 300px; cursor: pointer; }
+  .hr-tabs button[aria-selected=true] { background: #fff; color: var(--charcoal); font-weight: 500; }
+  .hr-card { background: #fff; color: var(--charcoal); border-radius: 28px; padding: 1.75rem 2rem; margin-bottom: 1.25rem; }
+  .hr-card h2 { font-size: 1.35rem; margin: 0 0 1rem; color: var(--charcoal); }
+  .hr-card h3 { font-size: 1.05rem; margin: 1.5rem 0 .75rem; color: var(--charcoal); }
+  .hr-cols { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 1.25rem; align-items: start; }
+  .hr-row-head { display: flex; justify-content: space-between; align-items: flex-start; gap: .75rem 1rem; flex-wrap: wrap; }
+  .hr-row-head h2, .hr-row-head h3 { margin-bottom: .75rem; }
+  .hr-muted { color: #6b716c; font-size: .92rem; } .hr-muted.small, .small.hr-muted { font-size: .82rem; }
+  .hr-progress { display: grid; gap: 1rem; margin: .5rem 0 0; }
+  .hr-bar-top { display: flex; justify-content: space-between; gap: 1rem; font-size: .9rem; margin-bottom: .35rem; flex-wrap: wrap; }
+  .hr-bar-top .lab { font-weight: 500; } .hr-bar-top .val { color: #5d635e; }
+  .hr-track { position: relative; display: flex; height: 12px; background: #eceeec; border-radius: 300px; overflow: hidden; }
+  .hr-track.thin { height: 6px; margin: .6rem 0 .4rem; }
+  .hr-track .fill { background: #4f7a58; } .hr-track .pend { background: repeating-linear-gradient(45deg, #c9d9cc 0 6px, #dde8df 6px 12px); }
+  .hr-note { font-size: .82rem; color: #8a5a00; margin: .35rem 0 0; }
+  .hr-seg { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+  .hr-seg label { display: inline-flex; align-items: center; gap: .4rem; border: 1px solid #c9cfca; border-radius: 300px; padding: .45rem .9rem; font-size: .88rem; cursor: pointer; }
+  .hr-seg label:has(input:checked) { border-color: var(--charcoal); background: #f3f5f3; font-weight: 500; }
+  .hr-field { display: flex; flex-direction: column; gap: .3rem; font-size: .85rem; margin-bottom: .9rem; }
+  .hr-field input, .hr-field select, .hr-add select { font: inherit; font-size: .95rem; padding: .6rem .8rem; border: 1px solid #c9cfca; border-radius: 10px; background: #fff; color: var(--charcoal); min-width: 0; max-width: 100%; }
+  .hr-nums { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 .9rem; }
+  .hr-warn { font-size: .8rem; color: #8a5a00; background: #fdf3d8; border-radius: 10px; padding: .5rem .8rem; margin: 0 0 .9rem; }
+  .hr-err, .hr-alert.bad { background: #fbeceb; color: #8a1c14; border-radius: 12px; padding: .7rem 1rem; font-size: .88rem; }
+  .hr-alert { position: sticky; top: 90px; z-index: 5; background: #eef2ee; color: var(--charcoal); border-radius: 12px; padding: .8rem 1rem; margin-bottom: 1rem; }
+  .hr-actions { display: flex; gap: .45rem; flex-wrap: wrap; }
+  .hr-btn { font: inherit; font-size: .9rem; font-weight: 500; border-radius: 300px; padding: .65rem 1.3rem; border: 1px solid var(--charcoal); background: #fff; color: var(--charcoal); cursor: pointer; white-space: nowrap; }
+  .hr-btn.small { font-size: .82rem; padding: .45rem .95rem; }
+  .hr-btn.primary { background: var(--charcoal); color: #fff; }
+  .hr-btn.danger:hover { border-color: #b3261e; color: #b3261e; }
+  .hr-btn:disabled { opacity: .5; cursor: not-allowed; }
+  .hr-list { display: grid; gap: .6rem; }
+  .hr-entry { border: 1px solid #e3e7e3; border-radius: 16px; padding: .85rem 1rem; }
+  .hr-entry.returned { border-color: #e7b9b4; background: #fdf6f5; }
+  .hr-entry-head { display: flex; justify-content: space-between; gap: .5rem; align-items: center; flex-wrap: wrap; }
+  .hr-entry-hours { margin: .35rem 0 0; font-size: .9rem; }
+  .hr-entry-sup { margin: .35rem 0 0; font-size: .84rem; color: #8a1c14; }
+  .hr-entry .hr-actions { margin-top: .6rem; }
+  .hr-wide { grid-column: 1 / -1; }
+  .hr-field small { color: #8a8f8b; font-size: .78rem; }
+  .hr-entry-total { margin-left: auto; font-size: .82rem; color: #5d635e; }
+  .hr-chip { font-size: .72rem; font-weight: 500; border-radius: 300px; padding: .2em .7em; white-space: nowrap; }
+  .hr-chip.pending { background: #fdf3d8; color: #6b4e00; }
+  .hr-chip.approved { background: #e3f0e5; color: #2f6b3a; }
+  .hr-chip.returned { background: #fbeceb; color: #8a1c14; }
+  .hr-add { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+  .hr-team { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: .75rem; }
+  .hr-person { text-align: left; font: inherit; color: var(--charcoal); background: #f6f7f6; border: 1px solid transparent; border-radius: 18px; padding: 1rem 1.1rem; cursor: pointer; display: flex; flex-direction: column; gap: .15rem; }
+  .hr-person:hover, .hr-person:focus-visible { border-color: var(--charcoal); background: #fff; }
+  .hr-person-top { display: flex; justify-content: space-between; gap: .5rem; align-items: center; }
+  .hr-person strong { font-weight: 500; }
+  .hr-settings { margin-top: 1.5rem; border-top: 1px solid #e6e9e6; padding-top: 1rem; }
+  .hr-settings summary { cursor: pointer; font-weight: 500; margin-bottom: 1rem; }
+  @media (max-width: 900px) {
+    .hr-cols { grid-template-columns: minmax(0, 1fr); }
+    .hr-card { padding: 1.4rem 1.2rem; border-radius: 22px; }
+  }
+  @media (max-width: 480px) { .hr-nums { grid-template-columns: minmax(0, 1fr); } .hr-bar-top { flex-direction: column; gap: .1rem; } }
+</style>

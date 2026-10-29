@@ -1,0 +1,270 @@
+---
+// Staff accounts admin (owners + directors). Behind the staff gate; data comes from /api/staff-admin.
+// Names/emails are never written into the site's code — they live in Netlify Blobs.
+import Base from '../layouts/Base.astro';
+import { ROLES, OFFICES } from '../data/staff-access';
+const offices = OFFICES.map((o) => ({ id: o.id, label: o.label }));
+---
+<Base title="Staff Accounts | Tangible Therapy" description="Manage staff accounts." noindex>
+  <section class="sec t-light sa">
+    <div class="sec-in"><div class="wrap sa-wrap">
+      <header class="sa-head">
+        <div>
+          <p class="sa-eyebrow">Admin</p>
+          <h1>Staff accounts</h1>
+          <p class="sa-lede">Staff sign in with their Tangible Google account. Here you approve them, set their role and home office, and remove access when someone leaves.</p>
+        </div>
+        <button class="sa-btn primary" type="button" data-open="add">+ Add people</button>
+      </header>
+
+      <div id="sa-alert" class="sa-alert" role="status" hidden></div>
+
+      <section id="sa-pending" class="sa-panel pending" hidden>
+        <h2>Waiting for approval</h2>
+        <p class="sa-help">These people signed in with a work account but aren't set up yet. Choose their role and office, then approve.</p>
+        <div id="sa-pending-list"></div>
+      </section>
+
+      <section class="sa-panel">
+        <div class="sa-tools">
+          <h2>Staff <span id="sa-count" class="sa-count"></span></h2>
+          <div class="sa-filters">
+            <input id="sa-search" type="search" placeholder="Search name or email" aria-label="Search staff" />
+            <select id="sa-office" aria-label="Filter by office"><option value="">All offices</option>{offices.map((o) => <option value={o.id}>{o.label}</option>)}</select>
+          </div>
+        </div>
+        <div id="sa-list" class="sa-list"><p class="sa-help">Loading…</p></div>
+      </section>
+    </div></div>
+  </section>
+
+  <dialog id="sa-dialog" class="sa-dialog" aria-labelledby="sa-dlg-title">
+    <form method="dialog" id="sa-form">
+      <h2 id="sa-dlg-title">Add people</h2>
+      <div class="sa-tabs" role="tablist">
+        <button type="button" role="tab" data-tab="one" aria-selected="true">One person</button>
+        <button type="button" role="tab" data-tab="many" aria-selected="false">Paste a list</button>
+      </div>
+
+      <div data-pane="one">
+        <label>Name<input name="name" autocomplete="off" /></label>
+        <label>Work email<input name="email" type="email" autocomplete="off" placeholder="first@tangiblementalhealth.com" /></label>
+        <fieldset><legend>Roles</legend>
+          <div class="sa-checks">{ROLES.map((r) => <label class="chk"><input type="checkbox" name="roles" value={r.id} /> {r.label}</label>)}</div>
+        </fieldset>
+        <label>Home office<select name="office">{offices.map((o) => <option value={o.id}>{o.label}</option>)}</select></label>
+        <label class="chk"><input type="checkbox" name="done" /> Already completed orientation (current staff)</label>
+      </div>
+
+      <div data-pane="many" hidden>
+        <p class="sa-help">One person per line: <strong>Name, email, role(s), office</strong>. Separate several roles with “+”.<br />Roles: {ROLES.map((r) => r.id).join(', ')}. Offices: {OFFICES.map((o) => o.id).join(', ')}.</p>
+        <textarea name="bulk" rows="8" placeholder={"Jane Doe, jane@tangiblementalhealth.com, therapist, orem\nSam Lee, sam@tangiblementalhealth.com, frontdesk, provo\nAlex Kim, alex@tangiblementalhealth.com, therapist+supervisor, sandy"}></textarea>
+        <label class="chk"><input type="checkbox" name="bulkdone" checked /> Mark these people as having completed orientation (current staff)</label>
+      </div>
+
+      <p id="sa-form-err" class="sa-err" hidden></p>
+      <div class="sa-actions">
+        <button class="sa-btn" value="cancel" formnovalidate type="button" data-close>Cancel</button>
+        <button class="sa-btn primary" type="submit" id="sa-save">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script is:inline define:vars={{ ROLES, offices }}>
+    (function () {
+      var API = '/api/staff-admin';
+      var people = [], me = '', editing = null;
+      var $ = function (s, r) { return (r || document).querySelector(s); };
+      var listEl = $('#sa-list'), pendEl = $('#sa-pending-list'), alertEl = $('#sa-alert');
+      var dlg = $('#sa-dialog'), form = $('#sa-form');
+      var roleLabel = {}; ROLES.forEach(function (r) { roleLabel[r.id] = r.label; });
+      var officeLabel = {}; offices.forEach(function (o) { officeLabel[o.id] = o.label.replace(/ \(.*\)/, ''); });
+
+      function el(tag, attrs, kids) {
+        var n = document.createElement(tag);
+        Object.keys(attrs || {}).forEach(function (k) { if (k === 'text') n.textContent = attrs[k]; else if (k === 'class') n.className = attrs[k]; else n.setAttribute(k, attrs[k]); });
+        (kids || []).forEach(function (c) { if (c) n.appendChild(c); });
+        return n;
+      }
+      function notify(text, bad) { alertEl.textContent = text; alertEl.className = 'sa-alert' + (bad ? ' bad' : ''); alertEl.hidden = false; clearTimeout(notify.t); notify.t = setTimeout(function () { alertEl.hidden = true; }, 6000); }
+      function when(iso) { if (!iso) return 'Never'; var d = new Date(iso); return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }); }
+
+      function call(method, body, qs) {
+        return fetch(API + (qs || ''), { method: method, credentials: 'same-origin', headers: body ? { 'content-type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined })
+          .then(function (r) { return r.json().then(function (b) { if (!r.ok) throw new Error(b.error || 'Something went wrong.'); return b; }); });
+      }
+      function load() { return call('GET').then(function (b) { me = b.me; people = b.people; render(); }).catch(function (e) { listEl.innerHTML = ''; listEl.appendChild(el('p', { class: 'sa-err', text: e.message })); }); }
+      function save(list) { return call('POST', { people: list }).then(function (b) { people = b.people; render(); if (b.problems.length) notify(b.problems.join(' • '), true); else notify('Saved ' + b.saved.length + (b.saved.length === 1 ? ' person.' : ' people.')); return b; }); }
+
+      function roleChecks(p) {
+        var box = el('div', { class: 'sa-checks' });
+        ROLES.forEach(function (r) {
+          var i = el('input', { type: 'checkbox', value: r.id }); i.checked = (p.roles || []).indexOf(r.id) >= 0;
+          box.appendChild(el('label', { class: 'chk' }, [i, document.createTextNode(' ' + r.label)]));
+        });
+        return box;
+      }
+      function officeSelect(p) {
+        var s = el('select', { 'aria-label': 'Home office' });
+        offices.forEach(function (o) { var op = el('option', { value: o.id, text: o.label }); if (o.id === p.office) op.selected = true; s.appendChild(op); });
+        return s;
+      }
+      function picked(box) { return Array.prototype.map.call(box.querySelectorAll('input:checked'), function (i) { return i.value; }); }
+
+      function render() {
+        var pend = people.filter(function (p) { return p.status === 'pending'; });
+        $('#sa-pending').hidden = !pend.length;
+        pendEl.innerHTML = '';
+        pend.forEach(function (p) {
+          var rc = roleChecks(p), os = officeSelect(p);
+          var ok = el('button', { class: 'sa-btn primary', type: 'button', text: 'Approve' });
+          var no = el('button', { class: 'sa-btn ghost', type: 'button', text: 'Remove' });
+          ok.onclick = function () { var roles = picked(rc); if (!roles.length) return notify('Pick at least one role for ' + (p.name || p.email) + '.', true); save([{ email: p.email, name: p.name, roles: roles, office: os.value, status: 'approved', orientationComplete: false }]); };
+          no.onclick = function () { remove(p); };
+          pendEl.appendChild(el('div', { class: 'sa-row pend' }, [
+            el('div', { class: 'who' }, [el('strong', { text: p.name || p.email }), el('span', { text: p.email })]),
+            rc, os, el('div', { class: 'btns' }, [ok, no]),
+          ]));
+        });
+
+        var q = $('#sa-search').value.trim().toLowerCase(), f = $('#sa-office').value;
+        var shown = people.filter(function (p) { return p.status !== 'pending' && (!f || p.office === f) && (!q || (p.name + ' ' + p.email).toLowerCase().indexOf(q) >= 0); });
+        $('#sa-count').textContent = '(' + people.filter(function (p) { return p.status !== 'pending'; }).length + ')';
+        listEl.innerHTML = '';
+        if (!shown.length) { listEl.appendChild(el('p', { class: 'sa-help', text: people.length ? 'No one matches.' : 'No one has been added yet. Use “Add people” to load your staff list.' })); return; }
+        shown.forEach(function (p) {
+          var chips = el('div', { class: 'chips' }, (p.roles || []).map(function (r) { return el('span', { class: 'chip', text: roleLabel[r] || r }); }));
+          var edit = el('button', { class: 'sa-btn ghost', type: 'button', text: 'Edit' });
+          var rm = el('button', { class: 'sa-btn ghost danger', type: 'button', text: 'Remove' });
+          edit.onclick = function () { openDialog(p); };
+          rm.onclick = function () { remove(p); };
+          if (p.email === me) rm.disabled = true;
+          listEl.appendChild(el('div', { class: 'sa-row' }, [
+            el('div', { class: 'who' }, [el('strong', { text: p.name || '(no name)' }), el('span', { text: p.email })]),
+            chips,
+            el('div', { class: 'meta' }, [
+              el('span', { text: officeLabel[p.office] || p.office }),
+              el('span', { class: p.orientationComplete ? 'done' : 'todo', text: p.orientationComplete ? 'Orientation done' : 'Orientation not done' }),
+              el('span', { class: 'muted', text: 'Last sign-in: ' + when(p.lastSignIn) }),
+            ]),
+            el('div', { class: 'btns' }, [edit, rm]),
+          ]));
+        });
+      }
+
+      function remove(p) {
+        if (!confirm('Remove ' + (p.name || p.email) + '? They will lose access to the staff pages within a minute.')) return;
+        call('DELETE', null, '?email=' + encodeURIComponent(p.email)).then(function (b) { people = b.people; render(); notify('Removed ' + b.removed + '.'); }).catch(function (e) { notify(e.message, true); });
+      }
+
+      function tab(name) {
+        form.querySelectorAll('[data-tab]').forEach(function (b) { b.setAttribute('aria-selected', String(b.dataset.tab === name)); });
+        form.querySelectorAll('[data-pane]').forEach(function (p) { p.hidden = p.dataset.pane !== name; });
+        form.dataset.mode = name;
+      }
+      function openDialog(p) {
+        editing = p || null; form.reset(); $('#sa-form-err').hidden = true;
+        $('#sa-dlg-title').textContent = p ? 'Edit ' + (p.name || p.email) : 'Add people';
+        form.querySelector('.sa-tabs').hidden = !!p; tab('one');
+        if (p) {
+          form.elements['name'].value = p.name || ''; form.elements['email'].value = p.email; form.elements['email'].readOnly = true;
+          form.querySelectorAll('[name=roles]').forEach(function (i) { i.checked = (p.roles || []).indexOf(i.value) >= 0; });
+          form.elements['office'].value = p.office; form.elements['done'].checked = !!p.orientationComplete;
+        } else form.elements['email'].readOnly = false;
+        dlg.showModal();
+      }
+      function formError(t) { var e = $('#sa-form-err'); e.textContent = t; e.hidden = false; }
+
+      function parseBulk(text, done) {
+        var out = [], bad = [];
+        text.split(/\n+/).forEach(function (line, i) {
+          if (!line.trim()) return;
+          var c = line.split(/[,\t]/).map(function (s) { return s.trim(); });
+          var email = (c[1] || '').toLowerCase(), roles = (c[2] || '').toLowerCase().split(/[+/ &]+/).filter(Boolean), office = (c[3] || '').toLowerCase().replace(/\s.*$/, '');
+          if (office === 'telehealth') office = 'orem';
+          var okRoles = roles.every(function (r) { return roleLabel[r]; });
+          if (!/@tangiblementalhealth\.com$/.test(email) || !roles.length || !okRoles || !officeLabel[office]) bad.push('line ' + (i + 1));
+          else out.push({ name: c[0], email: email, roles: roles, office: office, status: 'approved', orientationComplete: done });
+        });
+        return { out: out, bad: bad };
+      }
+
+      form.addEventListener('submit', function (ev) {
+        ev.preventDefault();
+        var list;
+        if (form.dataset.mode === 'many') {
+          var r = parseBulk(form.elements['bulk'].value, form.elements['bulkdone'].checked);
+          if (r.bad.length) return formError('Please check ' + r.bad.join(', ') + ': each line needs a name, a work email, valid role(s) and an office.');
+          if (!r.out.length) return formError('Paste at least one line.');
+          list = r.out;
+        } else {
+          var roles = picked(form.querySelector('[data-pane=one] .sa-checks'));
+          var email = form.elements['email'].value.trim().toLowerCase();
+          if (!/@tangiblementalhealth\.com$/.test(email)) return formError('Use their @tangiblementalhealth.com email.');
+          if (!roles.length) return formError('Pick at least one role.');
+          list = [{ name: form.elements['name'].value.trim(), email: email, roles: roles, office: form.elements['office'].value, status: 'approved', orientationComplete: form.elements['done'].checked }];
+        }
+        $('#sa-save').disabled = true;
+        save(list).then(function () { dlg.close(); }).catch(function (e) { formError(e.message); }).finally(function () { $('#sa-save').disabled = false; });
+      });
+      form.querySelectorAll('[data-tab]').forEach(function (b) { b.onclick = function () { tab(b.dataset.tab); }; });
+      form.querySelector('[data-close]').onclick = function () { dlg.close(); };
+      document.querySelector('[data-open=add]').onclick = function () { openDialog(null); };
+      $('#sa-search').oninput = render; $('#sa-office').onchange = render;
+      load();
+    })();
+  </script>
+</Base>
+
+<style is:global>
+  .sa .sa-wrap { max-width: 1100px; }
+  .sa-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 2rem; }
+  .sa-eyebrow { text-transform: uppercase; letter-spacing: .12em; font-size: .75rem; font-weight: 500; margin: 0 0 .4rem; }
+  .sa-head h1 { color: #fff; margin: 0 0 .5rem; font-size: clamp(2rem, 4vw, 2.8rem); }
+  .sa-lede { max-width: 60ch; margin: 0; color: #e8ece8; }
+  .sa-eyebrow { color: #dfe5df; }
+  .sa-head .sa-btn.primary { background: #fff; color: var(--charcoal); border-color: #fff; }
+  .sa-panel { background: #fff; border-radius: 28px; padding: 1.75rem 2rem; margin-bottom: 1.5rem; color: var(--charcoal); }
+  .sa-panel.pending { border: 2px solid #e3b341; }
+  .sa-panel h2 { font-size: 1.35rem; margin: 0 0 .5rem; color: var(--charcoal); }
+  .sa-count { font-weight: 300; color: #6b716c; }
+  .sa-help { font-size: .9rem; color: #5d635e; margin: 0 0 1rem; }
+  .sa-tools { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+  .sa-filters { display: flex; gap: .6rem; flex-wrap: wrap; }
+  .sa input[type=search], .sa select, .sa-dialog input:not([type=checkbox]), .sa-dialog select, .sa-dialog textarea { font: inherit; font-size: .9rem; padding: .6rem .8rem; border: 1px solid #c9cfca; border-radius: 10px; background: #fff; color: var(--charcoal); max-width: 100%; }
+  .sa-row { display: grid; grid-template-columns: minmax(180px, 1.3fr) minmax(160px, 1.2fr) minmax(160px, 1fr) auto; gap: 1rem; align-items: center; padding: 1rem 0; border-top: 1px solid #e6e9e6; }
+  .sa-row.pend { grid-template-columns: minmax(180px, 1fr) minmax(220px, 1.6fr) auto auto; }
+  .sa-row .who { display: flex; flex-direction: column; min-width: 0; }
+  .sa-row .who strong { font-weight: 500; }
+  .sa-row .who span { font-size: .85rem; color: #6b716c; overflow-wrap: break-word; word-break: break-word; }
+  .chips { display: flex; flex-wrap: wrap; gap: .35rem; }
+  .chip { background: #eef2ee; border-radius: 300px; padding: .2em .75em; font-size: .78rem; font-weight: 400; }
+  .meta { display: flex; flex-direction: column; font-size: .82rem; gap: .1rem; }
+  .meta .done { color: #2f6b3a; } .meta .todo { color: #8a5a00; } .meta .muted { color: #8a8f8b; }
+  .btns { display: flex; gap: .4rem; justify-content: flex-end; }
+  .sa-checks { display: flex; flex-wrap: wrap; gap: .3rem .9rem; }
+  .chk { display: inline-flex; align-items: center; gap: .4rem; font-size: .88rem; cursor: pointer; }
+  .sa-btn { font: inherit; font-size: .88rem; font-weight: 500; border-radius: 300px; padding: .6rem 1.2rem; border: 1px solid var(--charcoal); background: #fff; color: var(--charcoal); cursor: pointer; white-space: nowrap; }
+  .sa-btn.primary { background: var(--charcoal); color: #fff; }
+  .sa-btn.ghost { border-color: #c9cfca; }
+  .sa-btn.danger:hover { border-color: #b3261e; color: #b3261e; }
+  .sa-btn:disabled { opacity: .45; cursor: not-allowed; }
+  .sa-alert { position: sticky; top: 90px; z-index: 5; background: #eef2ee; border-radius: 12px; padding: .8rem 1rem; margin-bottom: 1rem; color: var(--charcoal); }
+  .sa-alert.bad, .sa-err { background: #fbeceb; color: #8a1c14; border-radius: 12px; padding: .7rem 1rem; font-size: .88rem; }
+  .sa-dialog { border: 0; border-radius: 24px; padding: 0; width: min(560px, calc(100vw - 32px)); color: var(--charcoal); }
+  .sa-dialog::backdrop { background: rgba(30, 33, 31, .45); }
+  .sa-dialog form { padding: 1.75rem; display: flex; flex-direction: column; gap: .9rem; }
+  .sa-dialog h2 { margin: 0; font-size: 1.35rem; color: var(--charcoal); }
+  .sa-dialog label:not(.chk) { display: flex; flex-direction: column; gap: .3rem; font-size: .85rem; font-weight: 400; }
+  .sa-dialog fieldset { border: 0; padding: 0; margin: 0; } .sa-dialog legend { font-size: .85rem; margin-bottom: .4rem; }
+  .sa-dialog textarea { width: 100%; box-sizing: border-box; font-size: .85rem; }
+  .sa-tabs { display: flex; gap: .4rem; }
+  .sa-tabs button { font: inherit; font-size: .85rem; border: 1px solid #c9cfca; background: #fff; border-radius: 300px; padding: .4rem .9rem; cursor: pointer; color: var(--charcoal); }
+  .sa-tabs button[aria-selected=true] { background: var(--charcoal); color: #fff; border-color: var(--charcoal); }
+  .sa-actions { display: flex; justify-content: flex-end; gap: .5rem; margin-top: .5rem; }
+  @media (max-width: 900px) {
+    .sa-row, .sa-row.pend { grid-template-columns: 1fr; gap: .6rem; }
+    .btns { justify-content: flex-start; }
+    .sa-panel { padding: 1.4rem 1.2rem; border-radius: 22px; }
+  }
+</style>
