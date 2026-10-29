@@ -159,13 +159,20 @@ function parseSchedule(name, values, bgs) {
 
 // ---------- run these from the editor ----------
 
-// Run once after deploying as a web app: creates the private key and logs the feed address for Netlify.
+// Run once after deploying as a web app: creates the private key.
 function setup() {
   var props = PropertiesService.getScriptProperties();
   if (!props.getProperty('FEED_KEY')) props.setProperty('FEED_KEY', Utilities.getUuid().replace(/-/g, '') + Utilities.getUuid().replace(/-/g, ''));
-  var url = ScriptApp.getService().getUrl();
-  Logger.log(url ? 'Netlify OFFICE_DASHBOARD_FEED = ' + url + '?key=' + props.getProperty('FEED_KEY')
-                 : 'Deploy > New deployment > Web app first, then run setup again.');
+  Logger.log('Key ready. Now put the web app address in WEB_APP_URL below and run netlifyValue.');
+}
+
+// The web app address from Deploy > Manage deployments (ends in /exec). Not secret on its own.
+// (ScriptApp.getService().getUrl() returns the /dev test address when run from the editor, so don't use it.)
+var WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxAVxfHHCngsZ7eUa0hhzVw_rZuSuX8HPx4BdUNz2qE1j0gRgzALV3Hvr3ctpDPOXGu/exec';
+
+// Prints the exact value to paste into Netlify as OFFICE_DASHBOARD_FEED (web app address + private key).
+function netlifyValue() {
+  Logger.log(WEB_APP_URL + '?key=' + PropertiesService.getScriptProperties().getProperty('FEED_KEY'));
 }
 
 // Shows what the website will receive, so you can check names and rooms look right.
