@@ -29,14 +29,17 @@ can view other offices with the "View office" picker.
 
 ## One-time setup (owner)
 
+Done for Orem on Oct 29, 2026 (script "Office dashboard feed" in brady@'s Google account, deployment version 1).
+
 1. Go to script.google.com → **New project**. Name it "Office dashboard feed".
 2. Replace the code with everything in `docs/office-dashboards/apps-script.gs`. Save.
 3. **Deploy → New deployment** → type **Web app** → Execute as **Me**, Who has access **Anyone** → Deploy.
    Google will ask you to allow access to your sheets — click Allow (only the owner should do this).
-4. In the editor, choose **setup** in the function menu and click **Run**. Open **Execution log** and copy the
-   line `Netlify OFFICE_DASHBOARD_FEED = https://script.google.com/…/exec?key=…`.
-5. Netlify → Project configuration → Environment variables → **Add** `OFFICE_DASHBOARD_FEED` with that address
-   (all deploy contexts). Then trigger a new deploy (or ask Claude to rebuild the preview).
+4. In the editor, run **setup** (creates the private key). Then put the web app's `/exec` address (Deploy →
+   Manage deployments) in `WEB_APP_URL` and run **netlifyValue**. Copy the whole line it logs.
+   (Don't use the address `ScriptApp.getService().getUrl()` gives in the editor: it's the `/dev` test address.)
+5. Netlify → Project configuration → Environment variables → **Add** `OFFICE_DASHBOARD_FEED` with that line
+   (all deploy contexts). Then trigger a new deploy.
 6. Optional check: run **testFeed** in the editor; the log lists the training meetings, each building's rooms
    and the color key it found.
 
