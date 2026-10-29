@@ -26,7 +26,10 @@ const stages: Stage[] = [
     when: 'As soon as the hire is confirmed',
     gate: 'Stop here. Don’t do any other steps until the employment contract is signed and saved.',
     steps: [
-      { id: 'googledrive', title: 'Create their Google Drive folder', body: `<ol>
+      { id: 'googledrive', title: 'Create their Google Drive folder', body: `
+        <p class="ob-folder" data-folder hidden></p>
+        <p>This happens automatically when you click <b>Start a new hire</b> at the top: their folder is made inside the shared ${a(DRIVE_EMPLOYEES, 'Employee folder')}, so everyone who has that folder can see it.</p>
+        <p class="pt-muted">If that didn’t work, make it by hand:</p><ol>
         <li>Open the ${a(DRIVE_EMPLOYEES, 'Employee folder')} in Google Drive.</li>
         <li>Click <b>New</b> → <b>New folder</b> (top left).</li>
         <li>Name it with their first and last name: <span class="ob-chip" data-fill="full">First Last</span></li></ol>` },
@@ -151,7 +154,7 @@ let num = 0;
     <aside class="ob-side">
       <section class="pt-card ob-hire">
         <h2>New hire</h2>
-        <p class="pt-muted">Fill these in and the emails and names below fill themselves.</p>
+        <p class="pt-muted">Fill these in, then click Start a new hire to make their Google Drive folder. The emails and names below fill themselves.</p>
         <div class="ob-fields">
           <label class="pt-field">First name<input id="f-first" autocomplete="off"></label>
           <label class="pt-field">Last name<input id="f-last" autocomplete="off"></label>
@@ -167,7 +170,10 @@ let num = 0;
           <label class="pt-field">Start date<input id="f-start" type="date"></label>
           <label class="pt-field">Pay rate<input id="f-pay" autocomplete="off" placeholder="Not saved"></label>
         </div>
-        <button type="button" class="pt-btn ghost ob-reset" id="ob-reset">Start a new hire</button>
+        <button type="button" class="pt-btn ob-start" id="ob-start">Start a new hire</button>
+        <p class="ob-status" id="ob-status" role="status" aria-live="polite"></p>
+        <p class="ob-folder" data-folder hidden></p>
+        <button type="button" class="ob-reset" id="ob-reset" hidden>Clear for the next hire</button>
       </section>
       <nav class="pt-card ob-nav" aria-label="Onboarding steps">
         <div class="ob-bar"><i id="ob-bar"></i></div>
@@ -202,7 +208,7 @@ let num = 0;
           {s.gate && <div class="ob-gate" role="note"><strong>Stop</strong><span>{s.gate}</span></div>}
         </section>
       ))}
-      <p class="pt-note">Your ticks and the new hire’s details are saved in this browser only. Pay rate is never saved. Use “Start a new hire” to clear everything.</p>
+      <p class="pt-note">Your ticks and the new hire’s details are saved in this browser only. Pay rate is never saved. Use “Clear for the next hire” to clear everything (it doesn’t delete their Drive folder).</p>
     </div>
   </div>
 </div>
@@ -216,7 +222,16 @@ let num = 0;
   .ob .ob-fields { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: .6rem; margin: .9rem 0; }
   .ob .ob-wide { grid-column: 1 / -1; }
   .ob .ob-fields input, .ob .ob-fields select { font: inherit; font-size: .9rem; color: var(--charcoal); border: 1px solid #c9cfca; border-radius: 10px; padding: .45rem .6rem; background: #fff; min-width: 0; width: 100%; box-sizing: border-box; min-height: 38px; }
-  .ob .ob-reset { width: 100%; }
+  .ob .ob-start { width: 100%; }
+  .ob .ob-start[aria-busy=true] { opacity: .6; cursor: progress; }
+  .ob .ob-status { font-size: .85rem; margin: .6rem 0 0; }
+  .ob .ob-status:empty { display: none; }
+  .ob .ob-status.err { color: #8a2f1c; }
+  .ob .ob-folder { font-size: .88rem; background: #e8f1ea; color: #23432c; border-radius: 10px; padding: .55rem .75rem; margin: .6rem 0 0; }
+  .ob .ob-folder a { color: inherit; font-weight: 600; }
+  .ob .ob-reset { display: block; margin: .7rem auto 0; font: inherit; font-size: .82rem; color: #5d635e; background: none; border: 0; text-decoration: underline; cursor: pointer; padding: .3rem; }
+  .ob .ob-reset[hidden] { display: none; }
+  .ob .ob-step.done .ob-folder { display: none; }
   .ob .ob-bar { height: 6px; border-radius: 6px; background: #e6e9e6; overflow: hidden; margin-bottom: .9rem; }
   .ob .ob-bar i { display: block; height: 100%; width: 0; background: var(--slate); transition: width .3s; }
   .ob .ob-nav-title { font-size: .78rem; font-weight: 600; color: #5d635e; margin: .7rem 0 .2rem; text-transform: uppercase; letter-spacing: .04em; }
@@ -354,7 +369,38 @@ let num = 0;
         gate.querySelector('strong').textContent = signed ? 'Go' : 'Stop';
         gate.querySelector('span').textContent = signed ? 'Contract signed. You can move on to setting up their accounts.' : 'Don’t do any other steps until the employment contract is signed and saved.';
       }
+      var started = state.folder && state.folder.url;
+      document.querySelectorAll('[data-folder]').forEach(function (n) {
+        n.hidden = !started;
+        if (started) {
+          n.textContent = '';
+          n.append((state.folder.created ? 'Folder created: ' : 'Found their existing folder: '));
+          var l = document.createElement('a'); l.href = state.folder.url; l.target = '_blank'; l.rel = 'noopener';
+          l.textContent = state.folder.name; n.append(l);
+        }
+      });
+      $('ob-start').hidden = !!started;
+      $('ob-reset').hidden = !started && !Object.keys(state.done).length && !F.some(function (k) { return state.f[k]; });
     }
+
+    // "Start a new hire": creates (or finds) their folder in the shared Employee folder on Google Drive
+    // through /api/new-hire-folder, then ticks step 1.
+    var startBtn = $('ob-start'), status = $('ob-status');
+    function say(msg, err) { status.textContent = msg; status.classList.toggle('err', !!err); }
+    startBtn.addEventListener('click', function () {
+      var first = val('first'), last = val('last');
+      if (!first || !last) { say('Type their first and last name first.', true); (first ? $('f-last') : $('f-first')).focus(); return; }
+      startBtn.setAttribute('aria-busy', 'true'); startBtn.disabled = true; say('Creating their Drive folder…');
+      fetch('/api/new-hire-folder', { method: 'POST', headers: { 'content-type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ first: first, last: last }) })
+        .then(function (r) { return r.json().catch(function () { return { error: 'The folder service didn’t answer (status ' + r.status + ').' }; }); })
+        .then(function (res) {
+          if (!res || res.error || !res.url) throw new Error((res && res.error) || 'Something went wrong.');
+          state.folder = { url: res.url, name: res.name, created: !!res.created };
+          state.done.googledrive = 1; save(); say(''); render();
+        })
+        .catch(function (e) { say('Couldn’t create the folder automatically: ' + e.message + ' You can make it by hand (step 1), or try again.', true); })
+        .then(function () { startBtn.removeAttribute('aria-busy'); startBtn.disabled = false; });
+    });
 
     F.forEach(function (k) { if (state.f[k] != null) $('f-' + k).value = state.f[k]; });
     F.concat(['pay']).forEach(function (k) {
@@ -374,11 +420,11 @@ let num = 0;
     reset.addEventListener('click', function () {
       if (!armed) {
         reset.textContent = 'Click again to clear everything';
-        armed = setTimeout(function () { armed = null; reset.textContent = 'Start a new hire'; }, 3000);
+        armed = setTimeout(function () { armed = null; reset.textContent = 'Clear for the next hire'; }, 3000);
         return;
       }
-      clearTimeout(armed); armed = null; reset.textContent = 'Start a new hire';
-      state = { f: {}, done: {} }; save();
+      clearTimeout(armed); armed = null; reset.textContent = 'Clear for the next hire';
+      state = { f: {}, done: {} }; save(); say('');
       F.concat(['pay']).forEach(function (k) { var n = $('f-' + k); n.value = n.tagName === 'SELECT' ? n.options[0].value : ''; });
       render(); window.scrollTo(0, 0);
     });
