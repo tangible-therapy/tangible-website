@@ -79,7 +79,11 @@ const APPROACH_WORDS: [string, RegExp][] = [
 ];
 export const APPROACHES = APPROACH_WORDS.map(([a]) => a);
 
+// Insurances tab column headers -> plan names. Medicaid is first so a header like
+// "SelectHealth Community Care (Medicaid)" counts as Medicaid, not SelectHealth.
+// Plans nobody takes are hidden in the finder and Tangie automatically.
 const INSURER_NAMES: [string, RegExp][] = [
+  ['Medicaid', /medicaid/i],
   ['UHC / Optum / UMR', /united|uhc|optum|umr/i], ['SelectHealth', /select/i], ['Aetna', /aetna/i], ['DMBA', /dmba/i],
   ['EMI Health', /\bemi\b/i], ['Regence', /regence/i], ['BCBS', /bcbs|blue cross/i], ['Tricare / TriWest', /tricare|triwest/i],
   ['PEHP', /pehp/i], ['Cigna', /cigna/i],

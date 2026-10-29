@@ -14,10 +14,11 @@ const { heading = 'Find Your Therapist', intro, preset = {} } = Astro.props;
 const { therapists } = await getFinderData();
 
 // Options shown in each filter: the ones at least one therapist has, plus anything preset on this page.
-const used = (all: string[], key: 'approaches' | 'specialties', extra: string[] = []) =>
+const used = (all: string[], key: 'approaches' | 'specialties' | 'insurance', extra: string[] = []) =>
   all.filter((a) => therapists.some((t) => t[key].includes(a)) || extra.includes(a));
 const usedApproaches = used(APPROACHES, 'approaches', preset.appr);
 const usedSpecialties = used(SPECIALTIES, 'specialties', preset.spec);
+const usedInsurers = used(INSURERS, 'insurance');
 
 const presetGroups = (['loc', 'spec', 'appr', 'age', 'sees'] as const).filter((g) => preset[g]?.length);
 const matches = (t: (typeof therapists)[number]) => matchesPreset(t, preset);
@@ -29,7 +30,7 @@ type Group = { key: string; title?: string; options: string[]; single?: boolean 
 type Pill = { key: string; label: string; empty: string; hint: string; groups: Group[] };
 const pills: Pill[] = [
   { key: 'loc', label: 'Location', empty: 'Any office', hint: 'Choose one or more', groups: [{ key: 'loc', options: LOCATIONS }] },
-  { key: 'ins', label: 'Insurance', empty: 'Any plan', hint: 'Show therapists in-network with your plan', groups: [{ key: 'ins', options: INSURERS, single: true }] },
+  { key: 'ins', label: 'Insurance', empty: 'Any plan', hint: 'Show therapists in-network with your plan', groups: [{ key: 'ins', options: usedInsurers, single: true }] },
   { key: 'time', label: 'Availability', empty: 'Any time', hint: 'Times of day that work for you', groups: [{ key: 'time', options: TIMES }] },
   { key: 'spec', label: 'Specialty', empty: 'Anything', hint: 'Pick any that apply', groups: [{ key: 'spec', options: usedSpecialties }] },
   {
