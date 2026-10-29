@@ -37,7 +37,9 @@ import { LICENSES } from '../data/hours';
                 <label class="hr-field"><span>Individual supervision</span><input type="number" name="individual" min="0" max="168" step="0.25" inputmode="decimal" placeholder="0" /></label>
                 <label class="hr-field"><span>Group supervision</span><input type="number" name="group" min="0" max="168" step="0.25" inputmode="decimal" placeholder="0" /></label>
                 <label class="hr-field"><span>…of which direct observation</span><input type="number" name="observation" min="0" max="168" step="0.25" inputmode="decimal" placeholder="0" /></label>
+                <label class="hr-field hr-wide"><span>Other work time <small>(notes, admin, trainings, consults…)</small></span><input type="number" name="other" min="0" max="168" step="0.25" inputmode="decimal" placeholder="0" /></label>
               </div>
+              <p class="hr-muted small" id="hr-week-total" aria-live="polite"></p>
               <label class="hr-field"><span>Note (optional)</span><input name="note" maxlength="200" placeholder="e.g. Covered for Joe on Friday" /></label>
               <p class="hr-warn">Never include client names or details. This log is for hours only.</p>
               <p class="hr-err" id="hr-form-err" hidden></p>
@@ -88,6 +90,7 @@ import { LICENSES } from '../data/hours';
               <div class="hr-nums">
                 <label class="hr-field"><span>License</span><select name="license">{LICENSES.map((l) => <option value={l.id}>{l.label} → {l.goal}</option>)}</select></label>
                 <label class="hr-field"><span>Supervision started</span><input type="date" name="startDate" /></label>
+                <label class="hr-field"><span>Total hours target</span><input type="number" name="total" min="0" step="1" /></label>
                 <label class="hr-field"><span>Direct client care target</span><input type="number" name="direct" min="0" step="1" /></label>
                 <label class="hr-field"><span>Supervision target</span><input type="number" name="supervision" min="0" step="1" /></label>
                 <label class="hr-field"><span>Direct observation target</span><input type="number" name="observation" min="0" step="1" /></label>
@@ -124,9 +127,10 @@ import { LICENSES } from '../data/hours';
       // ---------- progress ----------
       function progress(link, approved, pending) {
         var wrap = el('div', 'hr-progress');
-        var t = link ? link.targets : LICENSES[0].targets;
+        var t = Object.assign({}, LICENSES[0].targets, link ? link.targets : {});
         var groupCounted = Math.min(approved.group, t.groupMax);
         var rows = [
+          ['Total hours', approved.total || 0, pending.total || 0, t.total],
           ['Direct client care', approved.direct, pending.direct, t.direct],
           ['Supervision', approved.individual + groupCounted, pending.individual + pending.group, t.supervision, approved.group > t.groupMax ? 'Only ' + t.groupMax + ' group supervision hours can count (' + h(approved.group) + ' logged).' : ''],
           ['Direct observation', approved.observation, pending.observation, t.observation],
@@ -164,6 +168,9 @@ import { LICENSES } from '../data/hours';
           if (e.individual) parts.push('Individual sup. ' + h(e.individual));
           if (e.group) parts.push('Group sup. ' + h(e.group));
           if (e.observation) parts.push('Observation ' + h(e.observation));
+          if (e.other) parts.push('Other ' + h(e.other));
+          var tot = e.direct + e.individual + e.group + (e.other || 0);
+          head.insertBefore(el('span', 'hr-entry-total', h(tot)), head.lastChild);
           row.appendChild(el('p', 'hr-entry-hours', parts.join(' · ')));
           if (e.note) row.appendChild(el('p', 'hr-entry-note', e.note));
           if (e.supervisorNote && e.status === 'returned') row.appendChild(el('p', 'hr-entry-sup', 'Supervisor: ' + e.supervisorNote));
@@ -177,9 +184,9 @@ import { LICENSES } from '../data/hours';
 
       // ---------- CSV ----------
       function csv(log, who) {
-        var rows = [['Supervisee', 'Type', 'Date', 'Direct client care', 'Individual supervision', 'Group supervision', 'Direct observation', 'Status', 'Note', 'Reviewed by', 'Reviewed at']];
+        var rows = [['Supervisee', 'Type', 'Date', 'Direct client care', 'Individual supervision', 'Group supervision', 'Direct observation', 'Other work time', 'Total', 'Status', 'Note', 'Reviewed by', 'Reviewed at']];
         log.entries.slice().sort(function (a, b) { return a.date < b.date ? -1 : 1; }).forEach(function (e) {
-          rows.push([who, e.kind === 'week' ? 'Week' : 'Session', e.date, e.direct, e.individual, e.group, e.observation, STATUS[e.status], e.note || '', e.reviewedBy || '', e.reviewedAt ? e.reviewedAt.slice(0, 10) : '']);
+          rows.push([who, e.kind === 'week' ? 'Week' : 'Session', e.date, e.direct, e.individual, e.group, e.observation, e.other || 0, e.direct + e.individual + e.group + (e.other || 0), STATUS[e.status], e.note || '', e.reviewedBy || '', e.reviewedAt ? e.reviewedAt.slice(0, 10) : '']);
         });
         var text = rows.map(function (r) { return r.map(function (c) { c = String(c); if (/^[=+\-@]/.test(c)) c = "'" + c; return /[",\n]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c; }).join(','); }).join('\n');
         var a = document.createElement('a');
@@ -223,7 +230,8 @@ import { LICENSES } from '../data/hours';
       function startEdit(e) {
         editing = e; var f = $('hr-form');
         f.querySelector('[name=kind][value=' + e.kind + ']').checked = true; kindChanged();
-        ['date', 'direct', 'individual', 'group', 'observation', 'note'].forEach(function (k) { f.elements[k].value = e[k] || (k === 'note' || k === 'date' ? '' : ''); });
+        ['date', 'direct', 'individual', 'group', 'observation', 'other', 'note'].forEach(function (k) { f.elements[k].value = e[k] || ''; });
+        weekTotal();
         f.elements.date.value = e.date;
         $('hr-form-title').textContent = 'Edit entry'; $('hr-save').textContent = 'Save changes'; $('hr-cancel').hidden = false;
         f.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -232,14 +240,21 @@ import { LICENSES } from '../data/hours';
         editing = null; var f = $('hr-form'); f.reset(); kindChanged();
         f.elements.date.value = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
         $('hr-form-title').textContent = 'Log hours'; $('hr-save').textContent = 'Add hours'; $('hr-cancel').hidden = true; $('hr-form-err').hidden = true;
+        weekTotal();
       }
+      function weekTotal() {
+        var f = $('hr-form'), sum = 0;
+        ['direct', 'individual', 'group', 'other'].forEach(function (k) { sum += Number(f.elements[k].value) || 0; });
+        $('hr-week-total').textContent = sum ? 'Counts toward your total: ' + h(sum) : '';
+      }
+      ['direct', 'individual', 'group', 'other'].forEach(function (k) { $('hr-form').elements[k].addEventListener('input', weekTotal); });
       function save(body, msg) {
         return call('POST', '', body).then(function (b) { mine = Object.assign(mine, b); renderMine(); notify(msg); return b; }).catch(function (e) { notify(e.message, true); throw e; });
       }
       $('hr-form').addEventListener('submit', function (ev) {
         ev.preventDefault();
         var f = this, entry = { kind: f.querySelector('[name=kind]:checked').value, date: f.elements.date.value, note: f.elements.note.value };
-        ['direct', 'individual', 'group', 'observation'].forEach(function (k) { entry[k] = f.elements[k].value === '' ? 0 : Number(f.elements[k].value); });
+        ['direct', 'individual', 'group', 'observation', 'other'].forEach(function (k) { entry[k] = f.elements[k].value === '' ? 0 : Number(f.elements[k].value); });
         $('hr-save').disabled = true;
         save(editing ? { action: 'edit', id: editing.id, entry: entry } : { action: 'add', entry: entry }, editing ? 'Entry updated and sent for approval.' : 'Hours added and sent for approval.')
           .then(resetForm)
@@ -270,9 +285,9 @@ import { LICENSES } from '../data/hours';
           card.appendChild(top);
           var l = LIC[s.link.license] || LICENSES[0];
           card.appendChild(el('span', 'hr-muted small', l.label + ' → ' + l.goal + (team.overseer && s.supervisor !== team.me ? ' · supervisor: ' + s.supervisorName : '')));
-          var t = s.link.targets, pct = t.direct ? Math.min(100, s.approved.direct / t.direct * 100) : 0;
+          var t = Object.assign({}, LICENSES[0].targets, s.link.targets), pct = t.total ? Math.min(100, (s.approved.total || 0) / t.total * 100) : 0;
           var track = el('div', 'hr-track thin'); var f = el('span', 'fill'); f.style.width = pct + '%'; track.appendChild(f); card.appendChild(track);
-          card.appendChild(el('span', 'hr-muted small', h(s.approved.direct) + ' of ' + t.direct.toLocaleString('en-US') + ' direct · ' + h(s.approved.individual + Math.min(s.approved.group, t.groupMax)) + ' of ' + t.supervision.toLocaleString('en-US') + ' supervision' + (s.lastEntry ? ' · last entry ' + fmtDate(s.lastEntry) : '')));
+          card.appendChild(el('span', 'hr-muted small', h(s.approved.total || 0) + ' of ' + t.total.toLocaleString('en-US') + ' total · ' + h(s.approved.direct) + ' of ' + t.direct.toLocaleString('en-US') + ' direct · ' + h(s.approved.individual + Math.min(s.approved.group, t.groupMax)) + ' of ' + t.supervision.toLocaleString('en-US') + ' supervision' + (s.lastEntry ? ' · last entry ' + fmtDate(s.lastEntry) : '')));
           card.onclick = function () { openDetail(s.supervisee); };
           grid.appendChild(card);
         });
@@ -313,20 +328,20 @@ import { LICENSES } from '../data/hours';
         };
         $('hr-d-pending').innerHTML = ''; $('hr-d-pending').appendChild(entryList(pend, { empty: 'Nothing waiting. You’re all caught up.', buttons: buttons }));
         $('hr-d-entries').innerHTML = ''; $('hr-d-entries').appendChild(entryList(detail.log.entries.filter(function (e) { return e.status !== 'pending'; }), { empty: 'No reviewed entries yet.', buttons: buttons }));
-        var f = $('hr-d-settings'), t = detail.link ? detail.link.targets : l.targets;
+        var f = $('hr-d-settings'), t = Object.assign({}, l.targets, detail.link ? detail.link.targets : {});
         f.elements.license.value = detail.link ? detail.link.license : 'acmhc';
         f.elements.startDate.value = (detail.link && detail.link.startDate) || '';
-        ['direct', 'supervision', 'observation', 'groupMax'].forEach(function (k) { f.elements[k].value = t[k]; });
+        ['total', 'direct', 'supervision', 'observation', 'groupMax'].forEach(function (k) { f.elements[k].value = t[k]; });
       }
       $('hr-d-approve-all').onclick = function () { review(detail.log.entries.filter(function (e) { return e.status === 'pending'; }).map(function (e) { return e.id; }), 'approve'); };
       $('hr-d-close').onclick = function () { $('hr-detail').hidden = true; detail = null; };
       $('hr-d-csv').onclick = function () { csv(detail.log, detail.superviseeName); };
       $('hr-d-settings').addEventListener('submit', function (ev) {
         ev.preventDefault(); var f = this;
-        call('POST', '', { action: 'settings', email: detail.supervisee, license: f.elements.license.value, startDate: f.elements.startDate.value, targets: { direct: f.elements.direct.value, supervision: f.elements.supervision.value, observation: f.elements.observation.value, groupMax: f.elements.groupMax.value } })
+        call('POST', '', { action: 'settings', email: detail.supervisee, license: f.elements.license.value, startDate: f.elements.startDate.value, targets: { total: f.elements.total.value, direct: f.elements.direct.value, supervision: f.elements.supervision.value, observation: f.elements.observation.value, groupMax: f.elements.groupMax.value } })
           .then(function (b) { detail = Object.assign(detail, b); renderDetail(); loadTeam(); notify('Saved.'); }).catch(function (e) { notify(e.message, true); });
       });
-      $('hr-d-settings').elements.license.onchange = function () { var t = (LIC[this.value] || LICENSES[0]).targets, f = $('hr-d-settings'); ['direct', 'supervision', 'observation', 'groupMax'].forEach(function (k) { f.elements[k].value = t[k]; }); };
+      $('hr-d-settings').elements.license.onchange = function () { var t = (LIC[this.value] || LICENSES[0]).targets, f = $('hr-d-settings'); ['total', 'direct', 'supervision', 'observation', 'groupMax'].forEach(function (k) { f.elements[k].value = t[k]; }); };
       $('hr-d-unlink').onclick = function () {
         if (!confirm('Stop supervising ' + detail.superviseeName + '? Their logged hours are kept.')) return;
         call('POST', '', { action: 'unlink', email: detail.supervisee }).then(function () { $('hr-detail').hidden = true; notify('Removed from your supervisees.'); loadTeam(); }).catch(function (e) { notify(e.message, true); });
@@ -408,6 +423,9 @@ import { LICENSES } from '../data/hours';
   .hr-entry-note { margin: .25rem 0 0; font-size: .84rem; color: #6b716c; }
   .hr-entry-sup { margin: .35rem 0 0; font-size: .84rem; color: #8a1c14; }
   .hr-entry .hr-actions { margin-top: .6rem; }
+  .hr-wide { grid-column: 1 / -1; }
+  .hr-field small { color: #8a8f8b; font-size: .78rem; }
+  .hr-entry-total { margin-left: auto; font-size: .82rem; color: #5d635e; }
   .hr-chip { font-size: .72rem; font-weight: 500; border-radius: 300px; padding: .2em .7em; white-space: nowrap; }
   .hr-chip.pending { background: #fdf3d8; color: #6b4e00; }
   .hr-chip.approved { background: #e3f0e5; color: #2f6b3a; }
@@ -421,8 +439,8 @@ import { LICENSES } from '../data/hours';
   .hr-settings { margin-top: 1.5rem; border-top: 1px solid #e6e9e6; padding-top: 1rem; }
   .hr-settings summary { cursor: pointer; font-weight: 500; margin-bottom: 1rem; }
   @media (max-width: 900px) {
-    .hr-cols { grid-template-columns: 1fr; }
+    .hr-cols { grid-template-columns: minmax(0, 1fr); }
     .hr-card { padding: 1.4rem 1.2rem; border-radius: 22px; }
   }
-  @media (max-width: 480px) { .hr-nums { grid-template-columns: 1fr; } }
+  @media (max-width: 480px) { .hr-nums { grid-template-columns: minmax(0, 1fr); } .hr-bar-top { flex-direction: column; gap: .1rem; } }
 </style>
