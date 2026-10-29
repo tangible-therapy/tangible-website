@@ -1,7 +1,7 @@
 ---
 title: "Am I Ready for EMDR Therapy?"
 date: "2023-12-14T16:23:00.189000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/image-asset-8149f7.jpeg"
 imageAlt: "A glowing illustration of a human brain on a purple background"
 excerpt: ""

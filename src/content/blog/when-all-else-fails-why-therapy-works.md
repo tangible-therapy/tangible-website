@@ -1,7 +1,7 @@
 ---
 title: "When all else fails, why Therapy works"
 date: "2025-07-14T14:15:21.409000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/adobestock-356882834-1c70f1.jpg"
 imageAlt: "Two women talk on a blue velvet sofa in a cozy room"
 excerpt: ""

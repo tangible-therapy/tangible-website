@@ -1,7 +1,7 @@
 ---
 title: "Unraveling OCD: A Therapist's Insights"
 date: "2023-11-29T10:15:32.199000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/image-asset-6cb6b3.jpeg"
 imageAlt: "Rows of colorful potted succulents seen from above"
 excerpt: ""

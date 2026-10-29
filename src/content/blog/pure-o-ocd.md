@@ -1,7 +1,7 @@
 ---
 title: "Pure-O OCD: The Unseen Struggle"
 date: "2024-12-15T08:44:45.553000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/unsplash-image-zwq9vbp9qqa-7e3585.jpg"
 imageAlt: "A ladder leading up to a white sphere floating above an empty bowl"
 excerpt: ""

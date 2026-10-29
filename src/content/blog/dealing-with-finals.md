@@ -1,7 +1,7 @@
 ---
 title: "Dealing with Finals: The therapist’s survival guide"
 date: "2023-11-28T14:33:09.582000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/image-asset-4e6784.jpeg"
 imageAlt: "A student sits on a chair in the road as exam papers fly around him"
 excerpt: ""

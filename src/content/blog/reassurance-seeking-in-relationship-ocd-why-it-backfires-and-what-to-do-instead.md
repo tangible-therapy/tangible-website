@@ -1,7 +1,7 @@
 ---
 title: "Reassurance-Seeking in Relationship OCD: Why It Backfires (and What to Do Instead)"
 date: "2026-08-22T08:12:27.447000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/tangble-2-c36578.jpg"
 imageAlt: "A woman and man sit apart on a sofa, both looking away from each other"
 excerpt: ""

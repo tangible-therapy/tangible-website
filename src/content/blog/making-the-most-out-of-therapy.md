@@ -1,7 +1,7 @@
 ---
 title: "Making the most out of therapy"
 date: "2024-01-28T21:33:21.450000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/image-asset-c1fc9e.jpeg"
 imageAlt: "A smiling woman holds a mirror that reflects her face in a sunny field"
 excerpt: ""

@@ -1,7 +1,7 @@
 ---
 title: "Therapy at home: The Value of Telehealth Therapy"
 date: "2026-02-04T11:08:57.771000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/tangible-13-9d4988.jpg"
 imageAlt: "A therapist takes notes during a telehealth video session on her laptop"
 excerpt: ""

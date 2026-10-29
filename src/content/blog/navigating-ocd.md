@@ -1,7 +1,7 @@
 ---
 title: "Navigating OCD: Insights from a therapist"
 date: "2024-10-22T08:56:28.775000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/chance-anderson-0asxk09hkrk-unsplash-c0e4b5.jpg"
 imageAlt: "Decorative plates arranged around a framed picture on a white wall"
 excerpt: ""

@@ -1,7 +1,7 @@
 ---
 title: "Embracing the Shadows: A Sanctuary for Navigating Anxiety and Depression"
 date: "2019-05-28T09:13:10.536000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/image-asset-05b722.jpeg"
 imageAlt: "A woman's long shadow stretches across a sunlit white floor"
 excerpt: ""

@@ -1,7 +1,7 @@
 ---
 title: "Anyone out there? Dealing with Loneliness"
 date: "2023-12-03T17:44:35.378000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/image-asset-553665.jpeg"
 imageAlt: "A woman stands alone by a stone wall overlooking the sea"
 excerpt: ""

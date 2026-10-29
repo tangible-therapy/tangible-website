@@ -1,7 +1,7 @@
 ---
 title: "How Does EMDR Therapy Work? A Complete Guide From a Therapist’s Perspective"
 date: "2023-12-21T16:14:00.467000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/image-asset-638c0b.jpeg"
 imageAlt: "Swirling blue lines like a fingerprint or ripples of light"
 excerpt: ""

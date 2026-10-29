@@ -1,7 +1,7 @@
 ---
 title: "Fighting with myself: The power of Self-Compassion"
 date: "2024-02-18T09:46:15.083000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/untitled-design-3-66edb2.jpg"
 imageAlt: "Five smiling people stand together in a bright room"
 excerpt: ""

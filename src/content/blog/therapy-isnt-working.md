@@ -1,7 +1,7 @@
 ---
 title: "Why Therapy Isn’t Working"
 date: "2023-12-22T10:30:00.535000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/image-asset-6afadf.jpeg"
 imageAlt: "A toy figure lying in scattered pieces on a green background"
 excerpt: ""

@@ -1,7 +1,7 @@
 ---
 title: "Somatic Therapy: Getting in touch with your body"
 date: "2026-04-09T12:11:56.639000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/tangible-2819-29-556587.jpg"
 imageAlt: "A smiling woman with curly hair hugs her shoulders in a grassy field"
 excerpt: ""

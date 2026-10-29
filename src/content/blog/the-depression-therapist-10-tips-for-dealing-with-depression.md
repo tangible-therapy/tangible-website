@@ -1,7 +1,7 @@
 ---
 title: "The Depression Therapist: 10 Tips for Dealing with Depression"
 date: "2023-09-17T13:38:35.151000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/image-asset-c3e7e4.jpeg"
 imageAlt: "A man stretches his arms wide on a hilltop above a calm lake"
 excerpt: ""

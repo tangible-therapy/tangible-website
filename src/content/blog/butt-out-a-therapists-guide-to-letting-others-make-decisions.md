@@ -1,7 +1,7 @@
 ---
 title: "Step Aside: A therapist’s guide to letting others make decisions"
 date: "2023-09-28T11:49:49.918000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/image-asset-544c57.jpeg"
 imageAlt: "A person walks a wooden path between giant redwood trees"
 excerpt: ""

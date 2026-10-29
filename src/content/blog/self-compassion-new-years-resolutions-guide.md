@@ -1,7 +1,7 @@
 ---
 title: "2024: Leave behind Self-Criticism this New Year"
 date: "2023-12-29T15:14:08.414000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/image-asset-464faa.jpeg"
 imageAlt: "Gold glitter bursting from a champagne glass"
 excerpt: ""

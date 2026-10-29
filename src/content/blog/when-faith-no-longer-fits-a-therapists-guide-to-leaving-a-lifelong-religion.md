@@ -1,7 +1,7 @@
 ---
 title: "When Faith No Longer Fits: A Therapist’s Guide to Leaving a Lifelong Religion"
 date: "2025-05-09T13:45:22.785000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/unsplash-image-ruaabj4hjam-52dacb.jpg"
 imageAlt: "A gold statue atop a temple dome under a cloudy sky"
 excerpt: ""

@@ -1,7 +1,7 @@
 ---
 title: "Setback to Comeback: Mastering the Art of New Year's Resilience"
 date: "2024-01-05T08:15:30.753000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/new-years-resolutions-1672325159742-74ec95.jpg"
 imageAlt: "New Year's Resolutions spelled in gold letters with notes like Be Happy and Save Money"
 excerpt: ""

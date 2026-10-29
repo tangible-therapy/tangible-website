@@ -1,7 +1,7 @@
 ---
 title: "Local or Not? The Value of Choosing a Local Therapist for Telehealth in Utah"
 date: "2026-03-18T09:54:22.169000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/tangible-23-35f139.jpg"
 imageAlt: "A young woman writes in a notebook on a blanket outdoors with her laptop beside her"
 excerpt: ""

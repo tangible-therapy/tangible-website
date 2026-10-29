@@ -1,7 +1,7 @@
 ---
 title: "Say Yes to No: Setting boundaries with kids"
 date: "2023-11-30T10:02:00.864000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/image-asset-096b4f.jpeg"
 imageAlt: "A parent and child with backpacks hike a forest trail"
 excerpt: ""

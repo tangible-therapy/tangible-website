@@ -1,7 +1,7 @@
 ---
 title: "Damned by Salvation: Navigating Scrupulosity (Faith-based OCD)"
 date: "2024-10-22T09:05:32.521000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/bree-evans-fmcsqyq3e4q-unsplash-30c216.jpg"
 imageAlt: "A white temple spire with a gold statue against a pale sky"
 excerpt: ""

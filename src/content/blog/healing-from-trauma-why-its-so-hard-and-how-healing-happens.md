@@ -1,7 +1,7 @@
 ---
 title: "Healing From Trauma: Why It’s So Hard, and How Healing Happens"
 date: "2025-04-21T06:31:01.955000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/unsplash-image-usgb-k0tpxq-f59b33.jpg"
 imageAlt: "Green cactus pads reaching toward a blue sky with soft clouds"
 excerpt: ""

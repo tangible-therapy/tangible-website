@@ -1,7 +1,7 @@
 ---
 title: "Does Insurance Cover Therapy in Utah? What Sandy Residents Need to Know"
 date: "2026-08-20T11:18:06.266000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/chatgpt-image-aug-20-2026-10-25-55-am-62c54d.jpg"
 imageAlt: "A hand holds a yellow umbrella over small wooden figures and a toy sofa"
 excerpt: ""

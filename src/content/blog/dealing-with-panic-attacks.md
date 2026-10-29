@@ -1,7 +1,7 @@
 ---
 title: "Dealing with Panic Attacks"
 date: "2023-10-24T13:29:09.876000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/image-asset-962cc9.jpeg"
 imageAlt: "The words Don't Panic on a pink pegboard"
 excerpt: ""

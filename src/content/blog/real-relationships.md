@@ -1,7 +1,7 @@
 ---
 title: "Real Relationships"
 date: "2023-09-15T15:00:00.983000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/image-asset-f3bceb.jpeg"
 imageAlt: "A couple dances together on a sunlit forest path"
 excerpt: ""

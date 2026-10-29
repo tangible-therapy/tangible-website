@@ -1,7 +1,7 @@
 ---
 title: "What’s This Therapy Thing About?"
 date: "2023-09-16T09:00:00.821000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/image-asset-9b6ae6.jpeg"
 imageAlt: "Two people sit by the water at sunset with a city skyline behind them"
 excerpt: ""

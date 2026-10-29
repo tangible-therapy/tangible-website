@@ -1,7 +1,7 @@
 ---
 title: "Slaying the Dragon: Fighting Depression with Fantasy"
 date: "2023-09-13T16:30:00.480000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/image-asset-efa08a.jpeg"
 imageAlt: "A misty castle on a hill surrounded by forest"
 excerpt: ""

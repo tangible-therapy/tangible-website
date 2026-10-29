@@ -1,7 +1,7 @@
 ---
 title: "Summertime Sadness: Why You Might Feel Down During the Brightest Season"
 date: "2025-04-20T17:52:22.486000-06:00"
-author: "Brady Clegg"
+author: "Brady Clegg, LCSW"
 image: "/images/unsplash-image-syx3uchzjlo-18883a.jpg"
 imageAlt: "Sunglasses resting on sand at the beach"
 excerpt: ""
