@@ -1,126 +1,388 @@
 ---
+// Reception: step-by-step checklist for onboarding a new employee (front desk + directors).
+// Redesigned Oct 2026: plain HTML in the Employee Portal style (.pt-*), grouped into 4 stages with a
+// "new hire" panel that fills the email templates, a per-browser checklist (localStorage tt.onboard.v1)
+// and role-aware steps (clinician-only / associate-only). Old #anchors are kept as step ids.
+// No logins or passwords on this page — point to the team password manager.
 import Base from '../layouts/Base.astro';
-import Divider from '../components/Divider.astro';
+import { OFFICES } from '../data/staff-access';
+
+const DRIVE_EMPLOYEES = 'https://drive.google.com/drive/u/0/folders/1DCzPfLaGhpOIepDvmZ0krxgQl61bahwN';
+const DRIVE_MANAGEMENT = 'https://drive.google.com/drive/folders/1Lmh1aH0YbyRgcfuunFafXil00kQi1zLI';
+const ONBOARDING_SHEET = 'https://docs.google.com/spreadsheets/d/1i2OFTCSZUwcAvJD7pckJT0h9BPsUk2wvuAS0IjgjWZ8/edit?gid=0#gid=0';
+const THERAPIST_SHEET = 'https://docs.google.com/spreadsheets/d/1QIrJbIzoNtenFfOqAGBJzyx3nYSPVkLqOu7ECwLx-Kw/edit';
+const SIMPLEPRACTICE = 'https://secure.simplepractice.com/calendar/appointments';
+const ext = 'target="_blank" rel="noopener"';
+const a = (href: string, text: string) => `<a href="${href}" ${ext}>${text}</a>`;
+
+const offices = OFFICES.map((o) => ({ id: o.id, label: o.label, director: o.director, email: o.directorEmail }));
+
+type Step = { id: string; title: string; who?: 'clinician' | 'associate'; tag?: string; body: string };
+type Stage = { title: string; when: string; steps: Step[]; gate?: string };
+
+const stages: Stage[] = [
+  {
+    title: 'Get the contract signed',
+    when: 'As soon as the hire is confirmed',
+    gate: 'Stop here. Don’t do any other steps until the employment contract is signed and saved.',
+    steps: [
+      { id: 'googledrive', title: 'Create their Google Drive folder', body: `<ol>
+        <li>Open the ${a(DRIVE_EMPLOYEES, 'Employee folder')} in Google Drive.</li>
+        <li>Click <b>New</b> → <b>New folder</b> (top left).</li>
+        <li>Name it with their first and last name: <span class="ob-chip" data-fill="full">First Last</span></li></ol>` },
+      { id: 'employment-contract', title: 'Send the employment contract', body: `<ol>
+        <li>Open the ${a(DRIVE_MANAGEMENT, 'Management folder')}.</li>
+        <li>Right-click the right employment contract → <b>Make a copy</b>.</li>
+        <li>Fill in the copy: name, pay, employment status, etc.</li>
+        <li><b>File</b> → <b>Download</b> → <b>PDF</b>.</li>
+        <li>Send it to the office director (<span data-fill="director">the office director</span>) for approval.</li>
+        <li>Once approved, send it to the new employee to sign.</li>
+        <li>Save the signed copy in their Google Drive folder.</li></ol>` },
+    ],
+  },
+  {
+    title: 'Set up their accounts',
+    when: 'After the contract is signed',
+    steps: [
+      { id: 'gmailsetup', title: 'Create their Tangible email and add to groups', body: `<ol>
+        <li>Open the ${a('https://admin.google.com/ac/users', 'Google Admin console')} → <b>Users</b> → <b>Add new user</b>.</li>
+        <li>Enter their name. Use their first name for the email address: <span class="ob-chip" data-fill="email">first@tangiblementalhealth.com</span>. If it’s taken, use first name + last initial.</li>
+        <li>Put their personal email as the secondary email (Google sends their setup link there).</li>
+        <li>Click <b>Add new user</b>.</li></ol>
+        <h4>Add to Google Groups</h4><ol>
+        <li>In the left menu, open <b>Directory</b> → <b>Groups</b>.</li>
+        <li>Hover over a group and click <b>Add members</b>.</li>
+        <li>Add them to the groups for their office (<span data-fill="office">their office</span>).</li></ol>` },
+      { id: 'staff-admin', title: 'Get them approved for the Employee Portal', tag: 'New', body: `
+        <p>This lets them sign in to the Employee Portal with their Tangible Google account and see the right pages.</p><ol>
+        <li>Ask <span data-fill="director">the office director</span> to add them at ${a('/staff-admin', 'Staff Admin')} (only directors can open it). Send them:
+          <span class="ob-chip" data-fill="staffline">Name, email, role, office</span> <button type="button" class="ob-mini" data-copy="staffline">Copy</button></li>
+        <li>Roles: <b>Therapist</b> for licensed clinicians, <b>Associate (pre-licensed)</b> for anyone logging supervised hours, <b>Admin / front desk</b> for reception. Someone can have more than one.</li>
+        <li>If they sign in before they’re added, they show up as <b>pending</b> and the director just clicks Approve.</li></ol>
+        <p class="ob-tip">Until Google sign-in is switched on for the live site, also send them the staff password from the team password manager.</p>` },
+      { id: 'slack', title: 'Invite them to Slack', body: `<ol>
+        <li>Open Slack and click <b>Tangible Therapy</b> (top left).</li>
+        <li>Click <b>Invite people</b> and enter their Tangible email.</li></ol>` },
+      { id: 'simple', who: 'clinician', title: 'Add them to SimplePractice', body: `<ol>
+        <li>Open ${a(SIMPLEPRACTICE, 'SimplePractice')} → <b>Settings</b> → <b>Team</b> → <b>Team members</b>.</li>
+        <li>Click <b>Add new team member</b> (top right).</li>
+        <li>Enter their legal name and Tangible email → <b>Continue</b>.</li>
+        <li>Choose <b>Clinician</b> and <b>Full client list</b> → <b>Continue</b>.</li>
+        <li>Turn on all permissions → <b>Continue</b>.</li>
+        <li>If they need supervision, pick their supervisor from the dropdown. Specialty: <b>Counselor</b>.</li>
+        <li>Send the invitation and finish setup.</li></ol>` },
+    ],
+  },
+  {
+    title: 'Paperwork and payroll',
+    when: 'Once their email works',
+    steps: [
+      { id: 'onboarding', title: 'Send the welcome email (orientation + onboarding)', body: `
+        <p>Fill in the new hire details at the top and the email below is ready to send.</p>
+        <div class="ob-mail">
+          <p class="ob-mail-meta"><b>To:</b> <span data-fill="emailOrPersonal">their email</span><br><b>Subject:</b> Welcome to Tangible!</p>
+          <pre class="ob-mail-body" data-fill="welcomeBody"></pre>
+        </div>
+        <div class="ob-actions"><a class="pt-btn" data-mail="welcome" href="#" ${ext}>Open in Gmail</a><button type="button" class="pt-btn ghost" data-copy="welcomeBody">Copy text</button></div>` },
+      { id: 'driveandpayroll', title: 'File their paperwork and add them to payroll', body: `<ol>
+        <li>Wait for their answers in the ${a(ONBOARDING_SHEET, 'Onboarding responses')} sheet (you’ll also get an email alert).</li>
+        <li>Download their uploaded files and put them in their ${a(DRIVE_EMPLOYEES, 'Google Drive folder')}.</li>
+        <li>Email payroll (nsbcpayroll@gmail.com) with their name, pay rate and start date, and <b>attach the W-4 and direct deposit form</b>.</li></ol>
+        <div class="ob-actions"><a class="pt-btn" data-mail="payroll" href="#" ${ext}>Open payroll email in Gmail</a></div>
+        <p class="ob-tip">Gmail can’t attach the files for you. Add the W-4 and direct deposit form before sending.</p>` },
+      { id: 'malpractice', who: 'clinician', title: 'Add them to malpractice insurance', body: `<ol>
+        <li>Open the ${a('https://www.insure-portal.com/User/', 'malpractice insurance portal')} and sign in (the login is in the team password manager).</li>
+        <li>Click <b>Make changes to my policy</b> → <b>Add something</b> → <b>Add an employee</b>.</li>
+        <li>Add them and click <b>Save</b>.</li></ol>` },
+    ],
+  },
+  {
+    title: 'Get them ready to see clients',
+    when: 'After onboarding is finished',
+    steps: [
+      { id: 'supervision', who: 'clinician', title: 'Schedule supervision', body: `<ol>
+        <li>Reach out to <span data-fill="director">the office director</span> / their supervisor and find a time that works for both of them.</li>
+        <li>Add a recurring event to both calendars.</li></ol>` },
+      { id: 'hours', who: 'associate', tag: 'New', title: 'Link them in the Hours Tracker', body: `
+        <p>Pre-licensed associates log their supervised hours in the ${a('/hours', 'Hours Tracker')}.</p><ol>
+        <li>Make sure they have the <b>Associate (pre-licensed)</b> role in Staff Admin (step above).</li>
+        <li>Ask their clinical supervisor to open the Hours Tracker → <b>My supervisees</b> → add them, and set their license track, start date and hour targets.</li>
+        <li>If they were already linked to a different supervisor, that supervisor has to remove them first.</li></ol>` },
+      { id: 'photos', who: 'clinician', title: 'Schedule headshots', body: `<ol>
+        <li>Coordinate a time with Julie and the new employee.</li>
+        <li>Tell them to wear semi-professional clothes in neutral colors (not gray or black).</li></ol>` },
+      { id: 'availibility', who: 'clinician', title: 'Set up their availability in SimplePractice', body: `<ol>
+        <li>Open ${a(SIMPLEPRACTICE, 'SimplePractice')} and go to their calendar.</li>
+        <li>Click the gear icon (top right) → <b>View availability schedule</b>.</li>
+        <li>Click a time to add availability and title it <b>Opening</b>. Their schedule is in the ${a(ONBOARDING_SHEET, 'Onboarding responses')} sheet.</li>
+        <li>Set it to repeat on the right days. Different time windows are added one at a time.</li>
+        <li>Pick the right location and tick <b>Telehealth</b>.</li>
+        <li>Make sure the services match the screenshot below, then <b>Save</b>. Repeat for other times.</li></ol>
+        <img class="ob-shot" src="/images/screenshot-2025-11-24-at-3-57-40-pm-b0f670.png" alt="SimplePractice availability window showing the services to offer" width="858" height="570" loading="lazy" decoding="async">` },
+      { id: 'booking-id', who: 'clinician', tag: 'New', title: 'Find their SimplePractice booking ID', body: `
+        <p>This makes the <b>Book now</b> button on their website profile open their own calendar.</p><ol>
+        <li>In SimplePractice go to <b>Settings</b> → <b>Widgets</b> → <b>Appointment request</b>.</li>
+        <li>Preview their row and copy the <b>clinicianId</b> number.</li>
+        <li>Paste it in the <b>SimplePractice clinician ID</b> column of their row in the website profiles tab (next step).</li></ol>
+        <p class="ob-tip">Their booking page only shows times once their availability and new-client services are set up (step above).</p>` },
+      { id: 'website', who: 'clinician', tag: 'New', title: 'Add them to the website', body: `
+        <p>No code needed. The website reads the ${a(THERAPIST_SHEET, 'tangible sheets')} Google Sheet.</p><ol>
+        <li>In the <b>website profiles</b> tab, add a row: Name, Credential, Photo (Google Drive link to their headshot), Bio, SimplePractice clinician ID, Online booking and Show on website. SEO description is optional.</li>
+        <li>Add them to the <b>openings</b>, <b>modalities</b> and <b>Insurances</b> tabs too, spelling their name exactly the same.</li>
+        <li>Their profile goes live about 15 minutes after the last edit, but only once the photo link works. The <b>Website status</b> column says what’s missing.</li></ol>` },
+      { id: 'psychology-today', who: 'clinician', title: 'Create their Psychology Today profile', body: `<p class="pt-muted">Step-by-step instructions haven’t been written yet.</p>` },
+    ],
+  },
+];
+const total = stages.reduce((n, s) => n + s.steps.length, 0);
+let num = 0;
 ---
 <Base title={"Onboarding New Employees | Tangible Therapy"} description={""} noindex>
-<section class="sec t-light h-small has-div" style="--divh:2vw">
-<div class="sec-in">
-<div class="fe" style="--rows:3;--mrows:3">
-  <div class="b b-html je" style="--d:1/5/3/23;--m:1/2/4/10"><div class="rte"><div class="scaled"><span class="scaled-in"><h1>Onboarding a New Employee</h1></span></div></div></div>
-</div>
-</div>
-<Divider type="wavy" height={2} width={20} fill="#fff" flipX flipY /></section>
+<div class="pt-page ob">
+  <div class="pt-head">
+    <div>
+      <p class="pt-eyebrow">Reception</p>
+      <h1>Onboarding a new employee</h1>
+    </div>
+    <p class="pt-muted ob-count" aria-live="polite"><span id="ob-done">0</span> of <span id="ob-total">{total}</span> steps done</p>
+  </div>
 
-<section class="sec t-white h-medium">
-<div class="sec-in">
-<div class="fe" style="--rows:18;--mrows:4">
-  <div class="b b-html" style="--d:1/11/4/17;--m:1/2/3/10;z-index:2"><div class="rte"><h3 class="ta-center">Onboarding Steps</h3></div></div>
-  <div class="b b-html" style="--d:4/6/19/22;--m:3/2/5/10"><div class="rte"><p><a href="/reception-onboarding#googledrive">Set Up New Employee Folder in Google Drive</a></p><p><a href="/reception-onboarding#employment-contract">Send Employment Contract</a></p><p><a href="/reception-onboarding#gmailsetup">Create Gmail account and add to groups</a></p><p><a href="/reception-onboarding#onboarding">Send onboarding and orientation</a></p><p><a href="/reception-onboarding#driveandpayroll">Updating Google Drive &amp; Payroll Team</a></p><p><a href="/reception-onboarding#malpractice">Add to Malpractice Insurance</a></p><p><a href="/reception-onboarding#slack">Add to Slack</a></p><p><a href="/reception-onboarding#photos">Schedule head shots</a></p><p><a href="/reception-onboarding#supervision">Schedule Supervision</a></p><p><a href="/reception-onboarding#simple">Create Simple Practice Profile</a></p><p><a href="/reception-onboarding#availibility">Scheduling Availibility</a></p><p>Create Psychology Today Profile</p><p>Add to Website</p></div></div>
-</div>
-</div>
-</section>
+  <div class="ob-layout">
+    <aside class="ob-side">
+      <section class="pt-card ob-hire">
+        <h2>New hire</h2>
+        <p class="pt-muted">Fill these in and the emails and names below fill themselves.</p>
+        <div class="ob-fields">
+          <label class="pt-field">First name<input id="f-first" autocomplete="off"></label>
+          <label class="pt-field">Last name<input id="f-last" autocomplete="off"></label>
+          <label class="pt-field ob-wide">Tangible email<input id="f-email" type="email" autocomplete="off" placeholder="Suggested from first name"></label>
+          <label class="pt-field ob-wide">Personal email<input id="f-personal" type="email" autocomplete="off"></label>
+          <label class="pt-field">Office<select id="f-office">{offices.map((o) => <option value={o.id}>{o.label}</option>)}</select></label>
+          <label class="pt-field">Role<select id="f-role">
+            <option value="therapist">Therapist (licensed)</option>
+            <option value="associate">Associate (pre-licensed)</option>
+            <option value="frontdesk">Admin / front desk</option>
+            <option value="other">Other</option>
+          </select></label>
+          <label class="pt-field">Start date<input id="f-start" type="date"></label>
+          <label class="pt-field">Pay rate<input id="f-pay" autocomplete="off" placeholder="Not saved"></label>
+        </div>
+        <button type="button" class="pt-btn ghost ob-reset" id="ob-reset">Start a new hire</button>
+      </section>
+      <nav class="pt-card ob-nav" aria-label="Onboarding steps">
+        <div class="ob-bar"><i id="ob-bar"></i></div>
+        {stages.map((s, si) => (
+          <div class="ob-nav-stage">
+            <p class="ob-nav-title">{si + 1}. {s.title}</p>
+            <ul>{s.steps.map((st) => <li data-nav={st.id} data-who={st.who}><a href={`#${st.id}`}>{st.title}</a></li>)}</ul>
+          </div>
+        ))}
+      </nav>
+    </aside>
 
-<section class="sec t-light h-small">
-<div class="sec-in">
-<div class="fe" style="--rows:9;--mrows:10">
-  <div class="b b-html" style="--d:1/2/6/14;--m:1/2/5/10;z-index:2"><div class="rte"><h1>Create a Google Folder</h1></div></div>
-  <div class="b b-html" style="--d:6/8/8/20;--m:5/2/11/10;z-index:3"><div class="rte"><ol><li><p>Go to the <a href="https://drive.google.com/drive/u/0/folders/1DCzPfLaGhpOIepDvmZ0krxgQl61bahwN" rel="noopener" target="_blank">Employee Folder</a> on the drive</p></li><li><p>Click “new folder” in the top left corner</p></li><li><p>Label it with the first and last name of the employee</p></li></ol></div></div>
+    <div class="ob-main">
+      {stages.map((s, si) => (
+        <section class="ob-stage" data-stage={si}>
+          <header class="ob-stage-head">
+            <span class="ob-stage-num">Stage {si + 1}</span>
+            <h2>{s.title}</h2>
+            <p class="pt-muted">{s.when}</p>
+          </header>
+          {s.steps.map((st) => { num++; return (
+            <article class="pt-card ob-step" id={st.id} data-step={st.id} data-who={st.who}>
+              <label class="ob-check">
+                <input type="checkbox" data-check={st.id}>
+                <span class="ob-num" aria-hidden="true">{num}</span>
+                <span class="ob-title">{st.title}{st.tag && <em class="ob-tag">{st.tag}</em>}</span>
+              </label>
+              <p class="ob-skip">Not needed for this role. Skip it or tick it if it applies.</p>
+              <div class="ob-body" set:html={st.body} />
+            </article>
+          ); })}
+          {s.gate && <div class="ob-gate" role="note"><strong>Stop</strong><span>{s.gate}</span></div>}
+        </section>
+      ))}
+      <p class="pt-note">Your ticks and the new hire’s details are saved in this browser only. Pay rate is never saved. Use “Start a new hire” to clear everything.</p>
+    </div>
+  </div>
 </div>
-</div>
-</section>
 
-<section class="sec t-light h-small">
-<div class="sec-in">
-<div class="fe" style="--rows:19;--mrows:14">
-  <div class="b b-html" style="--d:1/2/6/14;--m:1/2/5/10;z-index:2"><div class="rte"><h1>Send Employment Contract</h1></div></div>
-  <div class="b b-html" style="--d:6/8/13/20;--m:5/2/11/10;z-index:3"><div class="rte"><ol><li><p>Go to the <a href="https://drive.google.com/drive/folders/1Lmh1aH0YbyRgcfuunFafXil00kQi1zLI" rel="noopener" target="_blank">Management Folder</a> on the drive</p></li><li><p>Right Click on the appropriate Employment Contract and “make a copy”</p></li><li><p>Update the Copy with relevant info, Name, pay, employment status, etc.</p></li><li><p>Download PDF</p></li><li><p>Send to the location supervisor for approval.</p></li><li><p>Send to the employee for signature</p></li><li><p>When the signed version is returned, save to Employees Google Drive folder.</p></li></ol></div></div>
-  <div class="b b-marquee jc" style="--d:13/2/17/26;--m:11/2/13/10;z-index:4"><div class="marquee" aria-label="❗️Stop, Do not Proceed❗️ ❗️Stop, Do not Proceed❗️ ❗️Stop, Do not Proceed❗️"><div class="marquee-track"><span>❗️Stop, Do not Proceed❗️ ❗️Stop, Do not Proceed❗️ ❗️Stop, Do not Proceed❗️</span><span class="dot" aria-hidden="true">✺</span><span>❗️Stop, Do not Proceed❗️ ❗️Stop, Do not Proceed❗️ ❗️Stop, Do not Proceed❗️</span><span class="dot" aria-hidden="true">✺</span><span>❗️Stop, Do not Proceed❗️ ❗️Stop, Do not Proceed❗️ ❗️Stop, Do not Proceed❗️</span><span class="dot" aria-hidden="true">✺</span><span>❗️Stop, Do not Proceed❗️ ❗️Stop, Do not Proceed❗️ ❗️Stop, Do not Proceed❗️</span><span class="dot" aria-hidden="true">✺</span><span>❗️Stop, Do not Proceed❗️ ❗️Stop, Do not Proceed❗️ ❗️Stop, Do not Proceed❗️</span><span class="dot" aria-hidden="true">✺</span><span>❗️Stop, Do not Proceed❗️ ❗️Stop, Do not Proceed❗️ ❗️Stop, Do not Proceed❗️</span><span class="dot" aria-hidden="true">✺</span><span>❗️Stop, Do not Proceed❗️ ❗️Stop, Do not Proceed❗️ ❗️Stop, Do not Proceed❗️</span><span class="dot" aria-hidden="true">✺</span><span>❗️Stop, Do not Proceed❗️ ❗️Stop, Do not Proceed❗️ ❗️Stop, Do not Proceed❗️</span><span class="dot" aria-hidden="true">✺</span><span>❗️Stop, Do not Proceed❗️ ❗️Stop, Do not Proceed❗️ ❗️Stop, Do not Proceed❗️</span><span class="dot" aria-hidden="true">✺</span><span>❗️Stop, Do not Proceed❗️ ❗️Stop, Do not Proceed❗️ ❗️Stop, Do not Proceed❗️</span><span class="dot" aria-hidden="true">✺</span><span>❗️Stop, Do not Proceed❗️ ❗️Stop, Do not Proceed❗️ ❗️Stop, Do not Proceed❗️</span><span class="dot" aria-hidden="true">✺</span><span>❗️Stop, Do not Proceed❗️ ❗️Stop, Do not Proceed❗️ ❗️Stop, Do not Proceed❗️</span><span class="dot" aria-hidden="true">✺</span></div></div></div>
-  <div class="b b-html" style="--d:16/2/20/26;--m:13/2/15/10;z-index:5"><div class="rte"><h2 class="ta-center">Do NOT do any other steps until the employment contract is signed</h2></div></div>
-</div>
-</div>
-</section>
+<style is:global>
+  .ob h4 { font-size: .95rem; font-weight: 600; margin: 1rem 0 .3rem; }
+  .ob .ob-count { font-size: .95rem; }
+  .ob .ob-count span { font-weight: 600; color: var(--charcoal); }
+  .ob .ob-layout { display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: 1.5rem; align-items: start; }
+  .ob .ob-side { position: sticky; top: 1rem; display: flex; flex-direction: column; gap: 1rem; max-height: calc(100vh - 2rem); overflow: auto; }
+  .ob .ob-fields { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: .6rem; margin: .9rem 0; }
+  .ob .ob-wide { grid-column: 1 / -1; }
+  .ob .ob-fields input, .ob .ob-fields select { font: inherit; font-size: .9rem; color: var(--charcoal); border: 1px solid #c9cfca; border-radius: 10px; padding: .45rem .6rem; background: #fff; min-width: 0; width: 100%; box-sizing: border-box; min-height: 38px; }
+  .ob .ob-reset { width: 100%; }
+  .ob .ob-bar { height: 6px; border-radius: 6px; background: #e6e9e6; overflow: hidden; margin-bottom: .9rem; }
+  .ob .ob-bar i { display: block; height: 100%; width: 0; background: var(--slate); transition: width .3s; }
+  .ob .ob-nav-title { font-size: .78rem; font-weight: 600; color: #5d635e; margin: .7rem 0 .2rem; text-transform: uppercase; letter-spacing: .04em; }
+  .ob .ob-nav ul { list-style: none; margin: 0; padding: 0; }
+  .ob .ob-nav li a { display: block; padding: .25rem 0 .25rem 1.4rem; font-size: .86rem; color: var(--charcoal); text-decoration: none; position: relative; line-height: 1.35; }
+  .ob .ob-nav li a::before { content: ''; position: absolute; left: 0; top: .45rem; width: .8rem; height: .8rem; border-radius: 50%; border: 1.5px solid #b5bcb6; box-sizing: border-box; }
+  .ob .ob-nav li.done a { color: #7a807b; text-decoration: line-through; }
+  .ob .ob-nav li.done a::before { background: var(--slate); border-color: var(--slate); }
+  .ob .ob-nav li.na a { color: #9aa09b; }
+  .ob .ob-stage { margin-bottom: 2rem; }
+  .ob .ob-stage-head { margin: 0 0 .8rem; }
+  .ob .ob-stage-num { font-size: .78rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--slate); }
+  .ob .ob-stage-head h2 { font-size: 1.35rem; font-weight: 600; margin: .1rem 0 .1rem; color: var(--charcoal); }
+  .ob .ob-step { margin-bottom: .8rem; scroll-margin-top: 1rem; transition: opacity .2s; }
+  .ob .ob-check { display: flex; align-items: center; gap: .75rem; cursor: pointer; }
+  .ob .ob-check input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .ob .ob-num { flex: none; width: 2rem; height: 2rem; border-radius: 50%; border: 2px solid #b5bcb6; display: grid; place-items: center; font-weight: 600; font-size: .9rem; color: var(--charcoal); }
+  .ob .ob-check input:focus-visible + .ob-num { outline: 2px solid var(--charcoal); outline-offset: 2px; }
+  .ob .ob-check input:checked + .ob-num { background: var(--slate); border-color: var(--slate); color: #fff; font-size: 0; }
+  .ob .ob-check input:checked + .ob-num::after { content: '✓'; font-size: 1rem; }
+  .ob .ob-title { font-size: 1.05rem; font-weight: 600; color: var(--charcoal); line-height: 1.3; }
+  .ob .ob-tag { font-style: normal; font-size: .7rem; font-weight: 600; background: var(--sage); color: var(--charcoal); border-radius: 300px; padding: .1rem .55rem; margin-left: .5rem; vertical-align: middle; }
+  .ob .ob-body { padding-left: 2.75rem; font-size: .93rem; line-height: 1.55; }
+  .ob .ob-body ol { margin: .6rem 0 0; padding-left: 1.2rem; }
+  .ob .ob-body li { margin: .25rem 0; }
+  .ob .ob-body p { margin: .6rem 0 0; }
+  .ob .ob-chip { display: inline-block; background: #f1f3f1; border-radius: 6px; padding: 0 .4rem; font-weight: 500; word-break: break-all; }
+  .ob .ob-mini { font: inherit; font-size: .75rem; border: 1px solid #c9cfca; background: #fff; border-radius: 300px; padding: .05rem .6rem; cursor: pointer; margin-left: .2rem; }
+  .ob .ob-tip { font-size: .85rem; background: #f6f4ec; border-radius: 10px; padding: .5rem .75rem; }
+  .ob .ob-mail { border: 1px solid #e0e4e0; border-radius: 12px; margin-top: .7rem; overflow: hidden; }
+  .ob .ob-mail-meta { background: #f6f7f6; margin: 0 !important; padding: .6rem .9rem; font-size: .85rem; }
+  .ob .ob-mail-body { margin: 0; padding: .8rem .9rem; font: inherit; font-size: .88rem; white-space: pre-wrap; max-height: 320px; overflow: auto; }
+  .ob .ob-actions { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .8rem; }
+  .ob .ob-actions a.pt-btn { text-decoration: none; display: inline-flex; align-items: center; }
+  .ob .ob-shot { display: block; max-width: 100%; height: auto; border-radius: 12px; margin-top: .8rem; border: 1px solid #e0e4e0; }
+  .ob .ob-skip { display: none; margin: .4rem 0 0 2.75rem; font-size: .82rem; color: #5d635e; }
+  .ob .ob-step.na { opacity: .6; }
+  .ob .ob-step.na .ob-skip { display: block; }
+  .ob .ob-step.na .ob-body { display: none; }
+  .ob .ob-step.done .ob-body { display: none; }
+  .ob .ob-step.done .ob-title { color: #5d635e; }
+  .ob .ob-gate { display: flex; gap: .9rem; align-items: center; background: #fbe9e4; border: 1px solid #efc2b5; color: #6b2a17; border-radius: 16px; padding: .9rem 1.2rem; margin-top: 1rem; font-size: .95rem; }
+  .ob .ob-gate strong { flex: none; background: #b8432b; color: #fff; border-radius: 300px; padding: .2rem .8rem; font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; }
+  .ob .ob-gate.ok { background: #e8f1ea; border-color: #bcd6c2; color: #23432c; }
+  .ob .ob-gate.ok strong { background: var(--slate); }
+  @media (max-width: 1100px) {
+    .ob .ob-layout { grid-template-columns: minmax(0, 1fr); }
+    .ob .ob-side { position: static; max-height: none; overflow: visible; }
+    .ob .ob-nav { display: none; }
+  }
+  @media (max-width: 520px) {
+    .ob .ob-body { padding-left: 0; }
+    .ob .ob-skip { margin-left: 0; }
+    .ob .ob-fields { grid-template-columns: 1fr; }
+    .ob .ob-gate { flex-direction: column; align-items: flex-start; }
+  }
+</style>
 
-<section class="sec t-white-bold h-small">
-<div class="sec-in">
-<div class="fe" style="--rows:14;--mrows:20">
-  <div class="b b-html" style="--d:1/2/5/14;--m:1/2/5/10;z-index:2"><div class="rte"><h1>Setting Up Gmail</h1></div></div>
-  <div class="b b-html" style="--d:5/7/12/21;--m:5/2/11/10;z-index:3"><div class="rte"><ol><li><p><span class="c-accent">Go to the </span><a href="https://admin.google.com/ac/home?hl=en" rel="noopener" target="_blank"><span class="c-accent">Google Admin Portal</span></a></p></li><li><p><span class="c-accent">Under the Users section, click “Add User”</span></p></li><li><p><span class="c-accent">Input the Employee’s name and use their first name as the email address. If that is already in use, use first name and first initial of their last name.</span></p></li><li><p><span class="c-accent">Input their current email address for secondary (set up) purposes</span></p></li><li><p><span class="c-accent">Click “add new user”</span></p></li></ol></div></div>
-  <div class="b b-html" style="--d:12/4/13/12;--m:11/2/15/10;z-index:3"><div class="rte"><h3>Add to Google Groups</h3></div></div>
-  <div class="b b-html" style="--d:12/7/15/21;--m:15/2/21/10;z-index:4"><div class="rte"><ol><li><p><span class="c-accent">Once the email is setup, on the left hand side under the Directory tab, click “Groups”.</span></p></li><li><p><span class="c-accent">If you hover over the group you’d like to edit, an add members button will appear. click “add members”</span></p></li><li><p><span class="c-accent">Add the new employee to the appropriate groups based on location.</span></p></li></ol></div></div>
-</div>
-</div>
-</section>
+<script is:inline define:vars={{ offices }}>
+  (function () {
+    var KEY = 'tt.onboard.v1';
+    var F = ['first', 'last', 'email', 'personal', 'office', 'role', 'start'];
+    var $ = function (id) { return document.getElementById(id); };
+    var state = { f: {}, done: {} };
+    try { var s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s && s.f && s.done) state = s; } catch (e) {}
+    function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
 
-<section class="sec t-light h-small">
-<div class="sec-in">
-<div class="fe" style="--rows:21;--mrows:10">
-  <div class="b b-html" style="--d:1/2/6/14;--m:1/2/5/10;z-index:2"><div class="rte"><h1>Send Onboarding and Orientation</h1></div></div>
-  <div class="b b-html" style="--d:6/7/22/21;--m:5/2/11/10;z-index:3"><div class="rte"><p><strong>Copy and paste this message and send to the new employee. </strong></p><p><strong>Subject</strong>: Welcome to Tangible!</p><p>Hello (Employee Name)! </p><p>Welcome to the Tangible Team, we’re excited to have you on board. </p><p>To begin your process here with our team we need you to complete our orientation and onboarding process. Follow this process to do so: </p><ol><li><p>Follow this link our employee portal: <a href="/employeeportal">https://tangiblementalhealth.com/employeeportal</a></p></li><li><p>Use your new Tangible Email to sign up. You should have an email from google regarding this new account.</p></li><li><p>Click “Orientation” under “New Employee Links.” This section covers important info that will be relevant to your work at Tangible so please take the time necessary to comprehend what is taught. It may take an hour or so.</p></li><li><p>Once you’ve finished orientation, please complete “Onboarding,” also under “New Employee Links.” </p></li></ol><p>If you have questions don’t hesitate to reach out and we can help you through it. </p><p>When you have completed both Onboarding and Orientation. please reach out to your practice director to schedule a time to meet to complete the onboarding process. </p></div></div>
-</div>
-</div>
-</section>
+    function val(id) { return ($('f-' + id).value || '').trim(); }
+    function office() { var id = $('f-office').value; for (var i = 0; i < offices.length; i++) if (offices[i].id === id) return offices[i]; return offices[0]; }
+    function suggestedEmail() { var f = val('first').toLowerCase().replace(/[^a-z]/g, ''); return f ? f + '@tangiblementalhealth.com' : ''; }
+    function email() { return val('email') || suggestedEmail(); }
+    function fmtDate(d) { if (!d) return ''; var p = d.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }); }
+    var ROLE = { therapist: 'therapist', associate: 'associate', frontdesk: 'frontdesk', other: '' };
 
-<section class="sec t-light h-small">
-<div class="sec-in">
-<div class="fe" style="--rows:12;--mrows:10">
-  <div class="b b-html" style="--d:1/2/6/14;--m:1/2/5/10;z-index:2"><div class="rte"><h1>Updating Drive and Payroll</h1></div></div>
-  <div class="b b-html" style="--d:6/7/13/21;--m:5/2/11/10;z-index:3"><div class="rte"><ol><li><p>Once an employee has submitted their onboarding head to the <a href="https://docs.google.com/spreadsheets/d/1i2OFTCSZUwcAvJD7pckJT0h9BPsUk2wvuAS0IjgjWZ8/edit?gid=0#gid=0" rel="noopener" target="_blank">Onboarding response</a> sheet.</p></li><li><p>Download all of the uploaded files and upload them to the employee’s <a href="https://drive.google.com/drive/u/0/folders/1DCzPfLaGhpOIepDvmZ0krxgQl61bahwN" rel="noopener" target="_blank">Google Drive</a> folder.</p></li><li><p>Compose an email to nsbcpayroll@gmail.com. </p></li><li><p>Ask them to please add the new employee to payroll. In the email include the employees name, pay rate and start date. Attach the W-4 and Direct Deposit pages you downloaded previously and send.</p></li></ol></div></div>
-</div>
-</div>
-</section>
+    function data() {
+      var first = val('first'), last = val('last'), o = office(), full = (first + ' ' + last).trim();
+      var welcome = 'Hi ' + (first || '[first name]') + ',\n\n' +
+        'Welcome to the Tangible team! We’re excited to have you on board.\n\n' +
+        'To get started, please complete our orientation and onboarding:\n\n' +
+        '1. Go to the Employee Portal: https://tangiblementalhealth.com/employeeportal\n' +
+        '2. Sign in with your new Tangible email (' + (email() || '[Tangible email]') + '). You should have an email from Google about your new account.\n' +
+        '3. Under “New employees”, open Orientation. It covers important things you’ll need for your work at Tangible, so take the time you need. It takes about an hour.\n' +
+        '4. When you’ve finished Orientation, complete Onboarding (also under “New employees”).\n\n' +
+        'If you have any questions, just reach out and we’ll help you through it.\n\n' +
+        'When you’ve finished both, please contact your practice director, ' + o.director + ' (' + o.email + '), to set up a time to finish onboarding.\n\n' +
+        'Welcome aboard!';
+      var payroll = 'Hi,\n\nPlease add our new employee to payroll:\n\n' +
+        'Name: ' + (full || '[name]') + '\n' +
+        'Pay rate: ' + (val('pay') || '[pay rate]') + '\n' +
+        'Start date: ' + (fmtDate(val('start')) || '[start date]') + '\n\n' +
+        'Their W-4 and direct deposit form are attached.\n\nThank you!';
+      return {
+        full: full || 'First Last',
+        email: email() || 'first@tangiblementalhealth.com',
+        emailOrPersonal: [email(), val('personal')].filter(Boolean).join(', ') || 'their email',
+        office: o.label,
+        director: o.director + ' (' + o.email + ')',
+        staffline: [full || 'Name', email() || 'email', ROLE[$('f-role').value] || 'role', o.id].join(', '),
+        welcomeBody: welcome,
+        payrollBody: payroll,
+        directorEmail: o.email,
+      };
+    }
+    function gmail(to, su, body) {
+      return 'https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(to) + '&su=' + encodeURIComponent(su) + '&body=' + encodeURIComponent(body);
+    }
 
-<section class="sec t-light h-small">
-<div class="sec-in">
-<div class="fe" style="--rows:10;--mrows:10">
-  <div class="b b-html" style="--d:1/2/5/14;--m:1/2/5/10;z-index:2"><div class="rte"><h1>Add to Malpractice Insurance</h1></div></div>
-  <div class="b b-html" style="--d:5/7/11/21;--m:5/2/11/10;z-index:3"><div class="rte"><ol><li><p>Head over to our <a href="https://www.insure-portal.com/User/" rel="noopener" target="_blank">Malpractice providers site</a></p></li><li><p>Username: cleggbrady@gmail.com Password: (see the team password manager)</p></li><li><p>Click the “Make changes to my policy” button</p></li><li><p>Click “add something” then “add an employee”</p></li><li><p>Add the new employee and click save.</p></li></ol></div></div>
-</div>
-</div>
-</section>
+    function render() {
+      var d = data();
+      $('f-email').placeholder = suggestedEmail() || 'Suggested from first name';
+      document.querySelectorAll('[data-fill]').forEach(function (n) { if (d[n.dataset.fill] != null) n.textContent = d[n.dataset.fill]; });
+      var to = [email(), val('personal')].filter(Boolean).join(',');
+      document.querySelectorAll('[data-mail=welcome]').forEach(function (n) { n.href = gmail(to, 'Welcome to Tangible!', d.welcomeBody); });
+      document.querySelectorAll('[data-mail=payroll]').forEach(function (n) { n.href = gmail('nsbcpayroll@gmail.com', 'New employee: ' + (val('first') + ' ' + val('last')).trim(), d.payrollBody); });
 
-<section class="sec t-light h-small">
-<div class="sec-in">
-<div class="fe" style="--rows:7;--mrows:10">
-  <div class="b b-html" style="--d:1/2/4/14;--m:1/2/5/10;z-index:2"><div class="rte"><h1>Add to Slack</h1></div></div>
-  <div class="b b-html" style="--d:4/7/8/21;--m:5/2/11/10;z-index:3"><div class="rte"><ol><li><p>Open Slack</p></li><li><p>Click on Tangible Therapy on the top left</p></li><li><p>Click Invite member and add the employee using Tangible Email account.</p></li></ol></div></div>
-</div>
-</div>
-</section>
+      var role = $('f-role').value;
+      var done = 0, all = 0;
+      document.querySelectorAll('[data-step]').forEach(function (n) {
+        var id = n.dataset.step, who = n.dataset.who;
+        var na = (who === 'clinician' && role === 'frontdesk') || (who === 'associate' && role !== 'associate');
+        var ok = !!state.done[id];
+        n.classList.toggle('na', na && !ok);
+        n.classList.toggle('done', ok);
+        n.querySelector('[data-check]').checked = ok;
+        var nav = document.querySelector('[data-nav="' + id + '"]');
+        if (nav) { nav.classList.toggle('done', ok); nav.classList.toggle('na', na && !ok); }
+        if (!na || ok) { all++; if (ok) done++; }
+      });
+      $('ob-done').textContent = done; $('ob-total').textContent = all;
+      $('ob-bar').style.width = (all ? Math.round(done / all * 100) : 0) + '%';
+      var gate = document.querySelector('.ob-gate');
+      if (gate) {
+        var signed = !!state.done['employment-contract'];
+        gate.classList.toggle('ok', signed);
+        gate.querySelector('strong').textContent = signed ? 'Go' : 'Stop';
+        gate.querySelector('span').textContent = signed ? 'Contract signed. You can move on to setting up their accounts.' : 'Don’t do any other steps until the employment contract is signed and saved.';
+      }
+    }
 
-<section class="sec t-light h-small">
-<div class="sec-in">
-<div class="fe" style="--rows:8;--mrows:10">
-  <div class="b b-html" style="--d:1/2/6/14;--m:1/2/5/10;z-index:2"><div class="rte"><h1>Schedule Headshots</h1></div></div>
-  <div class="b b-html" style="--d:6/7/9/21;--m:5/2/11/10;z-index:3"><div class="rte"><ol><li><p>Reach out to Julie and coordinate a time between Julie and the employee to take headshots.</p></li><li><p>Inform the employee that they should wear semi-professional attire, neutral colors that are not grey/black</p></li></ol></div></div>
-</div>
-</div>
-</section>
-
-<section class="sec t-light h-small">
-<div class="sec-in">
-<div class="fe" style="--rows:9;--mrows:10">
-  <div class="b b-html" style="--d:1/2/6/14;--m:1/2/5/10;z-index:2"><div class="rte"><h1>Schedule Supervision</h1></div></div>
-  <div class="b b-html" style="--d:6/7/10/21;--m:5/2/11/10;z-index:3"><div class="rte"><ol><li><p>Reach out to the locations practice director/supervisor and coordinate a time that fits for them and for the new employee to meet.</p></li><li><p>Create the calendar event in both calendars and set as a recurring appoinment.</p></li></ol></div></div>
-</div>
-</div>
-</section>
-
-<section class="sec t-light h-small">
-<div class="sec-in">
-<div class="fe" style="--rows:14;--mrows:10">
-  <div class="b b-html" style="--d:1/2/6/14;--m:1/2/5/10;z-index:2"><div class="rte"><h1>Add to Simple Practice</h1></div></div>
-  <div class="b b-html" style="--d:6/7/15/21;--m:5/2/11/10;z-index:3"><div class="rte"><ol><li><p>Got to <a href="https://secure.simplepractice.com/calendar/appointments" rel="noopener" target="_blank">Simple Practice</a></p></li><li><p>On the left hand side, go to settings, the in the left pop up menu select team, then team members.</p></li><li><p>Click Add new Team member in the top right.</p></li><li><p>Add them using their Legal Name and Tangible Email and hit continue.</p></li><li><p> In the next menu, select Clinician and select the “Full Client List” option and click continue.</p></li><li><p>Turn on all permissions and select continue. </p></li><li><p>If the employee needs supervision, select their supervisor from the dropdown. Under specialty select counselor.</p></li><li><p>Send invitation and complete setup.</p></li></ol></div></div>
-</div>
-</div>
-</section>
-
-<section class="sec t-light h-small">
-<div class="sec-in">
-<div class="fe" style="--rows:23;--mrows:16">
-  <div class="b b-html" style="--d:1/2/6/14;--m:1/2/5/10;z-index:2"><div class="rte"><h1>Setting up availibility</h1></div></div>
-  <div class="b b-html" style="--d:6/7/16/21;--m:5/2/11/10;z-index:3"><div class="rte"><ol><li><p>Got to <a href="https://secure.simplepractice.com/calendar/appointments" rel="noopener" target="_blank">Simple Practice</a></p></li><li><p>Navigate to the therapists calendar.</p></li><li><p>In the top right click the gear icon and then view availability schedule.</p></li><li><p>Click the time to add and add availability. Title the event Opening. The schedule should be found in <a href="https://docs.google.com/spreadsheets/d/1i2OFTCSZUwcAvJD7pckJT0h9BPsUk2wvuAS0IjgjWZ8/edit?gid=0#gid=0" rel="noopener" target="_blank">onboarding responses</a></p></li><li><p>Ensure the right time is added and set as recurring for the days that match the time frame. Different time windows will have to be added individually.</p></li><li><p>Ensure the correct location is selected as well as that the telehealth box is checked.</p></li><li><p>Ensure the offered services match the ones shown below and then click save.</p></li><li><p>Repeat for additional times.</p></li></ol></div></div>
-  <div class="b b-image jc" style="--d:16/9/24/19;--m:11/2/17/10;z-index:4"><figure class="img fill" style="--fit:contain"><img src="/images/screenshot-2025-11-24-at-3-57-40-pm-b0f670.png" alt="" width="858" height="570" loading="lazy" decoding="async"></figure></div>
-</div>
-</div>
-</section>
+    F.forEach(function (k) { if (state.f[k] != null) $('f-' + k).value = state.f[k]; });
+    F.concat(['pay']).forEach(function (k) {
+      $('f-' + k).addEventListener('input', function () { if (k !== 'pay') { state.f[k] = $('f-' + k).value; save(); } render(); });
+    });
+    document.querySelectorAll('[data-check]').forEach(function (c) {
+      c.addEventListener('change', function () { if (c.checked) state.done[c.dataset.check] = 1; else delete state.done[c.dataset.check]; save(); render(); });
+    });
+    document.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-copy]'); if (!b) return;
+      var text = data()[b.dataset.copy] || '';
+      var label = b.textContent;
+      function okMsg() { b.textContent = 'Copied'; setTimeout(function () { b.textContent = label; }, 1500); }
+      if (navigator.clipboard) navigator.clipboard.writeText(text).then(okMsg, function () {});
+    });
+    var armed = null, reset = $('ob-reset');
+    reset.addEventListener('click', function () {
+      if (!armed) {
+        reset.textContent = 'Click again to clear everything';
+        armed = setTimeout(function () { armed = null; reset.textContent = 'Start a new hire'; }, 3000);
+        return;
+      }
+      clearTimeout(armed); armed = null; reset.textContent = 'Start a new hire';
+      state = { f: {}, done: {} }; save();
+      F.concat(['pay']).forEach(function (k) { var n = $('f-' + k); n.value = n.tagName === 'SELECT' ? n.options[0].value : ''; });
+      render(); window.scrollTo(0, 0);
+    });
+    render();
+  })();
+</script>
 </Base>
