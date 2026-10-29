@@ -37,3 +37,21 @@ When Medicaid (or another plan) becomes accepted: move it from `notAccepted` to 
 
 ## Testing on a Deploy Preview
 The bubble works on Deploy Previews too (the function and AI Gateway run there and use the same credits).
+
+
+# Staff chatbot "Ask the Handbook" (built 29 Oct 2026, labeled Beta)
+
+A separate assistant for employees, on every staff page (button bottom-right; not on public pages). Name: STAFF_BOT_NAME in src/data/staff.ts. Turn it off with `staffChatbot: false` in src/data/site.ts.
+
+- **Window:** src/components/StaffChat.astro (added by src/layouts/Base.astro on staff pages). The conversation stays only in the browser tab (sessionStorage sc.chat.v1) and starts fresh if a different person signs in on that tab.
+- **Back end:** netlify/functions/staff-chat.mts at /api/staff-chat. Checks the staff sign-in on EVERY message (approved staff only) and only accepts requests from the site's own pages. Same model and Netlify AI Gateway credits as Tangie; rate limit 15 messages/minute; only token counts are logged, never what people type.
+- **What it knows (private):** src/integrations/staff-knowledge.mjs runs after every build and writes generated/staff-knowledge.json OUTSIDE dist/ (so it is never part of the public website and has no web address; generated/ is gitignored). Netlify packages it with the staff-chat function only (included_files in netlify.toml). Sources: Policies & Procedures (src/data/policies.md, one section per "##" heading, linked to its spot on the page), the Orientation lessons (src/data/orientation.json) and the text of the staff pages listed in STAFF_PAGES in that file (reception scripts, onboarding, crisis call, hours tracker, Find a Room, Submit Hours…). Edit those pages/files and the bot follows at the next build.
+- **Role-aware:** each section carries its page path; the function only uses sections the person may open (canOpen in src/data/staff-access.ts). So reception scripts are only used for front desk/directors, and the Hours Tracker page only for associates/supervisors. A short portal guide lists only the links that person can see.
+- **"Me" tools** (read only the signed-in person's own data, with the same code as the portal pages):
+  - my_trainings: the office's upcoming training meetings and whether they're trainer / skill assignment / DSM (first-name match), from the Team Dashboard sheet.
+  - my_hours: their approved and pending supervised hours vs. targets (Hours Tracker); supervisors also get each supervisee's approved total and entries waiting for approval.
+  - find_open_rooms: open/taken rooms for a day and time (default now), including today's claims and their own claims.
+  - claim_room / release_my_room: claims a room for today (same rules as Find a Room: until the next booking or closing; no double claims; booked rooms refused) or releases their own claim. The rules tell the bot to claim only when the person clearly asks, and to ask if the room/time is unclear.
+- **Rules (RULES in staff-chat.mts):** handbook answers only from the staff information with a link to the source; "me" questions always via tools; no client names/details (reminds people to use SimplePractice/supervisor); HR, legal and clinical decisions go to the director; if the employee themself seems in crisis: 988 / 911 / their director (questions about handling a crisis CALL are answered from the Crisis Call page).
+- **Kept away from Tangie:** the staff file is never in dist/ and Tangie's chat-knowledge.json is still checked by the safety net (src/lib/chat-safety.ts).
+- **Cost:** about 35k tokens of staff information per question, cached (re-reads cost about a tenth), so roughly a few credits per question on the same small model.

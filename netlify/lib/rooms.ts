@@ -5,7 +5,8 @@
 // a claim only shows on the website, for that day, and old days are simply never read again.
 // A claim runs from the chosen time until the room's next booking on the sheet's schedule (or closing time).
 import { getStore } from '@netlify/blobs';
-import type { Office } from '../../src/data/staff-access.ts';
+import { OWNER_EMAILS as OWNERS, type Office, type StaffRecord } from '../../src/data/staff-access.ts';
+import { getDashboard } from './dashboard.ts';
 
 export type Claim = { id: string; building: string; room: string; start: number; end: number; email: string; name: string; at: string };
 type DayDoc = { claims: Claim[] };
@@ -44,4 +45,48 @@ export async function updateDay(office: Office, date: string, change: (doc: DayD
     if (res?.modified !== false) return { doc };
   }
   return { error: 'Someone else was saving at the same time. Please try again.' };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Shared by /api/rooms (Find a Room page) and /api/staff-chat (the staff chatbot).
+
+export const canReleaseAny = (me: StaffRecord) => me.roles.includes('director') || me.roles.includes('frontdesk') || isOwnerEmail(me.email);
+const isOwnerEmail = (e: string) => OWNERS.includes(e.toLowerCase());
+export const firstNameOf = (me: StaffRecord) => (me.name || me.email).split(/[\s@.]/)[0].replace(/^./, (c) => c.toUpperCase());
+export const showClaim = (c: Claim, me: StaffRecord) => ({ id: c.id, building: c.building, room: c.room, start: c.start, end: c.end, name: c.name, at: c.at, mine: c.email === me.email, canRelease: c.email === me.email || canReleaseAny(me) });
+
+/** Claims a room for today from `start` (minutes after midnight) until its next booking (or closing). */
+export async function claimRoom(office: Office, me: StaffRecord, building: string, roomLabel: string, startMin: number): Promise<{ claim?: Claim; claims?: Claim[]; error?: string; status?: number }> {
+  const now = utahNow();
+  if (!now.day) return { error: 'Rooms can only be claimed on days the office is open.', status: 400 };
+  const start = Math.round(Number(startMin) / 30) * 30;
+  if (!Number.isFinite(start) || start < OPEN_MIN || start >= CLOSE_MIN) return { error: 'Please pick a time during office hours.', status: 400 };
+  if (start + 30 <= now.mins) return { error: 'That time has already passed today.', status: 400 };
+  const d = await getDashboard(office);
+  const sched = (d?.data?.schedules || []).find((s: any) => s.name.toLowerCase() === String(building || '').toLowerCase()) || ((d?.data?.schedules || []).length === 1 ? d!.data.schedules[0] : null);
+  const room = sched?.rooms?.find((r: any) => r.label.toLowerCase() === String(roomLabel || '').toLowerCase());
+  if (!room) return { error: 'That room wasn’t found on the schedule.', status: 400 };
+  const blocks: { start: string; end: string }[] = room.days?.[now.day] || [];
+  if (blocks.some((x) => hhmm(x.start) <= start && start < hhmm(x.end))) return { error: 'That room is booked on the schedule at that time.', status: 409 };
+  const next = blocks.map((x) => hhmm(x.start)).filter((m) => m > start).sort((a, z) => a - z)[0];
+  const end = Math.min(next ?? CLOSE_MIN, CLOSE_MIN);
+  const claim: Claim = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), building: sched.name, room: room.label, start, end, email: me.email, name: firstNameOf(me), at: new Date().toISOString() };
+  const r = await updateDay(office, now.date, (doc) => {
+    const clash = doc.claims.find((c) => c.building === claim.building && c.room === claim.room && c.start < claim.end && start < c.end);
+    if (clash) return `${clash.name} already claimed ${claim.room} for that time.`;
+    doc.claims.push(claim);
+  });
+  if (r.error) return { error: r.error, status: 409 };
+  return { claim, claims: r.doc!.claims };
+}
+
+/** Releases one of today's claims (yours, or anyone's for front desk / directors / owner). */
+export async function releaseClaim(office: Office, me: StaffRecord, id: string): Promise<{ claims?: Claim[]; error?: string }> {
+  const r = await updateDay(office, utahNow().date, (doc) => {
+    const c = doc.claims.find((x) => x.id === id);
+    if (!c) return 'That claim was already released.';
+    if (c.email !== me.email && !canReleaseAny(me)) return 'Only the person who claimed this room (or the front desk) can release it.';
+    doc.claims = doc.claims.filter((x) => x.id !== id);
+  });
+  return r.error ? { error: r.error } : { claims: r.doc!.claims };
 }
