@@ -1,6 +1,7 @@
 ---
 import BookCTA from '../components/BookCTA.astro';
 import Base from '../layouts/Base.astro';
+import Reviews from '../components/Reviews.astro';
 import Summary from '../components/Summary.astro';
 import Divider from '../components/Divider.astro';
 ---
@@ -70,15 +71,9 @@ import Divider from '../components/Divider.astro';
 </div>
 </section>
 
-<section class="sec t-light h-small">
+<section class="sec t-light">
 <div class="sec-in">
-<div class="fe" style="--rows:11;--mrows:12">
-  <div class="b b-html" style="--d:1/7/3/21;--m:1/2/4/10;--dz:2;--mz:2"><div class="rte"><h2 class="ta-center">Utah’s Best Therapists</h2></div></div>
-  <div class="b b-html" style="--d:3/7/5/21;--m:4/2/7/10;--dz:3;--mz:3"><div class="rte"><p class="lg ta-center">Here’s what our clients have to say</p></div></div>
-  <div class="b b-code" style="--d:5/4/12/24;--m:7/2/13/10"><!-- Elfsight Google Reviews | Tangible Reviews -->
-<script is:inline async="" src="https://elfsightcdn.com/platform.js"></script>
-<div class="elfsight-app-299117ef-b3ca-4f85-b852-48a645b1a46a" data-elfsight-app-lazy=""></div></div>
-</div>
+<Reviews title="Utah’s Best Therapists" subtitle="Here’s what our clients have to say" />
 </div>
 </section>
 

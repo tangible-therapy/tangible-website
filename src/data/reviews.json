@@ -1,0 +1,69 @@
+{
+  "_note": "Client reviews shown in the 'What our clients say' section (src/components/Reviews.astro) on the home page, /home-1 and /sandy. Copied by hand from Tangible Therapy's public Google listings in Oct 2026 (5-star reviews only, reviewer shown as first name + last initial). To add one: copy an entry, paste the review text exactly as written on Google (shorten with … only), set office to Orem, Provo or Sandy. Order here = order on the site. Only use reviews of therapists who still work at Tangible. Never add anything a client sent privately.",
+  "summary": {
+    "rating": "5.0",
+    "countLabel": "740+ Google reviews"
+  },
+  "listings": [
+    { "office": "Orem", "url": "https://maps.google.com/?cid=16478676730982573550" },
+    { "office": "Provo", "url": "https://maps.google.com/?cid=12486099368564257922" },
+    { "office": "Sandy", "url": "https://maps.google.com/?cid=14626648273142235131" }
+  ],
+  "reviews": [
+    {
+      "name": "Natalie P.",
+      "office": "Provo",
+      "text": "This is my favorite place I’ve ever done therapy!! It is such a beautiful office. Very quiet, clean, and peaceful. They have posters and pamphlets for resources in the lobby, as well as drinks and snacks. Most importantly, I LOVE my therapist! Her name is Leah Brown and she is so kind and empathetic. She helps me work through difficult situations and I always feel better after my sessions. 10/10 go to therapy here."
+    },
+    {
+      "name": "Madeleine S.",
+      "office": "Orem",
+      "text": "We have been working with a Tangible therapist, Arianne, for over two years now. She has walked with our family through a very challenging season with our teenager, and her support has been truly invaluable. … Both our young adult daughter and our teen consistently feel that they have someone in their corner—someone who listens, guides, and believes in their capacity to grow."
+    },
+    {
+      "name": "Jasmine R.",
+      "office": "Orem",
+      "text": "Morgan is such a thoughtful, compassionate, and highly skilled therapist. She creates a safe, non-judgmental space and truly listens, helping clients feel understood and supported while encouraging real growth. I would absolutely recommend her to anyone looking for a caring and professional therapist."
+    },
+    {
+      "name": "John H.",
+      "office": "Orem",
+      "text": "I’ve been struggling with who I am and confidence in myself since I had a stroke over 2 years ago. This place and therapy has been very helpful and helping me manage stress and providing tools to help with my personal goals. I’d definitely recommend to come and get help and therapy with these therapist."
+    },
+    {
+      "name": "Ariel M.",
+      "office": "Provo",
+      "text": "I have had a warm/welcoming and positive experience every time I’ve visited. Sophie specifically has had such a positive impact on my healing, she’s very confident and direct with her knowledge and advice, she has provided direction that I haven’t found anywhere/with anyone else. Very grateful for her, highly recommend"
+    },
+    {
+      "name": "Kaylee A.",
+      "office": "Orem",
+      "text": "My therapist, Corinne, is awesome! I always feel very valued and valid in my emotional responses to my experiences while teaching me how to feel my emotions without becoming my emotions."
+    },
+    {
+      "name": "Veronica M.",
+      "office": "Orem",
+      "text": "My daughter and I have found in Tangible a safe place to open up - talk about our feelings and emotions. Sarah, our therapist is a wonderful and very professional person. We feel comfortable in her presence. The place is so calming and comfortable."
+    },
+    {
+      "name": "Lenore A.",
+      "office": "Provo",
+      "text": "I highly recommend Leah as an excellent therapist. … She creates a comfortable accepting environment that makes it easy to open up and share my concerns. Leah is both knowledgable and personable- she recognized and nourishes strengths I never knew I had. Her honesty, openness, and deep compassion make her an exceptionally effective and caring therapist."
+    },
+    {
+      "name": "Shaylyn S.",
+      "office": "Provo",
+      "text": "Such a welcoming environment and my therapist Leah truly is passionate about what she does. It's been a breath of fresh air. I look forward to coming for each session."
+    },
+    {
+      "name": "Cathy B.",
+      "office": "Orem",
+      "text": "Morgan is an amazing therapist. With her kind and caring personality she creates a safe space for sharing. She is a great listener and offers help to face and work through the challenges being faced. She believes in and helps bring the gift of hope and change to those she works with."
+    },
+    {
+      "name": "Megan E.",
+      "office": "Orem",
+      "text": "Leah Brown is great!! I feel comfortable opening up with her and she intently listens. She is very warm and welcoming! The new office is also so nice and comfortable with lots of parking."
+    }
+  ]
+}
