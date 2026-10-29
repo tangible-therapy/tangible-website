@@ -93,6 +93,7 @@ export default async (req: Request) => {
       if (e.status === 'approved') return 'Approved entries are locked. Ask your supervisor to reopen it first.';
       if (action === 'delete') { log.entries = log.entries.filter((x) => x !== e); return; }
       Object.assign(e, c!.value!, { status: 'pending', updatedAt: now });
+      delete e.note;
     }));
   }
 

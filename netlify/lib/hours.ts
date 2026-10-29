@@ -16,7 +16,7 @@ export type Entry = {
   group: number;             // group supervision hours
   observation: number;       // of the supervision above, direct observation hours
   other?: number;            // other work time that week (notes, admin, trainings…); counts toward the total only
-  note: string;              // short note — never client names or details
+  note?: string;             // no longer collected (removed so nobody is tempted to add client details); old values are dropped on save
   status: Status;
   supervisorNote?: string;
   createdAt: string;
@@ -64,13 +64,13 @@ const num = (v: unknown) => {
 };
 
 /** Validates hours fields from the browser. Returns the clean fields or an error message. */
-export function cleanEntry(raw: any): { value?: Pick<Entry, 'kind' | 'date' | 'direct' | 'individual' | 'group' | 'observation' | 'other' | 'note'>; error?: string } {
+export function cleanEntry(raw: any): { value?: Pick<Entry, 'kind' | 'date' | 'direct' | 'individual' | 'group' | 'observation' | 'other'>; error?: string } {
   const kind: Kind = raw?.kind === 'session' ? 'session' : 'week';
   const date = String(raw?.date || '');
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || isNaN(Date.parse(date + 'T12:00:00Z'))) return { error: 'Please choose a date.' };
   const today = new Date(Date.now() - 7 * 3600e3).toISOString().slice(0, 10); // Utah-ish
   if (date > today) return { error: "The date can't be in the future." };
-  const v = { kind, date: kind === 'week' ? mondayOf(date) : date, direct: num(raw.direct ?? 0), individual: num(raw.individual ?? 0), group: num(raw.group ?? 0), observation: num(raw.observation ?? 0), other: num(raw.other ?? 0), note: String(raw?.note || '').trim().slice(0, 200) };
+  const v = { kind, date: kind === 'week' ? mondayOf(date) : date, direct: num(raw.direct ?? 0), individual: num(raw.individual ?? 0), group: num(raw.group ?? 0), observation: num(raw.observation ?? 0), other: num(raw.other ?? 0) };
   if ([v.direct, v.individual, v.group, v.observation, v.other].some(Number.isNaN)) return { error: 'Hours must be numbers between 0 and 168 (quarter hours are fine).' };
   if (v.direct + v.individual + v.group + v.other === 0) return { error: 'Please enter some hours.' };
   if (v.direct + v.individual + v.group + v.other > 168) return { error: 'That adds up to more than 168 hours (a whole week).' };

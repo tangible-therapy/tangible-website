@@ -40,8 +40,6 @@ import { LICENSES } from '../data/hours';
                 <label class="hr-field hr-wide"><span>Other work time <small>(notes, admin, trainings, consults…)</small></span><input type="number" name="other" min="0" max="168" step="0.25" inputmode="decimal" placeholder="0" /></label>
               </div>
               <p class="hr-muted small" id="hr-week-total" aria-live="polite"></p>
-              <label class="hr-field"><span>Note (optional)</span><input name="note" maxlength="200" placeholder="e.g. Covered for Joe on Friday" /></label>
-              <p class="hr-warn">Never include client names or details. This log is for hours only.</p>
               <p class="hr-err" id="hr-form-err" hidden></p>
               <div class="hr-actions">
                 <button class="hr-btn primary" type="submit" id="hr-save">Add hours</button>
@@ -172,7 +170,6 @@ import { LICENSES } from '../data/hours';
           var tot = e.direct + e.individual + e.group + (e.other || 0);
           head.insertBefore(el('span', 'hr-entry-total', h(tot)), head.lastChild);
           row.appendChild(el('p', 'hr-entry-hours', parts.join(' · ')));
-          if (e.note) row.appendChild(el('p', 'hr-entry-note', e.note));
           if (e.supervisorNote && e.status === 'returned') row.appendChild(el('p', 'hr-entry-sup', 'Supervisor: ' + e.supervisorNote));
           var btns = el('div', 'hr-actions');
           (opts.buttons(e) || []).forEach(function (b) { var x = el('button', 'hr-btn small' + (b.cls ? ' ' + b.cls : ''), b.label); x.type = 'button'; x.onclick = b.go; btns.appendChild(x); });
@@ -184,9 +181,9 @@ import { LICENSES } from '../data/hours';
 
       // ---------- CSV ----------
       function csv(log, who) {
-        var rows = [['Supervisee', 'Type', 'Date', 'Direct client care', 'Individual supervision', 'Group supervision', 'Direct observation', 'Other work time', 'Total', 'Status', 'Note', 'Reviewed by', 'Reviewed at']];
+        var rows = [['Supervisee', 'Type', 'Date', 'Direct client care', 'Individual supervision', 'Group supervision', 'Direct observation', 'Other work time', 'Total', 'Status', 'Reviewed by', 'Reviewed at']];
         log.entries.slice().sort(function (a, b) { return a.date < b.date ? -1 : 1; }).forEach(function (e) {
-          rows.push([who, e.kind === 'week' ? 'Week' : 'Session', e.date, e.direct, e.individual, e.group, e.observation, e.other || 0, e.direct + e.individual + e.group + (e.other || 0), STATUS[e.status], e.note || '', e.reviewedBy || '', e.reviewedAt ? e.reviewedAt.slice(0, 10) : '']);
+          rows.push([who, e.kind === 'week' ? 'Week' : 'Session', e.date, e.direct, e.individual, e.group, e.observation, e.other || 0, e.direct + e.individual + e.group + (e.other || 0), STATUS[e.status], e.reviewedBy || '', e.reviewedAt ? e.reviewedAt.slice(0, 10) : '']);
         });
         var text = rows.map(function (r) { return r.map(function (c) { c = String(c); if (/^[=+\-@]/.test(c)) c = "'" + c; return /[",\n]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c; }).join(','); }).join('\n');
         var a = document.createElement('a');
@@ -230,7 +227,7 @@ import { LICENSES } from '../data/hours';
       function startEdit(e) {
         editing = e; var f = $('hr-form');
         f.querySelector('[name=kind][value=' + e.kind + ']').checked = true; kindChanged();
-        ['date', 'direct', 'individual', 'group', 'observation', 'other', 'note'].forEach(function (k) { f.elements[k].value = e[k] || ''; });
+        ['date', 'direct', 'individual', 'group', 'observation', 'other'].forEach(function (k) { f.elements[k].value = e[k] || ''; });
         weekTotal();
         f.elements.date.value = e.date;
         $('hr-form-title').textContent = 'Edit entry'; $('hr-save').textContent = 'Save changes'; $('hr-cancel').hidden = false;
@@ -253,7 +250,7 @@ import { LICENSES } from '../data/hours';
       }
       $('hr-form').addEventListener('submit', function (ev) {
         ev.preventDefault();
-        var f = this, entry = { kind: f.querySelector('[name=kind]:checked').value, date: f.elements.date.value, note: f.elements.note.value };
+        var f = this, entry = { kind: f.querySelector('[name=kind]:checked').value, date: f.elements.date.value };
         ['direct', 'individual', 'group', 'observation', 'other'].forEach(function (k) { entry[k] = f.elements[k].value === '' ? 0 : Number(f.elements[k].value); });
         $('hr-save').disabled = true;
         save(editing ? { action: 'edit', id: editing.id, entry: entry } : { action: 'add', entry: entry }, editing ? 'Entry updated and sent for approval.' : 'Hours added and sent for approval.')
@@ -420,7 +417,6 @@ import { LICENSES } from '../data/hours';
   .hr-entry.returned { border-color: #e7b9b4; background: #fdf6f5; }
   .hr-entry-head { display: flex; justify-content: space-between; gap: .5rem; align-items: center; flex-wrap: wrap; }
   .hr-entry-hours { margin: .35rem 0 0; font-size: .9rem; }
-  .hr-entry-note { margin: .25rem 0 0; font-size: .84rem; color: #6b716c; }
   .hr-entry-sup { margin: .35rem 0 0; font-size: .84rem; color: #8a1c14; }
   .hr-entry .hr-actions { margin-top: .6rem; }
   .hr-wide { grid-column: 1 / -1; }
