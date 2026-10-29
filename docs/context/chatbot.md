@@ -10,6 +10,8 @@
 - **Rules given to the bot** (RULES in chat.mts): answer only from the site information, no clinical advice, crisis -> 988 / 911 / SafeUT, never ask for personal or health details, suggest up to 3 therapists (accepting first) with profile links, short replies, stay on topic.
 - **Crisis messages:** messages matching the CRISIS word list get a fixed reply (988, 911, SafeUT, office phone) without calling the AI.
 
+- **Nudge:** 10 seconds after a page loads, a small "Hi, I'm Tangie! How can I help?" bubble pops up above the avatar, once per visit (sessionStorage key tc.prompted), and not if the visitor already opened the chat. Clicking it opens the chat; the x dismisses it. Change the wait with PROMPT_DELAY and the wording in the .tc-prompt markup in ChatWidget.astro.
+
 ## Privacy
 - The function does not log or store what visitors type; it only logs token counts per reply ([chat] lines in Netlify > Logs > Functions). Netlify says AI Gateway does not store prompts or outputs.
 - The conversation lives only in the visitor's browser tab (sessionStorage key tc.chat.v1) so it survives clicking to another page; it is gone when the tab closes.
