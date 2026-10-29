@@ -9,6 +9,10 @@
 [functions.chat]
   included_files = ["dist/chat-knowledge.json"]
 
+# Staff chatbot: its private knowledge file lives outside the public site (src/integrations/staff-knowledge.mjs)
+[functions.staff-chat]
+  included_files = ["generated/staff-knowledge.json"]
+
 # ---- Redirects carried over from Squarespace ----
 # Old navigation folder URLs
 [[redirects]]

@@ -23,6 +23,9 @@ export const employeeLinks: StaffLink[] = [
   { label: 'Trainings', href: '/ceu' },
 ];
 
+// Name of the staff chatbot (button + chat window on staff pages, src/components/StaffChat.astro).
+export const STAFF_BOT_NAME = 'Ask the Handbook';
+
 // Published ID of the "Submit Hours" Google Form shown on /employeeportal/submit-hours.
 export const SUBMIT_HOURS_FORM = '1FAIpQLScqzjlYy0R3CTIllUWeO3S8ZrC0JPiHJVtlYSYKlogd3t_dYg';
 
