@@ -8,8 +8,8 @@ const starters = ['Who has openings near me?', 'What insurance do you take?', 'H
 ---
 <div class="tc" data-tc>
   <button type="button" class="tc-launch" aria-expanded="false" aria-controls="tc-panel" aria-label="Chat with Tangie, our website assistant" data-tc-toggle>
-    <img class="tc-launch-av" src="/images/tangie-avatar.webp" alt="" width="64" height="64" />
-    <span class="tc-launch-name">Tangie</span>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.2 3.6c-.5.4-1.3.1-1.3-.6V16A2.5 2.5 0 0 1 4 13.5z" /></svg>
+    <span>Ask Tangie</span>
   </button>
 
   <!-- Friendly nudge after a few seconds on the page (once per visit, see PROMPT_DELAY below) -->
@@ -208,14 +208,14 @@ const starters = ['Who has openings near me?', 'What insurance do you take?', 'H
 
 <style is:global>
   .tc { --tc-ink: #2f3530; --tc-dark: var(--charcoal, #3b3f3c); --tc-soft: #eef2ed; --tc-line: #e1e6e0; font-family: Poppins, system-ui, sans-serif; }
-  .tc-launch { position: fixed; right: 20px; bottom: 20px; z-index: 9000; display: flex; flex-direction: column; align-items: center; padding: 0; border: 0; background: none; font: inherit; cursor: pointer; transition: transform .15s; }
-  .tc-launch:hover { transform: translateY(-2px); }
-  .tc-launch:focus-visible { outline: 3px solid var(--charcoal, #3b3f3c); outline-offset: 4px; border-radius: 20px; }
-  .tc-launch-av { display: block; width: 64px; height: 64px; border-radius: 50%; background: #fff; border: 3px solid #fff; box-shadow: 0 8px 22px rgba(30, 36, 31, .28); }
-  .tc-launch-name { position: relative; margin-top: -14px; padding: 6px 16px 5px; border-radius: 300px; background: var(--tc-dark); color: #fff; font-size: 14px; font-weight: 500; line-height: 1.2; box-shadow: 0 6px 16px rgba(30, 36, 31, .25); }
+  /* "Ask Tangie" button: same look as the site's primary buttons (charcoal pill, Poppins 500) */
+  .tc-launch { position: fixed; right: 20px; bottom: 20px; z-index: 9000; display: inline-flex; align-items: center; gap: 9px; padding: 15px 26px 14px 22px; border: 2px solid transparent; border-radius: 300px; background: var(--charcoal, #3b3f3c); color: #fff; font-family: Poppins, system-ui, sans-serif; font-size: 15.5px; font-weight: 500; letter-spacing: .02em; line-height: 1.2; cursor: pointer; box-shadow: 0 8px 24px rgba(30, 36, 31, .25); transition: opacity .2s ease, transform .15s; }
+  .tc-launch:hover { opacity: .88; transform: translateY(-1px); }
+  .tc-launch:focus-visible { outline: 3px solid var(--sage, #acb9ac); outline-offset: 3px; }
+  .tc-launch svg { width: 19px; height: 19px; flex: 0 0 auto; fill: currentColor; }
   .tc.is-open .tc-launch { display: none; }
 
-  .tc-prompt { position: fixed; right: 20px; bottom: 112px; z-index: 9000; display: flex; align-items: flex-start; gap: 4px; max-width: 250px; padding: 4px 4px 4px 0; border-radius: 16px 16px 4px 16px; background: #fff; color: var(--tc-ink); box-shadow: 0 10px 28px rgba(30, 36, 31, .22); animation: tc-pop .35s ease-out; }
+  .tc-prompt { position: fixed; right: 20px; bottom: 88px; z-index: 9000; display: flex; align-items: flex-start; gap: 4px; max-width: 250px; padding: 4px 4px 4px 0; border-radius: 16px 16px 4px 16px; background: #fff; color: var(--tc-ink); box-shadow: 0 10px 28px rgba(30, 36, 31, .22); animation: tc-pop .35s ease-out; }
   .tc-prompt[hidden], .tc.is-open .tc-prompt { display: none; }
   .tc-prompt::after { content: ''; position: absolute; right: 26px; bottom: -7px; width: 14px; height: 14px; background: #fff; transform: rotate(45deg); border-radius: 0 0 3px 0; }
   .tc-prompt-text { position: relative; z-index: 1; padding: 10px 4px 10px 16px; border: 0; background: none; color: inherit; font: inherit; font-size: 14.5px; font-weight: 500; line-height: 1.4; text-align: left; cursor: pointer; }
@@ -270,12 +270,10 @@ const starters = ['Who has openings near me?', 'What insurance do you take?', 'H
   .tc-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
   @media (max-width: 560px) {
-    .tc-launch { right: 14px; bottom: 14px; }
-    .tc-launch-av { width: 56px; height: 56px; }
-    .tc-launch-name { margin-top: -12px; padding: 5px 13px 4px; font-size: 13px; }
-    .tc-prompt { right: 14px; bottom: 96px; max-width: 220px; }
+    .tc-launch { right: 14px; bottom: 14px; padding: 13px 20px 12px 17px; font-size: 14.5px; }
+    .tc-prompt { right: 14px; bottom: 76px; max-width: 220px; }
     .tc-prompt-text { font-size: 14px; }
-    body:has(.tp-sticky:not([hidden])) .tc-prompt { bottom: calc(162px + env(safe-area-inset-bottom)); }
+    body:has(.tp-sticky:not([hidden])) .tc-prompt { bottom: calc(142px + env(safe-area-inset-bottom)); }
     /* Therapist profiles: sit above the sticky Book / Call bar */
     body:has(.tp-sticky:not([hidden])) .tc-launch { bottom: calc(80px + env(safe-area-inset-bottom)); }
     .tc-panel { inset: 0; width: auto; height: 100%; height: 100dvh; border-radius: 0; }

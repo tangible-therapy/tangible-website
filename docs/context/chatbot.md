@@ -1,6 +1,6 @@
 # Website chatbot (test version, added 28 Oct 2026)
 
-"Tangie", a chat assistant with a toucan avatar (public/images/tangie-avatar.webp), in the bottom-right corner of every public page. Visitors ask practical questions (who has openings, insurance, cost, offices, booking) and an AI model answers from the website's own information.
+"Tangie", a chat assistant opened from an "Ask Tangie" button (charcoal pill like the site's primary buttons) in the bottom-right corner; the toucan avatar (public/images/tangie-avatar.webp) shows only inside the open chat window of every public page. Visitors ask practical questions (who has openings, insurance, cost, offices, booking) and an AI model answers from the website's own information.
 
 ## How it works
 - **Bubble:** src/components/ChatWidget.astro, added in src/layouts/Base.astro on every page that isn't noindex (so not on staff pages). Turn it off everywhere with `chatbot: false` in src/data/site.ts.
@@ -10,7 +10,7 @@
 - **Rules given to the bot** (RULES in chat.mts): answer only from the site information, no clinical advice, crisis -> 988 / 911 / SafeUT, never ask for personal or health details, suggest up to 3 therapists (accepting first) with profile links, short replies, stay on topic.
 - **Crisis messages:** messages matching the CRISIS word list get a fixed reply (988, 911, SafeUT, office phone) without calling the AI.
 
-- **Nudge:** 10 seconds after a page loads, a small "Hi, I'm Tangie! How can I help?" bubble pops up above the avatar, once per visit (sessionStorage key tc.prompted), and not if the visitor already opened the chat. Clicking it opens the chat; the x dismisses it. Change the wait with PROMPT_DELAY and the wording in the .tc-prompt markup in ChatWidget.astro.
+- **Nudge:** 10 seconds after a page loads, a small "Hi, I'm Tangie! How can I help?" bubble pops up above the "Ask Tangie" button, once per visit (sessionStorage key tc.prompted), and not if the visitor already opened the chat. Clicking it opens the chat; the x dismisses it. Change the wait with PROMPT_DELAY and the wording in the .tc-prompt markup in ChatWidget.astro.
 
 ## Privacy
 - The function does not log or store what visitors type; it only logs token counts per reply ([chat] lines in Netlify > Logs > Functions). Netlify says AI Gateway does not store prompts or outputs.
