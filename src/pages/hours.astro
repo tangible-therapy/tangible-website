@@ -47,11 +47,11 @@ for (const t of (await getFinderData()).therapists) {
                 <label class="hr-field"><span>To</span><input type="date" name="end" required /></label>
               </div>
               <div class="hr-nums">
-                <label class="hr-field"><span>Direct client care</span><input type="number" name="direct" min="0" step="0.25" inputmode="decimal" placeholder="0" /></label>
-                <label class="hr-field"><span>Individual supervision</span><input type="number" name="individual" min="0" step="0.25" inputmode="decimal" placeholder="0" /></label>
-                <label class="hr-field"><span>Group supervision</span><input type="number" name="group" min="0" step="0.25" inputmode="decimal" placeholder="0" /></label>
-                <label class="hr-field"><span>…of which direct observation</span><input type="number" name="observation" min="0" step="0.25" inputmode="decimal" placeholder="0" /></label>
-                <label class="hr-field hr-wide"><span>Other work time <small>(notes, admin, trainings, consults…)</small></span><input type="number" name="other" min="0" step="0.25" inputmode="decimal" placeholder="0" /></label>
+                <label class="hr-field"><span>Direct client care</span><input inputmode="decimal" autocomplete="off" data-num="dec" type="text" name="direct" placeholder="0" /></label>
+                <label class="hr-field"><span>Individual supervision</span><input inputmode="decimal" autocomplete="off" data-num="dec" type="text" name="individual" placeholder="0" /></label>
+                <label class="hr-field"><span>Group supervision</span><input inputmode="decimal" autocomplete="off" data-num="dec" type="text" name="group" placeholder="0" /></label>
+                <label class="hr-field"><span>…of which direct observation</span><input inputmode="decimal" autocomplete="off" data-num="dec" type="text" name="observation" placeholder="0" /></label>
+                <label class="hr-field hr-wide"><span>Other work time <small>(notes, admin, trainings, consults…)</small></span><input inputmode="decimal" autocomplete="off" data-num="dec" type="text" name="other" placeholder="0" /></label>
               </div>
               <p class="hr-muted small" id="hr-week-total" aria-live="polite"></p>
               <p class="hr-err" id="hr-form-err" hidden></p>
@@ -101,11 +101,11 @@ for (const t of (await getFinderData()).therapists) {
               <div class="hr-nums">
                 <label class="hr-field"><span>License</span><select name="license">{LICENSES.map((l) => <option value={l.id}>{l.label} → {l.goal}</option>)}</select></label>
                 <label class="hr-field"><span>Supervision started</span><input type="date" name="startDate" /></label>
-                <label class="hr-field"><span>Total hours target</span><input type="number" name="total" min="0" step="1" /></label>
-                <label class="hr-field"><span>Direct client care target</span><input type="number" name="direct" min="0" step="1" /></label>
-                <label class="hr-field"><span>Supervision target</span><input type="number" name="supervision" min="0" step="1" /></label>
-                <label class="hr-field"><span>Direct observation target</span><input type="number" name="observation" min="0" step="1" /></label>
-                <label class="hr-field"><span>Group supervision that can count (max)</span><input type="number" name="groupMax" min="0" step="1" /></label>
+                <label class="hr-field"><span>Total hours target</span><input inputmode="numeric" autocomplete="off" data-num="int" type="text" name="total" /></label>
+                <label class="hr-field"><span>Direct client care target</span><input inputmode="numeric" autocomplete="off" data-num="int" type="text" name="direct" /></label>
+                <label class="hr-field"><span>Supervision target</span><input inputmode="numeric" autocomplete="off" data-num="int" type="text" name="supervision" /></label>
+                <label class="hr-field"><span>Direct observation target</span><input inputmode="numeric" autocomplete="off" data-num="int" type="text" name="observation" /></label>
+                <label class="hr-field"><span>Group supervision that can count (max)</span><input inputmode="numeric" autocomplete="off" data-num="int" type="text" name="groupMax" /></label>
               </div>
               <p class="hr-muted small">Defaults follow Utah Code 58-60-405 (July 2026). Requirements vary by license and issue date, so check with DOPL.</p>
               <div class="hr-actions">
@@ -124,6 +124,15 @@ for (const t of (await getFinderData()).therapists) {
       var API = '/api/hours', $ = function (id) { return document.getElementById(id); };
       var mine = null, team = null, detail = null, editing = null;
       var LIC = {}; LICENSES.forEach(function (l) { LIC[l.id] = l; });
+
+      // Hours are typed, never scrolled or clicked up/down: only digits (and one decimal point) stay in the box.
+      document.querySelectorAll('input[data-num]').forEach(function (inp) {
+        inp.addEventListener('input', function () {
+          var v = inp.value.replace(inp.dataset.num === 'int' ? /[^0-9]/g : /[^0-9.]/g, '');
+          if (inp.dataset.num !== 'int') { var i = v.indexOf('.'); if (i >= 0) v = v.slice(0, i + 1) + v.slice(i + 1).replace(/\./g, ''); }
+          if (v !== inp.value) inp.value = v;
+        });
+      });
 
       function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
       function h(n) { n = Math.round(n * 100) / 100; return n.toLocaleString('en-US') + (n === 1 ? ' hr' : ' hrs'); }
