@@ -139,7 +139,7 @@ If you have a concern or question about payroll, please direct those questions t
 
 ## Submitting hours
 
-At the end of each pay period, you are responsible for submitting your hours. Submit them through the **Submit Hours** link in the Employee Portal or through the Slack reminder. If hours are not submitted before payroll is processed, they will be paid in the following pay period. We want you to get paid, so please submit your hours on time!
+At the end of each pay period, you are responsible for submitting your hours. Submit them through the Slack reminder that is posted on the day payroll closes, or any time through **Submit Hours** in the Employee Portal menu. If hours are not submitted before payroll is processed, they will be paid in the following pay period. We want you to get paid, so please submit your hours on time!
 
 ## Part-time vs. full-time employment status
 

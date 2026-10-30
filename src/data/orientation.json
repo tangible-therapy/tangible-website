@@ -158,12 +158,17 @@
     },
     {
      "t": "text",
-     "md": "At the end of each pay period, you are responsible for submitting your hours. If hours are not submitted before payroll is processed, then those hours will need to be paid out at the following pay period. We want you to get paid so please submit those hours on time!\n\nTo submit your hours, you can do so through the employee portal under the submit hours link or via the Slack reminder."
+     "md": "At the end of each pay period, you are responsible for submitting your hours. If hours are not submitted before payroll is processed, then those hours will need to be paid out at the following pay period. We want you to get paid so please submit those hours on time!\n\nThere are two ways to submit your hours:\n\n1. **The Slack reminder.** On the day payroll closes, a reminder to submit your hours is posted in Slack. Open it and submit your hours right from the message.\n2. **The Employee Portal.** Any time, sign in to the Employee Portal and click **Submit Hours** in the menu on the left (on a phone, the menu is the row of buttons at the top of the page)."
     },
     {
      "t": "image",
-     "src": "/images/orientation/untitled-design-31-.png",
-     "alt": ""
+     "src": "/images/orientation/submit-hours-slack.webp",
+     "alt": "Option 1: the Slack reminder posted the day payroll closes, with a Submit hours button"
+    },
+    {
+     "t": "image",
+     "src": "/images/orientation/submit-hours-portal.webp",
+     "alt": "Option 2: Submit Hours highlighted in the Employee Portal menu, opening the hours form"
     }
    ]
   ]
