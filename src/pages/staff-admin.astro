@@ -59,6 +59,7 @@ const offices = OFFICES.map((o) => ({ id: o.id, label: o.label }));
           <div class="sa-checks">{ROLES.map((r) => <label class="chk"><input type="checkbox" name="roles" value={r.id} /> {r.label}</label>)}</div>
         </fieldset>
         <label>Home office<select name="office">{offices.map((o) => <option value={o.id}>{o.label}</option>)}</select></label>
+        <label>Supervisor <span class="sa-opt">(therapists and associates)</span><select name="supervisor"><option value="">None</option></select></label>
         <label class="chk"><input type="checkbox" name="done" /> Already completed orientation (current staff)</label>
       </div>
 
@@ -140,7 +141,8 @@ const offices = OFFICES.map((o) => ({ id: o.id, label: o.label }));
         nhEl.innerHTML = '';
         nh.forEach(function (p) {
           var ob = p.onboarding || {}, done = ob.done || {};
-          var steps = el('div', { class: 'chips' }, STEPS.map(function (st) { return el('span', { class: 'chip ' + (done[st.id] ? 'ok' : 'no'), text: (done[st.id] ? '✓ ' : '○ ') + st.label }); }));
+          var clin = (p.roles || []).indexOf('therapist') >= 0 || (p.roles || []).indexOf('associate') >= 0 || OWNERS.indexOf(p.email) >= 0;
+          var steps = el('div', { class: 'chips' }, STEPS.filter(function (st) { return !st.clinician || clin; }).map(function (st) { return el('span', { class: 'chip ' + (done[st.id] ? 'ok' : 'no'), text: (done[st.id] ? '✓ ' : '○ ') + st.label }); }));
           var status = ob.submittedAt ? 'Finished ' + when(ob.submittedAt) + ' · ready for your approval' : 'Still working on it';
           var ok = el('button', { class: 'sa-btn primary', type: 'button', text: 'Approve' });
           ok.disabled = !ob.submittedAt;
@@ -192,6 +194,14 @@ const offices = OFFICES.map((o) => ({ id: o.id, label: o.label }));
         form.querySelectorAll('[data-pane]').forEach(function (p) { p.hidden = p.dataset.pane !== name; });
         form.dataset.mode = name;
       }
+      // Supervisor choices: everyone with the Clinical supervisor role (not the person themself).
+      function fillSupervisors(current, self) {
+        var sel = form.elements['supervisor']; sel.innerHTML = '';
+        sel.appendChild(el('option', { value: '', text: 'None' }));
+        people.filter(function (x) { return x.status === 'approved' && (x.roles || []).indexOf('supervisor') >= 0 && x.email !== self; })
+          .forEach(function (x) { var o = el('option', { value: x.email, text: x.name || x.email }); if (x.email === current) o.selected = true; sel.appendChild(o); });
+        if (current && sel.value !== current) { var o = el('option', { value: current, text: current }); o.selected = true; sel.appendChild(o); }
+      }
       function openDialog(p) {
         editing = p || null; form.reset(); $('#sa-form-err').hidden = true;
         $('#sa-dlg-title').textContent = p ? 'Edit ' + (p.name || p.email) : 'Add people';
@@ -200,7 +210,8 @@ const offices = OFFICES.map((o) => ({ id: o.id, label: o.label }));
           form.elements['name'].value = p.name || ''; form.elements['email'].value = p.email; form.elements['email'].readOnly = true;
           form.querySelectorAll('[name=roles]').forEach(function (i) { i.checked = (p.roles || []).indexOf(i.value) >= 0; });
           form.elements['office'].value = p.office; form.elements['done'].checked = !!p.orientationComplete;
-        } else form.elements['email'].readOnly = false;
+          fillSupervisors(p.supervisor, p.email);
+        } else { form.elements['email'].readOnly = false; fillSupervisors('', ''); }
         dlg.showModal();
       }
       function formError(t) { var e = $('#sa-form-err'); e.textContent = t; e.hidden = false; }
@@ -232,7 +243,7 @@ const offices = OFFICES.map((o) => ({ id: o.id, label: o.label }));
           var email = form.elements['email'].value.trim().toLowerCase();
           if (!/@tangiblementalhealth\.com$/.test(email)) return formError('Use their @tangiblementalhealth.com email.');
           if (!roles.length) return formError('Pick at least one role.');
-          list = [{ name: form.elements['name'].value.trim(), email: email, roles: roles, office: form.elements['office'].value, status: 'approved', orientationComplete: form.elements['done'].checked }];
+          list = [{ name: form.elements['name'].value.trim(), email: email, roles: roles, office: form.elements['office'].value, status: 'approved', orientationComplete: form.elements['done'].checked, supervisor: form.elements['supervisor'].value }];
         }
         $('#sa-save').disabled = true;
         save(list).then(function () { dlg.close(); }).catch(function (e) { formError(e.message); }).finally(function () { $('#sa-save').disabled = false; });
@@ -256,6 +267,7 @@ const offices = OFFICES.map((o) => ({ id: o.id, label: o.label }));
   .sa-head .sa-btn.primary { background: #fff; color: var(--charcoal); border-color: #fff; }
   .sa-panel { background: #fff; border-radius: 28px; padding: 1.75rem 2rem; margin-bottom: 1.5rem; color: var(--charcoal); }
   .sa-panel.pending { border: 2px solid #e3b341; }
+  .sa-opt { font-size: .8rem; color: #8a8f8b; font-weight: 400; }
   .sa-panel.newhire { border: 2px solid #bcd6c2; }
   .sa-row.nh .chip.ok { background: #e3efe5; color: #23432c; } .sa-row.nh .chip.no { background: #f4f5f4; color: #6b716c; }
   .sa-row.nh .btns button[disabled] { opacity: .45; cursor: not-allowed; }

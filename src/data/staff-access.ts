@@ -34,6 +34,7 @@ export type StaffRecord = {
   office: Office;
   status: 'approved' | 'pending';
   orientationComplete?: boolean;
+  supervisor?: string; // email of their clinical supervisor (set by Reception Onboarding or Staff Admin)
   onboarding?: Onboarding;
   addedBy?: string;
   updatedAt?: string;
@@ -43,12 +44,21 @@ export type StaffRecord = {
 // New-hire checklist on the Employee Portal dashboard (/api/onboarding). Shown to approved staff who haven't
 // finished orientation; when every step is ticked they show up on directors' dashboards, and once a director
 // approves at /staff-admin, orientationComplete becomes true and the checklist disappears.
-export type OnboardingStep = 'slack' | 'orientation' | 'paperwork';
-export const ONBOARDING_STEPS: { id: OnboardingStep; label: string }[] = [
+export type OnboardingStep = 'slack' | 'orientation' | 'paperwork' | 'headshots' | 'supervision';
+// clinician: only for therapists and associates.
+export const ONBOARDING_STEPS: { id: OnboardingStep; label: string; clinician?: boolean }[] = [
   { id: 'slack', label: 'Join Slack' },
   { id: 'orientation', label: 'Complete Orientation' },
   { id: 'paperwork', label: 'Complete Onboarding' },
+  { id: 'headshots', label: 'Schedule headshots', clinician: true },
+  { id: 'supervision', label: 'Schedule supervision', clinician: true },
 ];
+// Who takes headshots (the new hire messages her on Slack).
+export const HEADSHOTS_CONTACT = 'Julie Clegg';
+export const isClinician = (r: StaffRecord | null) => !!r && (r.roles.includes('therapist') || r.roles.includes('associate'));
+// The steps this person's checklist has (owners previewing it see every step).
+export const stepsFor = (r: StaffRecord | null) =>
+  ONBOARDING_STEPS.filter((s) => !s.clinician || isClinician(r) || isOnboardingPreview(r));
 export type Onboarding = {
   done?: Partial<Record<OnboardingStep, string>>; // step → when it was ticked (ISO)
   lessons?: string[]; // orientation lessons opened (slugs), from any device

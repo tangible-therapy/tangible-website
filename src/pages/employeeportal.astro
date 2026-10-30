@@ -37,9 +37,9 @@ const defaultTargets = JSON.stringify(LICENSES[0].targets);
           <p class="pt-eyebrow">New here?</p>
           <h2 id="ob-heading">Let’s get you set up</h2>
           <p class="ob-preview" id="ob-preview" hidden>Preview: you see this because you’re the owner. Ticks are real; approving your finished checklist just resets it.</p>
-          <p class="pt-muted" id="ob-sub">Work through these three steps. When they’re all ticked, your practice director sees it on their dashboard and will finish your onboarding with you.</p>
+          <p class="pt-muted" id="ob-sub">Work through these steps. When they’re all ticked, your practice director sees it on their dashboard and will finish your onboarding with you.</p>
         </div>
-        <p class="ob-count"><strong id="ob-n">0</strong> of 3 done</p>
+        <p class="ob-count"><strong id="ob-n">0</strong> of <span id="ob-total">3</span> done</p>
       </div>
       <div class="ob-bar"><i id="ob-bar"></i></div>
       <ol class="ob-steps">
@@ -74,6 +74,32 @@ const defaultTargets = JSON.stringify(LICENSES[0].targets);
             <div class="ob-acts">
               <a class="pt-btn" href="/onboarding">Go to Onboarding</a>
               <button type="button" class="pt-btn ghost" data-tick="paperwork">I’ve submitted the form</button>
+            </div>
+          </div>
+        </li>
+        <li class="ob-step" data-step="headshots" hidden>
+          <span class="ob-dot" aria-hidden="true"></span>
+          <div class="ob-body">
+            <h3>Schedule your headshots</h3>
+            <p><b data-fill-ob="headshots">Julie Clegg</b> takes our headshots for the website. Send her a message on Slack to find a time. Wear semi-professional clothes in neutral colors (not gray or black).</p>
+            <p class="ob-how">In Slack: click the search bar at the top, type <b data-fill-ob="headshots">Julie Clegg</b>, click her name, then click <b>Message</b>.</p>
+            <div class="ob-draft"><span class="ob-draft-label">You could send:</span><span class="ob-draft-text" data-draft="headshots"></span><button type="button" class="ob-link" data-copy-draft="headshots">Copy</button></div>
+            <div class="ob-acts">
+              <a class="pt-btn" href="https://tangibletherapy.slack.com" target="_blank" rel="noopener">Open Slack</a>
+              <button type="button" class="pt-btn ghost" data-tick="headshots">I’ve messaged Julie</button>
+            </div>
+          </div>
+        </li>
+        <li class="ob-step" data-step="supervision" hidden>
+          <span class="ob-dot" aria-hidden="true"></span>
+          <div class="ob-body">
+            <h3>Schedule supervision</h3>
+            <p class="ob-sup" id="ob-sup"></p>
+            <p class="ob-how" id="ob-sup-how"></p>
+            <div class="ob-draft" id="ob-sup-draft"><span class="ob-draft-label">You could send:</span><span class="ob-draft-text" data-draft="supervision"></span><button type="button" class="ob-link" data-copy-draft="supervision">Copy</button></div>
+            <div class="ob-acts">
+              <a class="pt-btn" href="https://tangibletherapy.slack.com" target="_blank" rel="noopener">Open Slack</a>
+              <button type="button" class="pt-btn ghost" data-tick="supervision" id="ob-sup-tick">I’ve messaged my supervisor</button>
             </div>
           </div>
         </li>
@@ -351,8 +377,11 @@ const defaultTargets = JSON.stringify(LICENSES[0].targets);
           fetch('/api/onboarding', { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ lessons: o.localOnly, skillsReview: o.reviewLocalOnly }) })
             .then(function (r) { return r.ok ? r.json() : null; }).then(function (b) { if (b && b.steps) { ob = b; renderOb(); } }).catch(function () {});
         }
+        var mine = {}; ob.steps.forEach(function (st) { mine[st.id] = 1; });
+        card.querySelectorAll('[data-step]').forEach(function (li) { li.hidden = !mine[li.dataset.step]; });
+        fillDrafts();
         ob.steps.forEach(function (st) {
-          var li = card.querySelector('[data-step="' + st.id + '"]'); var ok = !!done[st.id]; if (ok) n++;
+          var li = card.querySelector('[data-step="' + st.id + '"]'); if (!li) return; var ok = !!done[st.id]; if (ok) n++;
           li.classList.toggle('done', ok);
           card.querySelectorAll('[data-tick="' + st.id + '"]').forEach(function (b) {
             b.hidden = locked || (st.id === 'orientation' && ok);
@@ -361,7 +390,7 @@ const defaultTargets = JSON.stringify(LICENSES[0].targets);
           });
         });
         $('ob-orient-prog').hidden = !!done.orientation; $('ob-orient-prog').textContent = 'Progress: ' + o.viewed + ' of ' + o.total + ' lessons opened · Skills review ' + (o.review ? 'passed' : 'not finished yet') + '.';
-        $('ob-n').textContent = n; $('ob-bar').style.width = Math.round(n / 3 * 100) + '%';
+        $('ob-n').textContent = n; $('ob-total').textContent = ob.steps.length; $('ob-bar').style.width = Math.round(n / ob.steps.length * 100) + '%';
         var d = ob.director || {};
         if (locked) {
           card.classList.add('sent');
@@ -369,6 +398,34 @@ const defaultTargets = JSON.stringify(LICENSES[0].targets);
           $('ob-sub').textContent = 'Your checklist is with ' + (d.name || 'your practice director') + ' for approval. They’ll set up a time with you to finish onboarding, and this list will disappear once they approve it.';
         }
       }
+      // Headshots + supervision: who to message on Slack, and a message they can copy.
+      var drafts = {};
+      function firstOf(n) { return String(n || '').split(/[\s@]/)[0]; }
+      function fillDrafts() {
+        var mineFirst = me && me.firstName ? me.firstName.charAt(0).toUpperCase() + me.firstName.slice(1) : '';
+        var office = me ? (me.officeLabel || me.office || '').replace(/ \(.*\)/, '') : '';
+        var hs = ob.headshots || 'Julie Clegg';
+        document.querySelectorAll('[data-fill-ob="headshots"]').forEach(function (n) { n.textContent = hs; });
+        drafts.headshots = 'Hi ' + firstOf(hs) + '! I’m ' + (mineFirst || '[your name]') + ', new at Tangible' + (office ? ' (' + office + ')' : '') + '. I’d like to schedule my headshots. What times work for you?';
+        var sup = ob.supervisor, d = ob.director || {};
+        if (sup) {
+          $('ob-sup').innerHTML = ''; $('ob-sup').append('Your supervisor is '); var b = document.createElement('b'); b.textContent = sup.name; $('ob-sup').append(b, '. Send them a message on Slack to set up a regular supervision time.');
+          $('ob-sup-how').innerHTML = ''; $('ob-sup-how').append('In Slack: click the search bar at the top, type '); var b2 = document.createElement('b'); b2.textContent = sup.name; $('ob-sup-how').append(b2, ', click their name, then click '); var b3 = document.createElement('b'); b3.textContent = 'Message'; $('ob-sup-how').append(b3, '.');
+          drafts.supervision = 'Hi ' + firstOf(sup.name) + '! I’m ' + (mineFirst || '[your name]') + ', just starting at Tangible. I’d like to set up a regular supervision time with you. What works for you?';
+          $('ob-sup-tick').textContent = $('ob-sup-tick').dataset.label = 'I’ve messaged ' + firstOf(sup.name);
+        } else {
+          $('ob-sup').textContent = 'Your supervisor hasn’t been added to your account yet. Message ' + (d.name || 'your practice director') + ' on Slack to ask who your supervisor will be, then set up a regular supervision time with them.';
+          $('ob-sup-how').textContent = 'In Slack: click the search bar at the top, type ' + (d.name || 'their name') + ', click their name, then click Message.';
+          drafts.supervision = 'Hi ' + (d.name || '') + '! I’m ' + (mineFirst || '[your name]') + ', just starting at Tangible. Who will my supervisor be, so I can set up a regular supervision time?';
+        }
+        document.querySelectorAll('[data-draft]').forEach(function (n) { n.textContent = drafts[n.dataset.draft] || ''; });
+      }
+      document.querySelectorAll('[data-copy-draft]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var t = drafts[b.dataset.copyDraft] || '';
+          if (navigator.clipboard) navigator.clipboard.writeText(t).then(function () { b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); }, function () {});
+        });
+      });
       document.querySelectorAll('[data-tick]').forEach(function (b) {
         b.dataset.label = b.textContent;
         b.addEventListener('click', function () { var on = !(ob.done || {})[b.dataset.tick]; b.disabled = true; obPost(b.dataset.tick, on).then(function () { b.disabled = false; }); });
@@ -451,6 +508,12 @@ const defaultTargets = JSON.stringify(LICENSES[0].targets);
   .ob-link { font: inherit; font-size: .82rem; color: #5d635e; background: none; border: 0; text-decoration: underline; cursor: pointer; padding: .3rem; }
   .ob-acts [hidden] { display: none !important; }
   .ob-msg { font-size: .85rem; color: #8a2f1c; margin: .4rem 0 0; }
+  .ob-how { font-size: .85rem !important; color: #5d635e; }
+  .ob-draft { display: flex; flex-wrap: wrap; align-items: baseline; gap: .2rem .5rem; background: #f4f6f4; border-radius: 10px; padding: .55rem .75rem; margin: 0 0 .7rem; font-size: .88rem; }
+  .ob-draft-label { font-size: .78rem; color: #5d635e; flex-basis: 100%; }
+  .ob-draft-text { flex: 1; min-width: 0; }
+  .ob-step.done .ob-draft, .ob-step.done .ob-how { display: none; }
+  .ob-steps [hidden] { display: none !important; }
   .ob-msg:empty { display: none; }
   .ob-review { margin-bottom: 1.2rem; border: 2px solid #e3b341; }
   .ob-review .ob-msg { color: #23432c; }

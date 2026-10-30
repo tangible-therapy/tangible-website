@@ -1,6 +1,7 @@
 // /api/onboarding — the new-hire checklist on the Employee Portal dashboard (Google sign-in only).
-//   GET                         → { show, steps, done, submittedAt, director, review? }
-//   POST { step, done: bool }   → tick/untick one step (slack | orientation | paperwork)
+//   GET                         → { show, steps, done, submittedAt, director, supervisor, headshots, review? }
+//   POST { step, done: bool }   → tick/untick one step (slack | orientation | paperwork | headshots | supervision;
+//                                 the last two only for therapists/associates, see stepsFor())
 //   POST { lessons?: [slug], skillsReview?: true } → save Orientation progress to the account (any signed-in staff;
 //        sent by public/scripts/orientation.js and the skills review page). When every lesson is opened and the
 //        skills review is passed, the Orientation step ticks itself.
@@ -12,7 +13,7 @@
 // orientation complete, so the checklist disappears from the dashboard.
 import orientation from '../../src/data/orientation.json';
 import { currentPerson, getPerson, savePerson, listPeople } from '../lib/staff-session.ts';
-import { showsOnboarding, isOnboardingPreview, ONBOARDING_STEPS, OFFICES, canManage, type OnboardingStep, type StaffRecord } from '../../src/data/staff-access.ts';
+import { showsOnboarding, isOnboardingPreview, stepsFor, HEADSHOTS_CONTACT, ONBOARDING_STEPS, OFFICES, canManage, type OnboardingStep, type StaffRecord } from '../../src/data/staff-access.ts';
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', 'cache-control': 'private, no-store' } });
@@ -26,23 +27,25 @@ const LESSONS = (orientation as { slug: string }[]).map((l) => l.slug);
 const orientationFinished = (ob: { lessons?: string[]; skillsReview?: string }) =>
   !!ob.skillsReview && LESSONS.every((s) => (ob.lessons || []).includes(s));
 
-const view = (p: StaffRecord) => ({
+const view = async (p: StaffRecord) => ({
   show: showsOnboarding(p),
   preview: isOnboardingPreview(p),
-  steps: ONBOARDING_STEPS,
+  steps: stepsFor(p),
   done: p.onboarding?.done || {},
   submittedAt: p.onboarding?.submittedAt || null,
   lessons: p.onboarding?.lessons || [],
   lessonCount: LESSONS.length,
   skillsReview: !!p.onboarding?.skillsReview,
   director: directorFor(p),
+  supervisor: p.supervisor ? { email: p.supervisor, name: (await getPerson(p.supervisor))?.name || p.supervisor } : null,
+  headshots: HEADSHOTS_CONTACT,
 });
 
 export default async (req: Request) => {
   const me = await currentPerson(req);
   if (!me || me.status !== 'approved') return json({ error: 'Please sign in.' }, 401);
   if (req.method === 'GET') {
-    const out: any = view(me);
+    const out: any = await view(me);
     if (canManage(me)) {
       // Directors/owners: new hires who finished their checklist and are waiting for approval, own office first.
       out.review = (await listPeople())
@@ -65,36 +68,36 @@ export default async (req: Request) => {
     const before = known.size;
     for (const s of (Array.isArray(b.lessons) ? b.lessons : []).slice(0, 200)) if (LESSONS.includes(s)) known.add(s);
     const passed = !!b.skillsReview && !ob.skillsReview;
-    if (known.size === before && !passed) return json(view(p));
+    if (known.size === before && !passed) return json(await view(p));
     ob.lessons = LESSONS.filter((s) => known.has(s));
     if (passed) ob.skillsReview = new Date().toISOString();
     if (showsOnboarding(p) && !ob.submittedAt && orientationFinished(ob)) {
       ob.done = { ...(ob.done || {}), orientation: ob.done?.orientation || new Date().toISOString() };
-      if (ONBOARDING_STEPS.every((s) => ob.done![s.id])) ob.submittedAt = new Date().toISOString();
+      if (stepsFor(p).every((s) => ob.done![s.id])) ob.submittedAt = new Date().toISOString();
     }
     const updated: StaffRecord = { ...p, onboarding: ob };
     await savePerson(updated);
-    return json(view(updated));
+    return json(await view(updated));
   }
 
   const step = b.step as OnboardingStep;
   if (!ONBOARDING_STEPS.some((s) => s.id === step)) return json({ error: 'Unknown step.' }, 400);
 
   const p = (await getPerson(me.email))!;
-  if (!showsOnboarding(p)) return json(view(p));
+  if (!showsOnboarding(p)) return json(await view(p));
   const ob = { ...(p.onboarding || {}) };
-  if (ob.submittedAt) return json({ ...view(p), error: 'Your checklist was already sent to your director.' }, 409);
+  if (ob.submittedAt) return json({ ...(await view(p)), error: 'Your checklist was already sent to your director.' }, 409);
   const done = { ...(ob.done || {}) };
   if (b.done) done[step] = done[step] || new Date().toISOString();
   else delete done[step];
   ob.done = done;
 
-  const finished = ONBOARDING_STEPS.every((s) => done[s.id]);
+  const finished = stepsFor(p).every((s) => done[s.id]);
   if (finished) ob.submittedAt = new Date().toISOString();
   const updated: StaffRecord = { ...p, onboarding: ob };
   await savePerson(updated);
 
-  return json(view(updated));
+  return json(await view(updated));
 };
 
 export const config = { path: '/api/onboarding' };

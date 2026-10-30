@@ -1,6 +1,6 @@
 // /api/staff-admin — the staff list behind /staff-admin. Only owners and directors can use it.
 //   GET                      → everyone on the list
-//   POST { people: [...] }   → add or update people (email, name, roles, office, status, orientationComplete)
+//   POST { people: [...] }   → add or update people (email, name, roles, office, status, orientationComplete, supervisor)
 //   POST { approveOnboarding: email } → approve a new hire's finished checklist (orientation complete)
 //   DELETE ?email=...        → remove someone (they lose access within a minute)
 import { currentPerson, listPeople, getPerson, savePerson, deletePerson } from '../lib/staff-session.ts';
@@ -53,6 +53,7 @@ export default async (req: Request) => {
         office,
         status: raw.status === 'pending' ? 'pending' : 'approved',
         orientationComplete: raw.orientationComplete === undefined ? existing?.orientationComplete : !!raw.orientationComplete,
+        supervisor: raw.supervisor === undefined ? existing?.supervisor : isWorkEmail(String(raw.supervisor).trim().toLowerCase()) ? String(raw.supervisor).trim().toLowerCase() : undefined,
         addedBy: existing?.addedBy || me!.email,
       };
       if (email === me!.email && (rec.status !== 'approved' || (!isOwner(email) && !roles.includes('director')))) {
