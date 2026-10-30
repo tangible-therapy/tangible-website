@@ -1,7 +1,8 @@
 // /api/onboarding — the new-hire checklist on the Employee Portal dashboard (Google sign-in only).
 //   GET                         → { show, steps, done, submittedAt, director, supervisor, headshots, review? }
-//   POST { step, done: bool }   → tick/untick one step (slack | orientation | paperwork | headshots | supervision;
-//                                 the last two only for therapists/associates, see stepsFor())
+//   POST { step, done: bool }   → tick/untick one step (slack | orientation | paperwork | headshots | supervision |
+//                                 inperson; headshots + supervision only for therapists/associates, see stepsFor();
+//                                 inperson only after all the others, and unticking any step unticks it too)
 //   POST { lessons?: [slug], quizzes?: [{ slug, answers }], skillsReview?: true } → save Orientation progress to the
 //        account (any signed-in staff; sent by public/scripts/orientation.js and the skills review page). Quiz answers
 //        are re-checked here against src/data/orientation.json and only saved when 100% correct. When every lesson is
@@ -114,8 +115,11 @@ export default async (req: Request) => {
   const ob = { ...(p.onboarding || {}) };
   if (ob.submittedAt) return json({ ...(await view(p)), error: 'Your checklist was already sent to your director.' }, 409);
   const done = { ...(ob.done || {}) };
+  // In-person onboarding is the last step: only once everything else is done.
+  const others = stepsFor(p).filter((s) => s.id !== 'inperson');
+  if (step === 'inperson' && b.done && !others.every((s) => done[s.id])) return json({ ...(await view(p)), error: 'Finish the other steps first.' }, 409);
   if (b.done) done[step] = done[step] || new Date().toISOString();
-  else delete done[step];
+  else { delete done[step]; delete done.inperson; }
   ob.done = done;
 
   const finished = stepsFor(p).every((s) => done[s.id]);
