@@ -284,6 +284,25 @@ for (const t of (await getFinderData()).therapists) {
 
         var box = $('hr-team'); box.innerHTML = '';
         if (!team.supervisees.length) { box.appendChild(el('p', 'hr-muted', 'No supervisees yet. Choose an associate above to add them. Only staff with the Associate role are listed.')); return; }
+        // "Approve all": every entry waiting for approval from this supervisor's own supervisees.
+        var own = team.supervisees.filter(function (s) { return s.supervisor === team.me && s.pendingCount; });
+        var waiting = own.reduce(function (n, s) { return n + s.pendingCount; }, 0);
+        if (waiting) {
+          var bar = el('div', 'hr-approve-all');
+          bar.appendChild(el('span', null, waiting + (waiting === 1 ? ' entry' : ' entries') + ' waiting for approval from ' + own.length + (own.length === 1 ? ' supervisee' : ' supervisees')));
+          var all = el('button', 'hr-btn primary small', 'Approve all'); all.type = 'button';
+          all.onclick = function () {
+            if (!confirm('Approve all ' + waiting + (waiting === 1 ? ' entry' : ' entries') + ' waiting from ' + own.map(function (s) { return s.superviseeName; }).join(', ') + '?\n\nEntries you sent back for changes are not included.')) return;
+            all.disabled = true; all.textContent = 'Approving…';
+            call('POST', '', { action: 'approveAll' }).then(function (r) {
+              notify('Approved ' + r.entries + (r.entries === 1 ? ' entry' : ' entries') + ' from ' + r.people + (r.people === 1 ? ' supervisee' : ' supervisees') + '.' + (r.failed && r.failed.length ? ' Couldn\u2019t save for ' + r.failed.join(', ') + '; please try again.' : ''), !!(r.failed && r.failed.length));
+              if (detail && !$('hr-detail').hidden) call('GET', '?view=log&email=' + encodeURIComponent(detail.supervisee)).then(function (b) { detail = b; renderDetail(); }).catch(function () {});
+              return loadTeam();
+            }).catch(function (e) { notify(e.message, true); all.disabled = false; all.textContent = 'Approve all'; });
+          };
+          bar.appendChild(all);
+          box.appendChild(bar);
+        }
         var grid = el('div', 'hr-team');
         team.supervisees.sort(function (a, b) { return b.pendingCount - a.pendingCount || a.superviseeName.localeCompare(b.superviseeName); }).forEach(function (s) {
           var card = el('button', 'hr-person'); card.type = 'button';
@@ -446,6 +465,7 @@ for (const t of (await getFinderData()).therapists) {
   .hr-chip.approved { background: #e3f0e5; color: #2f6b3a; }
   .hr-chip.returned { background: #fbeceb; color: #8a1c14; }
   .hr-add { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+  .hr-approve-all { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .6rem 1rem; background: #fff7e8; border: 1px solid #f0dcb4; border-radius: 14px; padding: .75rem 1rem; margin-bottom: 1rem; font-weight: 500; }
   .hr-team { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: .75rem; }
   .hr-person { text-align: left; font: inherit; color: var(--charcoal); background: #f6f7f6; border: 1px solid transparent; border-radius: 18px; padding: 1rem 1.1rem; cursor: pointer; display: flex; flex-direction: column; gap: .15rem; }
   .hr-person:hover, .hr-person:focus-visible { border-color: var(--charcoal); background: #fff; }
