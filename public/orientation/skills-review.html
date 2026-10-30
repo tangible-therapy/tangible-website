@@ -1060,10 +1060,16 @@ function answerChoice(i) {
   if (i === q.a) { P.solved = true; P.fb = null; ui.helpShown = null; } else P.fb = 'Not quite. Try again.';
   save(); renderGuide();
 }
+// Passing the review is saved to the person's account (Google sign-in), so the dashboard checklist knows on any
+// device. Ignored with the shared staff password (no account).
+function saveReviewToAccount() {
+  try { fetch('/api/onboarding', { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ skillsReview: true }) }).catch(() => {}); } catch (e) {}
+}
+if (P.finished) saveReviewToAccount();
 function nextQuestion() {
   if (!P.solved) return;
   P.qi++; P.solved = false; P.fb = null; P.picked = null; ui.helpShown = null;
-  if (P.qi >= QS.length) { P.finished = true; P.qi = QS.length; ui.page = 'done'; }
+  if (P.qi >= QS.length) { P.finished = true; P.qi = QS.length; ui.page = 'done'; saveReviewToAccount(); }
   closeLayer(); save(); render();
 }
 function renderGuide() {
