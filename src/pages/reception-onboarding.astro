@@ -34,66 +34,60 @@ const contractTypes = CONTRACT_TYPES as Record<string, string>;
 // "How?" instructions, shown under each step in a profile. <span data-f="..."> is filled in per person:
 // full, first, email, personal, office, director, directorName, supervisorName, staffline.
 const HOW: Record<string, string> = {
-  folder: `<p>Their folder is made automatically by <b>Start a new hire</b>, inside the shared ${a(DRIVE_EMPLOYEES, 'Employee folder')}. If that didn’t work, make it by hand:</p><ol>
-    <li>Open the ${a(DRIVE_EMPLOYEES, 'Employee folder')} in Google Drive.</li>
-    <li>Click <b>New</b> → <b>New folder</b> and name it <span class="ob-chip" data-f="full">First Last</span>.</li></ol>`,
-  contract: `<p><b>Start a new hire</b> fills in the right contract with their name, start date and pay, and sends it through SignWell in this order: their location director (<span data-f="directorName">the office director</span>), then <b>${CONTRACT_SIGNER}</b> (COO), then the new hire at their personal email. When everyone has signed, the signed copy is saved into their folder and this profile turns green by itself.</p>
-    <p class="pt-muted">To do it by hand:</p><ol>
-    <li>Open the ${a(DRIVE_MANAGEMENT, 'Management folder')}, right-click the right employment contract → <b>Make a copy</b>.</li>
-    <li>Fill in the copy (name, pay, employment status), then <b>File</b> → <b>Download</b> → <b>PDF</b>.</li>
-    <li>Send it to their location director, then ${CONTRACT_SIGNER} (COO), then the new employee to sign.</li>
-    <li>Save the signed copy in their folder, then click <b>Employee contract signed</b> here.</li></ol>`,
-  setup: `<p><b>Finish setup</b> does all of this in one go. If something didn’t work, here’s how to do that part by hand.</p>
+  folder: `<p>Made automatically by <b>Start a new hire</b>. By hand:</p><ol>
+    <li>Open the ${a(DRIVE_EMPLOYEES, 'Employee folder')}.</li>
+    <li><b>New</b> → <b>New folder</b>, named <span class="ob-chip" data-f="full">First Last</span>.</li></ol>`,
+  contract: `<p>Sent automatically by <b>Start a new hire</b> (signing order: <span data-f="directorName">office director</span>, ${CONTRACT_SIGNER}, new hire). Turns green when signed.</p>
+    <p class="pt-muted">By hand:</p><ol>
+    <li>In the ${a(DRIVE_MANAGEMENT, 'Management folder')}, right-click the contract → <b>Make a copy</b>.</li>
+    <li>Fill in name, pay and status → <b>File</b> → <b>Download</b> → <b>PDF</b>.</li>
+    <li>Send for signing: office director, ${CONTRACT_SIGNER}, new hire.</li>
+    <li>Save the signed copy in their folder, then click <b>Employee contract signed</b>.</li></ol>`,
+  setup: `<p><b>Finish setup</b> does all of this. By hand:</p>
     <h4>Tangible email and groups</h4><ol>
-    <li>Open the ${a('https://admin.google.com/ac/users', 'Google Admin console')} → <b>Users</b> → <b>Add new user</b>.</li>
-    <li>Use their first name for the address: <span class="ob-chip" data-f="email">first@tangiblementalhealth.com</span> (first name + last initial if it’s taken). Put their personal email as the secondary email, then <b>Add new user</b>.</li>
-    <li><b>Directory</b> → <b>Groups</b> → add them to the groups for their office (<span data-f="office">their office</span>).</li></ol>
+    <li>${a('https://admin.google.com/ac/users', 'Google Admin')} → <b>Users</b> → <b>Add new user</b>: <span class="ob-chip" data-f="email">first@tangiblementalhealth.com</span> (add last initial if taken), personal email as secondary.</li>
+    <li><b>Directory</b> → <b>Groups</b> → add to <span data-f="office">their office</span>'s groups.</li></ol>
     <h4>Employee Portal access</h4>
-    <p>Ask <span data-f="director">the office director</span> to add them in ${a('/staff-admin', 'Staff Admin')} and leave <b>Already completed orientation</b> unticked: <span class="ob-chip" data-f="staffline">Name, email, role, office</span> <button type="button" class="ob-mini" data-copy="staffline">Copy</button></p>
-    <p class="ob-tip">Until Google sign-in is switched on for the live site, also send them the staff password from the team password manager.</p>
+    <p>Ask <span data-f="director">the office director</span> to add them in ${a('/staff-admin', 'Staff Admin')} (leave <b>Already completed orientation</b> unticked): <span class="ob-chip" data-f="staffline">Name, email, role, office</span> <button type="button" class="ob-mini" data-copy="staffline">Copy</button></p>
     <h4>Welcome email</h4>
     <div class="ob-mail"><p class="ob-mail-meta"><b>To:</b> <span data-f="emailOrPersonal">their email</span><br><b>Subject:</b> Welcome to Tangible!</p><pre class="ob-mail-body" data-f="welcomeBody"></pre></div>
     <div class="ob-actions"><a class="pt-btn ghost" data-mail="welcome" href="#" ${ext}>Open in Gmail</a><button type="button" class="pt-btn ghost" data-copy="welcomeBody">Copy text</button></div>
     <h4>Payroll info</h4>
-    <p>Their pay and start date are saved on their Drive folder so the payroll email to Chelsea can go out by itself once their paperwork comes in (see “Paperwork filed and payroll emailed”).</p>`,
-  slack: `<p>Nothing to do: anyone with a Tangible email can join ${a(SLACK, 'Tangible’s Slack')} on their own, and their Employee Portal checklist walks them through it. Tick this once they’ve joined.</p>
-    <p class="pt-muted">If they can’t get in: open Slack, click <b>Tangible Therapy</b> (top left) → <b>Invite people</b>, and enter <span data-f="email">their Tangible email</span>.</p>`,
+    <p>Pay and start date are saved on their Drive folder for the payroll email.</p>`,
+  slack: `<p>They join ${a(SLACK, 'Slack')} themselves from their portal checklist. Tick once they're in.</p>
+    <p class="pt-muted">If they can't: Slack → <b>Tangible Therapy</b> → <b>Invite people</b> → <span data-f="email">their Tangible email</span>.</p>`,
   simple: `<ol>
-    <li>Open ${a(SIMPLEPRACTICE, 'SimplePractice')} → <b>Settings</b> → <b>Team</b> → <b>Team members</b> → <b>Add new team member</b>.</li>
-    <li>Enter their legal name and <span data-f="email">Tangible email</span> → <b>Continue</b>.</li>
-    <li>Choose <b>Clinician</b> and <b>Full client list</b> → <b>Continue</b>, turn on all permissions → <b>Continue</b>.</li>
-    <li>If they need supervision, pick their supervisor. Specialty: <b>Counselor</b>. Send the invitation.</li></ol>`,
-  paperwork: `<p>This happens by itself once they fill out the onboarding form from their Employee Portal checklist:</p><ol>
-    <li>Their uploads are moved into their ${a(DRIVE_EMPLOYEES, 'Drive folder')} with their legal name (“<span data-f="full">Name</span> - W-4” and so on), and frontdesk@ gets <b>“Onboarding files filed: <span data-f="full">Name</span>”</b>.</li>
-    <li>Within about 10 minutes, Chelsea (nsbcpayroll@gmail.com) gets the payroll email from frontdesk@ with the W-4 and direct deposit form attached, and the filing email gets the Gmail label <b>Payroll sent</b>.</li></ol>
-    <p>Tick this once you see “New employee: <span data-f="full">Name</span>” in frontdesk@’s <b>Sent</b> folder with both attachments.</p>
-    <h4>If it didn’t work</h4><ul>
-    <li><b>“Payroll email waiting”</b>: it says what’s missing. Fix the pay or start date in this profile’s details, or save the missing file in their folder named like the others. It then sends within 10 minutes.</li>
-    <li><b>“NOT filed”</b> or no filing email after 15 minutes: move the files into their folder by hand from the ${a(ONBOARDING_SHEET, 'Onboarding responses')} sheet, send payroll by hand (below) and tell Brady.</li></ul>
+    <li>${a(SIMPLEPRACTICE, 'SimplePractice')} → <b>Settings</b> → <b>Team</b> → <b>Team members</b> → <b>Add new team member</b>.</li>
+    <li>Legal name and <span data-f="email">Tangible email</span> → <b>Continue</b>.</li>
+    <li><b>Clinician</b>, <b>Full client list</b> → <b>Continue</b> → all permissions on → <b>Continue</b>.</li>
+    <li>Supervisor (if needed), specialty <b>Counselor</b> → send invitation.</li></ol>`,
+  paperwork: `<p>Automatic once they submit the onboarding form: files go to their ${a(DRIVE_EMPLOYEES, 'Drive folder')} and frontdesk@ emails payroll. Tick when “New employee: <span data-f="full">Name</span>” is in frontdesk@'s <b>Sent</b> folder.</p>
+    <h4>If it didn't work</h4><ul>
+    <li><b>“Payroll email waiting”</b>: fix what it lists (pay, start date or a missing file). It resends within 10 minutes.</li>
+    <li><b>“NOT filed”</b> or nothing after 15 minutes: move the files from the ${a(ONBOARDING_SHEET, 'Onboarding responses')} sheet into their folder, send payroll by hand and tell Brady.</li></ul>
     <div class="ob-actions"><a class="pt-btn ghost" data-mail="payroll" href="#" ${ext}>Send payroll email by hand</a></div>
-    <p class="ob-tip">Gmail can’t attach the files for you: add the W-4 and direct deposit form before sending, and check Sent first so it doesn’t go twice.</p>`,
+    <p class="ob-tip">Attach the W-4 and direct deposit form yourself, and check Sent first so it doesn't go twice.</p>`,
   malpractice: `<ol>
-    <li>Open the ${a('https://www.insure-portal.com/User/', 'malpractice insurance portal')} and sign in (the login is in the team password manager).</li>
-    <li><b>Make changes to my policy</b> → <b>Add something</b> → <b>Add an employee</b>, add them and <b>Save</b>.</li></ol>`,
+    <li>Sign in to the ${a('https://www.insure-portal.com/User/', 'malpractice portal')} (login in the password manager).</li>
+    <li><b>Make changes to my policy</b> → <b>Add something</b> → <b>Add an employee</b> → <b>Save</b>.</li></ol>`,
   hours: `<ol>
-    <li>Make sure they have the <b>Associate (pre-licensed)</b> role.</li>
-    <li>Ask their clinical supervisor to open the ${a('/hours', 'Supervision Hours')} → <b>My supervisees</b> → add them and set their license track, start date and hour targets.</li></ol>`,
+    <li>Check they have the <b>Associate (pre-licensed)</b> role.</li>
+    <li>Ask their supervisor to add them in ${a('/hours', 'Supervision Hours')} → <b>My supervisees</b>.</li></ol>`,
   availibility: `<ol>
-    <li>Open ${a(SIMPLEPRACTICE, 'SimplePractice')}, go to their calendar → gear icon → <b>View availability schedule</b>.</li>
-    <li>Click a time, title it <b>Opening</b> (their schedule is in the ${a(ONBOARDING_SHEET, 'Onboarding responses')} sheet), set it to repeat, pick the location and tick <b>Telehealth</b>.</li>
-    <li>Make sure the services match the screenshot, then <b>Save</b>. Add each time window separately.</li></ol>
+    <li>${a(SIMPLEPRACTICE, 'SimplePractice')} → their calendar → gear → <b>View availability schedule</b>.</li>
+    <li>Click a time, title <b>Opening</b>, repeat, location, tick <b>Telehealth</b>. Their schedule is in the ${a(ONBOARDING_SHEET, 'Onboarding responses')} sheet.</li>
+    <li>Match the services to the screenshot → <b>Save</b>. One window per time block.</li></ol>
     <img class="ob-shot" src="/images/screenshot-2025-11-24-at-3-57-40-pm-b0f670.png" alt="SimplePractice availability window showing the services to offer" width="858" height="570" loading="lazy" decoding="async">`,
   'booking-id': `<ol>
-    <li>In SimplePractice go to <b>Settings</b> → <b>Widgets</b> → <b>Appointment request</b>.</li>
-    <li>Preview their row and copy the <b>clinicianId</b> number into the <b>SimplePractice clinician ID</b> column of their row in the website profiles tab.</li></ol>`,
-  website: `<p>Use the ${a('/employeeportal/website-profile', 'Website Profiles')} page. No code needed: it fills in the tangible sheet for you, and the website updates itself from that sheet.</p><ol>
-    <li>Check first: their onboarding form answers (populations, modalities, specialties, photo, birthday) are added to the sheet automatically, so they may already be there. Start typing <span data-f="full">their name</span> in the name box; if they're found, their current info fills in.</li>
-    <li>Fill in or fix anything missing, especially <b>Credential</b>, <b>Office</b>, <b>Photo</b> (their headshot), <b>Bio</b> and the <b>SimplePractice clinician ID</b> (from the step above). Then click <b>Save</b>. Blank boxes never erase what's already there.</li>
-    <li>Type their name exactly as on the sheet (first + last). If the page warns “Not on the website or the sheet yet”, double-check the spelling before saving, so they aren't added twice.</li>
-    <li>In the ${a(THERAPIST_SHEET, 'tangible sheets')} Google Sheet, type their openings after the colon on their highlighted line in the <b>openings</b> tab, and tick the plans they take in the <b>Insurances</b> tab (these two are still edited in the sheet).</li>
-    <li>They show up on the website about 15 minutes later, but only once they have both a photo and a bio. The <b>Website status</b> column in the sheet's website profiles tab says what's missing.</li></ol>
+    <li>SimplePractice → <b>Settings</b> → <b>Widgets</b> → <b>Appointment request</b>.</li>
+    <li>Preview their row and copy the <b>clinicianId</b> (you'll enter it in the next step).</li></ol>`,
+  website: `<ol>
+    <li>Open ${a('/employeeportal/website-profile', 'Website Profiles')} and type <span data-f="full">their name</span>. Their onboarding answers may already be there.</li>
+    <li>Fill in what's missing: credential, office, photo, bio, SimplePractice clinician ID → <b>Save</b>.</li>
+    <li>In the ${a(THERAPIST_SHEET, 'tangible sheet')}: add their openings (<b>openings</b> tab) and insurance (<b>Insurances</b> tab).</li></ol>
+    <p class="pt-muted">Live in about 15 minutes once they have a photo and bio.</p>
     <div class="ob-actions"><a class="pt-btn ghost" href="/employeeportal/website-profile" ${ext}>Open Website Profiles</a> <a class="pt-btn ghost" href="${THERAPIST_SHEET}" ${ext}>Open the tangible sheet</a></div>`,
-  'psychology-today': `<p class="pt-muted">Step-by-step instructions haven’t been written yet.</p>`,
+  'psychology-today': `<p class="pt-muted">Instructions coming soon.</p>`,
 };
 const steps = HIRE_STEPS.map((s) => ({ id: s.id, title: s.title, who: s.who || '', auto: !!s.auto }));
 ---
@@ -398,7 +392,7 @@ const steps = HIRE_STEPS.map((s) => ({ id: s.id, title: s.title, who: s.who || '
         out += '<div class="ob-box">You chose to send the contract by hand. When it’s signed and saved in their folder, click <b>Employee contract signed</b> below.</div>';
       }
       if (!h.contractSigned) out += '<div class="ob-row"><button type="button" class="pt-btn ghost" data-act="signed" data-two="Employee contract signed">Employee contract signed</button><span class="pt-muted ob-small" style="margin:0">Only if the automatic check didn’t catch it. Two clicks.</span></div>';
-      out += how('contract', 'How the contract works / doing it by hand') + (h.folder ? '' : how('folder', 'Making the folder by hand'));
+      out += how('contract', 'How?') + (h.folder ? '' : how('folder', 'Make the folder by hand'));
       return out + '</section>';
     }
     // Paperwork step: what frontdesk@'s Payroll email script reported for this person.
@@ -409,7 +403,7 @@ const steps = HIRE_STEPS.map((s) => ({ id: s.id, title: s.title, who: s.who || '
       else if (p && p.state === 'failed') { cls = 'red'; text = 'Email failed'; }
       else if (p && p.state === 'waiting') { cls = 'amber'; text = 'Payroll email waiting'; }
       else { cls = 'amber'; text = 'Waiting for their paperwork'; }
-      var detail = p && p.state !== 'sent' ? p.detail : (!p ? (payrollTracking ? 'They haven’t sent their onboarding form yet. This updates by itself.' : 'Automatic status isn’t connected yet (Front desk mailer), so check frontdesk@’s Sent folder and tick this by hand.') : '');
+      var detail = p && p.state !== 'sent' ? p.detail : (!p ? (payrollTracking ? 'Waiting for their onboarding form. Updates by itself.' : 'Not connected: check frontdesk@’s Sent folder and tick by hand.') : '');
       return '<p class="ob-paystate"><span class="ob-pill ' + cls + '">' + text + '</span>' + (detail ? ' <span class="ob-paydetail">' + esc(detail) + '</span>' : '') + '</p>';
     }
     function checklist(h) {
@@ -421,10 +415,10 @@ const steps = HIRE_STEPS.map((s) => ({ id: s.id, title: s.title, who: s.who || '
         out += '<li class="ob-item' + (s.auto ? ' auto' : '') + (d ? ' done' : '') + '"><label class="ob-tick"><input type="checkbox" data-step="' + s.id + '"' + (d ? ' checked' : '') + '><span>' + esc(s.title) + '</span></label><div class="ob-item-body">';
         if (s.auto) {
           var allOk = h.account && h.welcome && h.folder && h.folder.payroll && h.folder.payroll.payRate && h.folder.payroll.startDate;
-          if (!allOk) out += '<p>One button, two clicks: creates their Tangible email and adds their groups, gives them Employee Portal access, saves their pay and start date for the automatic payroll email, and emails them the welcome email from frontdesk@.</p>' +
+          if (!allOk) out += '<p>Creates their Tangible email and groups, Employee Portal access, payroll info and welcome email.</p>' +
             '<div class="ob-row"><button type="button" class="pt-btn" data-act="finish" data-two="' + (h.finish && h.finish.length ? 'Try again' : 'Finish setup') + '"' + (busy[h.id] === 'finish' ? ' disabled aria-busy="true"' : '') + '>' + (busy[h.id] === 'finish' ? 'Working…' : (h.finish && h.finish.length ? 'Try again' : 'Finish setup')) + '</button></div>';
           if (h.finish && h.finish.length) out += '<ul class="ob-results">' + h.finish.map(function (r) { return '<li class="' + (r.ok ? 'ok' : 'bad') + '">' + esc(r.text) + '</li>'; }).join('') + '</ul>';
-          out += how('setup', 'Doing it by hand');
+          out += how('setup', 'Do it by hand');
         } else {
           if (s.id === 'paperwork') out += payrollLine(h);
           out += how(s.id);
@@ -434,7 +428,7 @@ const steps = HIRE_STEPS.map((s) => ({ id: s.id, title: s.title, who: s.who || '
         out += '</div></li>';
       });
       out += '</ul><div class="ob-complete"><button type="button" class="pt-btn" data-act="complete" data-two="Onboarding complete"' + (n === list.length ? '' : ' disabled') + '>Onboarding complete</button>' +
-        '<p class="pt-muted ob-small">' + (n === list.length ? 'Two clicks. Moves ' + esc(h.first) + ' to Completed.' : 'Tick every step to finish their onboarding.') + '</p></div></section>';
+        '<p class="pt-muted ob-small">' + (n === list.length ? 'Two clicks. Moves ' + esc(h.first) + ' to Completed.' : 'Tick every step first.') + '</p></div></section>';
       return out;
     }
     function renderProfile() {
@@ -536,7 +530,7 @@ const steps = HIRE_STEPS.map((s) => ({ id: s.id, title: s.title, who: s.who || '
             .then(function (res) {
               out.push({ ok: true, text: res.already ? 'Welcome email: already sent before, not sent again.' : 'Welcome email sent from frontdesk@ to ' + (res.to || []).join(' and ') + '.' });
               return upd(h, { welcome: { sentAt: res.sentAt || new Date().toISOString(), to: res.to || [], already: !!res.already } }).then(function (nh) { h = nh; });
-            }, function (e) { out.push({ ok: false, text: 'Welcome email not sent: ' + e.message + (/by hand/.test(e.message) ? '' : ' Send it by hand (“Doing it by hand” below).') }); });
+            }, function (e) { out.push({ ok: false, text: 'Welcome email not sent: ' + e.message + (/by hand/.test(e.message) ? '' : ' Send it by hand (“Do it by hand” below).') }); });
         })
         .then(function () { return upd(h, { finish: out }); });
     }
