@@ -33,21 +33,21 @@ import { SUBMIT_HOURS_FORM } from '../../data/staff';
           <label class="sh-field sh-wide">
             <span>Hours worked <b aria-hidden="true">*</b></span>
             <small>Sessions, no-shows or late cancels, meetings and consult calls (a consult call counts as .25 hrs). Don’t count PTO here.</small>
-            <input type="number" name="hours" min="0" max="300" step="0.25" inputmode="decimal" required />
+            <input inputmode="decimal" autocomplete="off" data-num="dec" type="text" name="hours" required />
           </label>
           <label class="sh-field">
             <span>PTO hours used</span>
             <small>Leave blank if none.</small>
-            <input type="number" name="pto" min="0" max="300" step="0.25" inputmode="decimal" placeholder="0" />
+            <input inputmode="decimal" autocomplete="off" data-num="dec" type="text" name="pto" placeholder="0" />
           </label>
           <label class="sh-field">
             <span>No-shows</span>
             <small>How many sessions were no-shows.</small>
-            <input type="number" name="noShows" min="0" max="300" step="1" inputmode="numeric" placeholder="0" />
+            <input inputmode="numeric" autocomplete="off" data-num="int" type="text" name="noShows" placeholder="0" />
           </label>
           <label class="sh-field sh-wide">
             <span>Of your hours worked, how many were meetings, supervision or consult calls?</span>
-            <input type="number" name="meetings" min="0" max="300" step="0.25" inputmode="decimal" placeholder="0" />
+            <input inputmode="decimal" autocomplete="off" data-num="dec" type="text" name="meetings" placeholder="0" />
           </label>
         </div>
       </section>
@@ -58,29 +58,29 @@ import { SUBMIT_HOURS_FORM } from '../../data/staff';
         <div class="sh-fields">
           <label class="sh-field">
             <span>Direct client care</span>
-            <input type="number" name="direct" min="0" step="0.25" inputmode="decimal" placeholder="0" />
+            <input inputmode="decimal" autocomplete="off" data-num="dec" type="text" name="direct" placeholder="0" />
           </label>
           <label class="sh-field" id="sh-relational" hidden>
             <span>…of which relational</span>
             <small>Two or more clients in the session, such as couples or families</small>
-            <input type="number" name="relational" min="0" step="0.25" inputmode="decimal" placeholder="0" />
+            <input inputmode="decimal" autocomplete="off" data-num="dec" type="text" name="relational" placeholder="0" />
           </label>
           <label class="sh-field">
             <span>Individual supervision</span>
-            <input type="number" name="individual" min="0" step="0.25" inputmode="decimal" placeholder="0" />
+            <input inputmode="decimal" autocomplete="off" data-num="dec" type="text" name="individual" placeholder="0" />
           </label>
           <label class="sh-field">
             <span>Group supervision</span>
-            <input type="number" name="group" min="0" step="0.25" inputmode="decimal" placeholder="0" />
+            <input inputmode="decimal" autocomplete="off" data-num="dec" type="text" name="group" placeholder="0" />
           </label>
           <label class="sh-field">
             <span>…of which direct observation</span>
-            <input type="number" name="observation" min="0" step="0.25" inputmode="decimal" placeholder="0" />
+            <input inputmode="decimal" autocomplete="off" data-num="dec" type="text" name="observation" placeholder="0" />
           </label>
           <label class="sh-field sh-wide">
             <span>Other work time</span>
             <small>Notes, admin, trainings… (counts toward your total hours only)</small>
-            <input type="number" name="other" min="0" step="0.25" inputmode="decimal" placeholder="0" />
+            <input inputmode="decimal" autocomplete="off" data-num="dec" type="text" name="other" placeholder="0" />
           </label>
         </div>
         <p class="pt-note" id="sh-sup-status"></p>
@@ -110,6 +110,15 @@ import { SUBMIT_HOURS_FORM } from '../../data/staff';
     (function () {
       var $ = function (id) { return document.getElementById(id); };
       var f = $('sh-form'), state = null;
+
+      // Hours are typed, never scrolled or clicked up/down: only digits (and one decimal point) stay in the box.
+      document.querySelectorAll('input[data-num]').forEach(function (inp) {
+        inp.addEventListener('input', function () {
+          var v = inp.value.replace(inp.dataset.num === 'int' ? /[^0-9]/g : /[^0-9.]/g, '');
+          if (inp.dataset.num !== 'int') { var i = v.indexOf('.'); if (i >= 0) v = v.slice(0, i + 1) + v.slice(i + 1).replace(/\./g, ''); }
+          if (v !== inp.value) inp.value = v;
+        });
+      });
       var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       function d(iso) { var p = iso.split('-'); return { y: +p[0], m: +p[1] - 1, d: +p[2] }; }
       function range(p) {
