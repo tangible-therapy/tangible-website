@@ -95,7 +95,7 @@ function refreshProfileStatus() {
   var status = values.map(function (r) {
     if (!String(r[0]).trim()) return [''];
     if (/^(n|no)$/i.test(String(r[7]).trim())) return ['Hidden from the website (Show on website = No)'];
-    if (!String(r[2]).trim()) return ['Waiting for photo (a new therapist goes on the website once a photo link is added)'];
+    if (!String(r[2]).trim()) return ['Waiting for photo (a new therapist goes on the website once both a photo and a bio are in)'];
     var id = driveId_(r[2]);
     if (!id) return ['Photo: paste the Google Drive link to the photo (Share > Copy link)'];
     try {
@@ -104,6 +104,7 @@ function refreshProfileStatus() {
     } catch (err) {
       return ["Can't open the photo: share it with brady@tangiblementalhealth.com or put it in his Drive"];
     }
+    if (!String(r[3]).trim()) return ['Photo OK. No bio: a NEW therapist needs a bio before they go on the website (therapists already on the site keep their current bio)'];
     return ['Ready: the website updates about 15 minutes after the last edit'];
   });
   sheet.getRange(2, 9, n, 1).setValues(status);

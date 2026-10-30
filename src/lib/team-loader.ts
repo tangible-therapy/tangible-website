@@ -3,7 +3,8 @@
 //
 // For each row in that tab (matched by name, same spelling as the openings tab):
 //   - Therapist with no website profile yet -> a new profile at /ourteam/p/<first-last>, but ONLY
-//     once the Photo column has a Google Drive photo the feed can open. No photo = not on the site.
+//     once the Photo column has a Google Drive photo the feed can open AND the Bio column is filled in.
+//     No photo or no bio = not on the site yet (rows come from the onboarding form before a bio exists).
 //   - Therapist who already has a profile -> any filled cell replaces that part of the profile
 //     (photo, bio, credential, SEO description, SimplePractice ID, online booking, show/hide).
 //     Blank cells keep what the .md file says.
@@ -83,8 +84,8 @@ export function teamLoader(files: Loader): Loader {
         const slug = existingId ?? slugify(name);
 
         if (!existing) {
-          // New therapist: only once the photo is in.
-          if (!p.photoId) { waiting++; continue; }
+          // New therapist: only once both the photo and the bio are in.
+          if (!p.photoId || !clean(p.bio)) { waiting++; continue; }
           if (ctx.store.has(slug)) { ctx.logger.warn(`[team-sheet] Row ${p.row} (${name}): the web address /ourteam/p/${slug} is already used by another profile; skipped.`); continue; }
           const photo = await savePhoto(ctx, p, slug);
           if (!photo) { waiting++; continue; }
@@ -131,7 +132,7 @@ export function teamLoader(files: Loader): Loader {
         });
         updated++;
       }
-      ctx.logger.info(`[team-sheet] website profiles tab: ${added} new, ${updated} updated, ${waiting} waiting for a photo`);
+      ctx.logger.info(`[team-sheet] website profiles tab: ${added} new, ${updated} updated, ${waiting} waiting for a photo or bio`);
     },
   };
 }

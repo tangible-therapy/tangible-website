@@ -24,7 +24,9 @@ export default async (req: Request) => {
   const startDate = /^\d{4}-\d{2}-\d{2}$/.test(String(b.startDate ?? '')) ? String(b.startDate) : '';
 
   try {
-    const out = await callScript({ action: 'folder', name, payRate, startDate });
+    // Office from the New hire box, saved on the folder so their onboarding answers land under the right office.
+    const office = ['orem', 'provo', 'sandy', 'virtual'].includes(String(b.office)) ? String(b.office) : '';
+    const out = await callScript({ action: 'folder', name, payRate, startDate, office });
     if (!out.url) return json({ error: 'Google didn’t return the folder link.' }, 502);
     return json({ id: out.id ? String(out.id) : null, url: String(out.url), name: String(out.name || name), created: !!out.created, payroll: out.payroll || null });
   } catch (e) {
