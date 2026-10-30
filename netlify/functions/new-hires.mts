@@ -41,6 +41,33 @@ function result(v: unknown) {
   const s = JSON.stringify(v);
   return s.length > 6000 ? null : JSON.parse(s);
 }
+// Asks frontdesk@'s Payroll email script (through the Front desk mailer, NEW_HIRE_MAIL_SCRIPT) what happened
+// with the payroll email for everyone still waiting on it, and ticks "Paperwork filed and payroll emailed"
+// by itself once it was sent. Never blocks the page for long: gives up after 6 seconds.
+async function refreshPayroll(all: HireRecord[]) {
+  const target = Netlify.env.get('NEW_HIRE_MAIL_SCRIPT');
+  const pending = all.filter((h) => h.status === 'active' && h.contractSigned && h.folder?.id && !h.done.paperwork);
+  if (!target || !pending.length) return;
+  try {
+    const r = await fetch(target, {
+      method: 'POST', headers: { 'content-type': 'application/json' }, redirect: 'follow', signal: AbortSignal.timeout(6000),
+      body: JSON.stringify({ kind: 'payrollStatus', folderIds: pending.map((h) => h.folder!.id) }),
+    });
+    const out = await r.json().catch(() => null);
+    const states = out && out.states && typeof out.states === 'object' ? out.states : {};
+    for (const h of pending) {
+      const st = states[h.folder!.id as string];
+      if (!st || !['waiting', 'sent', 'failed'].includes(st.state)) continue;
+      const next = { state: String(st.state), detail: txt(st.detail, 240), at: txt(st.at, 40) };
+      if (JSON.stringify(next) === JSON.stringify(h.payrollStatus || null) && !(next.state === 'sent' && !h.done.paperwork)) continue;
+      h.payrollStatus = next;
+      if (next.state === 'sent') h.done = { ...h.done, paperwork: { at: next.at || new Date().toISOString(), by: 'automatic' } };
+      await saveHire(h);
+    }
+  } catch (e) {
+    console.warn('[new-hires] payroll status check failed:', String(e).slice(0, 120));
+  }
+}
 const done = (h: HireRecord) => stepsFor(h.role).every((s) => h.done[s.id]);
 
 export default async (req: Request) => {
@@ -51,10 +78,11 @@ export default async (req: Request) => {
 
   const all = await listHires();
   if (!isPost) {
+    await refreshPayroll(all);
     const hires = all.filter((h) => h.status === 'active').sort((a, b) => a.createdAt.localeCompare(b.createdAt));
     const completed = all.filter((h) => h.status === 'completed').sort((a, b) => String(b.completedAt).localeCompare(String(a.completedAt)))
       .slice(0, 20).map((h) => ({ id: h.id, name: `${h.first} ${h.last}`, role: h.role, completedAt: h.completedAt, completedBy: h.completedBy }));
-    return json({ hires, completed });
+    return json({ hires, completed, payrollTracking: !!Netlify.env.get('NEW_HIRE_MAIL_SCRIPT') });
   }
 
   const b = await req.json().catch(() => ({}) as any);

@@ -75,12 +75,9 @@ const HOW: Record<string, string> = {
   malpractice: `<ol>
     <li>Open the ${a('https://www.insure-portal.com/User/', 'malpractice insurance portal')} and sign in (the login is in the team password manager).</li>
     <li><b>Make changes to my policy</b> → <b>Add something</b> → <b>Add an employee</b>, add them and <b>Save</b>.</li></ol>`,
-  supervision: `<p>Their dashboard checklist tells them their supervisor (<span data-f="supervisorName">set in their details</span>) and asks them to set up a regular time on Slack. Tick this once it’s on both calendars.</p>
-    <p class="pt-muted">If they haven’t, reach out to their supervisor, find a time, and add a recurring event to both calendars.</p>`,
   hours: `<ol>
     <li>Make sure they have the <b>Associate (pre-licensed)</b> role.</li>
     <li>Ask their clinical supervisor to open the ${a('/hours', 'Hours Tracker')} → <b>My supervisees</b> → add them and set their license track, start date and hour targets.</li></ol>`,
-  photos: `<p>Their dashboard checklist asks them to message Julie Clegg on Slack to schedule headshots (semi-professional clothes in neutral colors, not gray or black). Tick this once it’s scheduled.</p>`,
   availibility: `<ol>
     <li>Open ${a(SIMPLEPRACTICE, 'SimplePractice')}, go to their calendar → gear icon → <b>View availability schedule</b>.</li>
     <li>Click a time, title it <b>Opening</b> (their schedule is in the ${a(ONBOARDING_SHEET, 'Onboarding responses')} sheet), set it to repeat, pick the location and tick <b>Telehealth</b>.</li>
@@ -107,9 +104,17 @@ const steps = HIRE_STEPS.map((s) => ({ id: s.id, title: s.title, who: s.who || '
     <p class="pt-muted ob-count" aria-live="polite" id="ob-count"></p>
   </div>
 
-  <div class="ob-layout">
-    <aside class="ob-side">
-      <section class="pt-card ob-hire">
+  <div class="ob-home" id="ob-home">
+      <nav class="pt-card ob-people" aria-label="People being onboarded">
+        <h2>Being onboarded</h2>
+        <ul class="ob-list" id="ob-list"></ul>
+        <p class="pt-muted ob-empty" id="ob-list-empty" hidden>Nobody yet. Add a new hire with the form.</p>
+        <details class="ob-done-list" id="ob-done-wrap" hidden>
+          <summary>Completed (<span id="ob-done-n">0</span>)</summary>
+          <ul id="ob-done-ul"></ul>
+        </details>
+      </nav>
+      <section class="pt-card ob-hire" aria-label="Add a new hire">
         <h2>New hire</h2>
         <p class="pt-muted">Fill these in and click <b>Start a new hire</b>. It makes their profile, their Google Drive folder and sends their contract for signing.</p>
         <div class="ob-fields">
@@ -136,18 +141,10 @@ const steps = HIRE_STEPS.map((s) => ({ id: s.id, title: s.title, who: s.who || '
         <button type="button" class="pt-btn ob-start" id="ob-start">Start a new hire</button>
         <p class="ob-status" id="ob-status" role="status" aria-live="polite"></p>
       </section>
+  </div>
 
-      <nav class="pt-card ob-people" aria-label="People being onboarded">
-        <h2>Being onboarded</h2>
-        <ul class="ob-list" id="ob-list"></ul>
-        <p class="pt-muted ob-empty" id="ob-list-empty" hidden>Nobody yet. Add a new hire above.</p>
-        <details class="ob-done-list" id="ob-done-wrap" hidden>
-          <summary>Completed (<span id="ob-done-n">0</span>)</summary>
-          <ul id="ob-done-ul"></ul>
-        </details>
-      </nav>
-    </aside>
-
+  <div class="ob-view" id="ob-view" hidden>
+    <a class="ob-back" href="/reception-onboarding">← All new hires</a>
     <main class="ob-main" id="ob-profile" aria-live="polite">
       <div class="pt-card ob-placeholder"><p class="pt-muted">Loading…</p></div>
     </main>
@@ -158,8 +155,10 @@ const steps = HIRE_STEPS.map((s) => ({ id: s.id, title: s.title, who: s.who || '
 <style is:global>
   .ob h2 { font-size: 1.15rem; font-weight: 600; margin: 0 0 .3rem; }
   .ob h4 { font-size: .92rem; font-weight: 600; margin: 1rem 0 .3rem; }
-  .ob .ob-layout { display: grid; grid-template-columns: 330px minmax(0, 1fr); gap: 1.5rem; align-items: start; }
-  .ob .ob-side { display: flex; flex-direction: column; gap: 1rem; }
+  .ob .ob-home { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 1.5rem; align-items: start; }
+  .ob .ob-view { max-width: 860px; }
+  .ob .ob-back { display: inline-block; font-size: .9rem; font-weight: 600; color: var(--charcoal); text-decoration: none; margin: 0 0 .8rem; }
+  .ob .ob-back:hover { text-decoration: underline; }
   .ob .ob-fields { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: .6rem; margin: .9rem 0; }
   .ob .ob-wide { grid-column: 1 / -1; }
   .ob .ob-chk { flex-direction: row !important; align-items: center; gap: .45rem; font-size: .88rem; }
@@ -175,12 +174,13 @@ const steps = HIRE_STEPS.map((s) => ({ id: s.id, title: s.title, who: s.who || '
   .ob .ob-status.err, .ob .ob-err { color: #8a2f1c; }
 
   /* people list */
-  .ob .ob-list { list-style: none; margin: .5rem 0 0; padding: 0; display: flex; flex-direction: column; gap: .4rem; }
-  .ob .ob-person { width: 100%; text-align: left; font: inherit; color: var(--charcoal); background: #fff; border: 1.5px solid #e0e4e0; border-radius: 12px; padding: .6rem .7rem; cursor: pointer; display: flex; flex-direction: column; gap: .3rem; }
-  .ob .ob-person:hover { border-color: #b5bcb6; }
-  .ob .ob-person[aria-current=true] { border-color: var(--slate); box-shadow: 0 0 0 1px var(--slate); background: #f6f8f6; }
-  .ob .ob-person b { font-size: .98rem; }
-  .ob .ob-person small { font-size: .78rem; color: #5d635e; }
+  .ob .ob-list { list-style: none; margin: .6rem 0 0; padding: 0; border-top: 1px solid #e6e9e6; }
+  .ob .ob-list li { border-bottom: 1px solid #e6e9e6; }
+  .ob .ob-person { display: flex; align-items: center; justify-content: space-between; gap: .8rem; padding: .7rem .3rem; color: var(--charcoal); text-decoration: none; flex-wrap: wrap; }
+  .ob .ob-person:hover { background: #f6f8f6; }
+  .ob .ob-person b { font-size: 1rem; font-weight: 600; }
+  .ob .ob-person .ob-pill { margin-left: auto; }
+  .ob .ob-person::after { content: '›'; font-size: 1.3rem; color: #9aa09b; line-height: 1; }
   .ob .ob-empty { font-size: .88rem; margin: .4rem 0 0; }
   .ob .ob-done-list { margin-top: .8rem; font-size: .85rem; }
   .ob .ob-done-list summary { cursor: pointer; color: #5d635e; }
@@ -192,6 +192,9 @@ const steps = HIRE_STEPS.map((s) => ({ id: s.id, title: s.title, who: s.who || '
   .ob .ob-pill.red { background: #fbe4dd; color: #a3361b; }
   .ob .ob-pill.green { background: #e1efe4; color: #2f6b3f; }
   .ob .ob-pill.blue { background: #e3ecf3; color: #2e5873; }
+  .ob .ob-pill.amber { background: #fbf0d9; color: #8a5a10; }
+  .ob .ob-paystate { margin: .45rem 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: .3rem .5rem; }
+  .ob .ob-paydetail { font-size: .85rem; color: #4a4f4b; }
 
   /* profile */
   .ob .ob-main { min-width: 0; }
@@ -251,8 +254,7 @@ const steps = HIRE_STEPS.map((s) => ({ id: s.id, title: s.title, who: s.who || '
   .ob .ob-shot { display: block; max-width: 100%; height: auto; border-radius: 12px; margin-top: .8rem; border: 1px solid #e0e4e0; }
 
   @media (max-width: 900px) {
-    .ob .ob-layout { grid-template-columns: 1fr; }
-    .ob .ob-people { order: -1; }
+    .ob .ob-home { grid-template-columns: 1fr; }
   }
   @media (max-width: 520px) {
     .ob .ob-fields { grid-template-columns: 1fr; }
@@ -263,12 +265,16 @@ const steps = HIRE_STEPS.map((s) => ({ id: s.id, title: s.title, who: s.who || '
 <script is:inline define:vars={{ offices, signer: SIGNER.name, welcomeTpl: WELCOME_TEMPLATE, steps, HOW }}>
   (function () {
     var $ = function (id) { return document.getElementById(id); };
-    var hires = [], completed = [], sel = null, supervisors = [], loaded = false;
+    var hires = [], completed = [], sel = null, supervisors = [], loaded = false, payrollTracking = false;
     var msgs = {};       // per-hire notes from the last action (not saved)
     var busy = {};       // per-hire: an action is running
     var checkedAt = {};  // per-hire: last time the contract status was checked
-    var SEL = 'tt.onboard.sel';
-    try { sel = localStorage.getItem(SEL); } catch (e) {}
+    // Main page: list + New hire box. ?hire=<id>: that person's own page. &start=1: just added, finish
+    // making their folder and sending their contract.
+    var params = new URLSearchParams(location.search), viewId = params.get('hire'), starting = params.get('start') === '1';
+    sel = viewId;
+    $('ob-home').hidden = !!viewId; $('ob-view').hidden = !viewId;
+    function pageFor(id) { return '/reception-onboarding?hire=' + encodeURIComponent(id); }
 
     var ROLE_LABEL = { therapist: 'Therapist', associate: 'Associate', frontdesk: 'Front desk', billing: 'Billing', other: 'Other' };
     function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -310,9 +316,7 @@ const steps = HIRE_STEPS.map((s) => ({ id: s.id, title: s.title, who: s.who || '
       var ul = $('ob-list'); ul.textContent = '';
       hires.forEach(function (h) {
         var st = status(h), li = document.createElement('li');
-        li.innerHTML = '<button type="button" class="ob-person" data-pick="' + esc(h.id) + '"' + (h.id === sel ? ' aria-current="true"' : '') + '>' +
-          '<b>' + esc(full(h)) + '</b><small>' + esc([ROLE_LABEL[h.role] || '', office(h).label.replace(/ \(.*\)/, ''), h.start ? 'starts ' + fmtDate(h.start) : ''].filter(Boolean).join(' · ')) + '</small>' +
-          '<span class="ob-pill ' + st.cls + '">' + esc(st.text) + '</span></button>';
+        li.innerHTML = '<a class="ob-person" href="' + pageFor(h.id) + '"><b>' + esc(full(h)) + '</b><span class="ob-pill ' + st.cls + '">' + esc(st.text) + '</span></a>';
         ul.appendChild(li);
       });
       $('ob-list-empty').hidden = !!hires.length || !loaded;
@@ -320,7 +324,7 @@ const steps = HIRE_STEPS.map((s) => ({ id: s.id, title: s.title, who: s.who || '
       $('ob-done-n').textContent = completed.length;
       var dl = $('ob-done-ul'); dl.textContent = '';
       completed.forEach(function (c) { var li = document.createElement('li'); li.textContent = c.name + (c.completedAt ? ' · ' + new Date(c.completedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''); dl.appendChild(li); });
-      $('ob-count').textContent = loaded ? hires.length + (hires.length === 1 ? ' person' : ' people') + ' being onboarded' : '';
+      $('ob-count').textContent = loaded && !viewId ? hires.length + (hires.length === 1 ? ' person' : ' people') + ' being onboarded' : '';
     }
 
     // ---- per-person text used in instructions and emails ----
@@ -394,6 +398,17 @@ const steps = HIRE_STEPS.map((s) => ({ id: s.id, title: s.title, who: s.who || '
       out += how('contract', 'How the contract works / doing it by hand') + (h.folder ? '' : how('folder', 'Making the folder by hand'));
       return out + '</section>';
     }
+    // Paperwork step: what frontdesk@'s Payroll email script reported for this person.
+    function payrollLine(h) {
+      var p = h.payrollStatus, when = function (t) { return t ? ' on ' + new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''; };
+      var cls, text;
+      if (p && p.state === 'sent') { cls = 'green'; text = 'Payroll email sent' + when(p.at); }
+      else if (p && p.state === 'failed') { cls = 'red'; text = 'Email failed'; }
+      else if (p && p.state === 'waiting') { cls = 'amber'; text = 'Payroll email waiting'; }
+      else { cls = 'amber'; text = 'Waiting for their paperwork'; }
+      var detail = p && p.state !== 'sent' ? p.detail : (!p ? (payrollTracking ? 'They haven’t sent their onboarding form yet. This updates by itself.' : 'Automatic status isn’t connected yet (Front desk mailer), so check frontdesk@’s Sent folder and tick this by hand.') : '');
+      return '<p class="ob-paystate"><span class="ob-pill ' + cls + '">' + text + '</span>' + (detail ? ' <span class="ob-paydetail">' + esc(detail) + '</span>' : '') + '</p>';
+    }
     function checklist(h) {
       var list = stepsFor(h), n = list.filter(function (s) { return h.done[s.id]; }).length;
       var out = '<section class="ob-section"><h3>Onboarding checklist</h3>' +
@@ -408,9 +423,11 @@ const steps = HIRE_STEPS.map((s) => ({ id: s.id, title: s.title, who: s.who || '
           if (h.finish && h.finish.length) out += '<ul class="ob-results">' + h.finish.map(function (r) { return '<li class="' + (r.ok ? 'ok' : 'bad') + '">' + esc(r.text) + '</li>'; }).join('') + '</ul>';
           out += how('setup', 'Doing it by hand');
         } else {
+          if (s.id === 'paperwork') out += payrollLine(h);
           out += how(s.id);
         }
-        if (d && d.by && d.by !== 'front desk') out += '<p class="pt-muted ob-small">Ticked by ' + esc(d.by) + '</p>';
+        if (d && d.by === 'automatic') out += '<p class="pt-muted ob-small">Ticked automatically</p>';
+        else if (d && d.by && d.by !== 'front desk') out += '<p class="pt-muted ob-small">Ticked by ' + esc(d.by) + '</p>';
         out += '</div></li>';
       });
       out += '</ul><div class="ob-complete"><button type="button" class="pt-btn" data-act="complete" data-two="Onboarding complete"' + (n === list.length ? '' : ' disabled') + '>Onboarding complete</button>' +
@@ -420,7 +437,7 @@ const steps = HIRE_STEPS.map((s) => ({ id: s.id, title: s.title, who: s.who || '
     function renderProfile() {
       var box = $('ob-profile'), h = cur();
       if (!h) {
-        box.innerHTML = '<div class="pt-card ob-placeholder"><p class="pt-muted">' + (!loaded ? 'Loading…' : hires.length ? 'Choose someone on the left to see their onboarding.' : 'Add a new hire on the left. Their profile shows up here.') + '</p></div>';
+        box.innerHTML = '<div class="pt-card ob-placeholder"><p class="pt-muted">' + (!loaded ? 'Loading…' : 'This person isn’t being onboarded anymore (their onboarding may be complete, or the profile was removed). <a href="/reception-onboarding">Back to all new hires</a>') + '</p></div>';
         return;
       }
       var open = {}; box.querySelectorAll('details[open]').forEach(function (d) { open[d.dataset.how || d.className] = 1; });
@@ -437,16 +454,16 @@ const steps = HIRE_STEPS.map((s) => ({ id: s.id, title: s.title, who: s.who || '
       box.dataset.for = h.id;
       applyFills(box, h);
     }
-    function render() { if (anyArmed()) return; renderList(); renderProfile(); }
+    function render() { if (anyArmed()) return; if (viewId) { renderProfile(); document.title = (cur() ? full(cur()) + ' · ' : '') + 'Onboarding | Tangible Therapy'; } else renderList(); }
 
     // ---- saving ----
     function upd(h, patch) { return api('/api/new-hires', { action: 'update', id: h.id, patch: patch }).then(function (r) { put(r.hire); return r.hire; }); }
     function note(h, text, err) { msgs[h.id] = text ? { text: text, err: !!err } : null; }
     function load() {
       return api('/api/new-hires').then(function (r) {
-        hires = r.hires || []; completed = r.completed || []; loaded = true;
-        if (!cur() && hires.length) sel = hires[hires.length - 1].id;
+        hires = r.hires || []; completed = r.completed || []; loaded = true; payrollTracking = !!r.payrollTracking;
         render(); autoCheck();
+        if (starting && cur()) { starting = false; history.replaceState(null, '', pageFor(viewId)); startHire(cur()); }
       }, function (e) { loaded = true; $('ob-profile').innerHTML = '<div class="pt-card ob-placeholder"><p class="ob-err">Couldn’t load the new hires: ' + esc(e.message) + '</p></div>'; });
     }
 
@@ -535,14 +552,6 @@ const steps = HIRE_STEPS.map((s) => ({ id: s.id, title: s.title, who: s.who || '
 
     // ---- events ----
     document.addEventListener('click', function (e) {
-      var pick = e.target.closest('[data-pick]');
-      if (pick) {
-        sel = pick.dataset.pick; try { localStorage.setItem(SEL, sel); } catch (x) {}
-        document.querySelectorAll('.ob .armed').forEach(function (b) { clearTimeout(b._t); b.classList.remove('armed'); });
-        render(); autoCheck();
-        if (window.innerWidth < 900) $('ob-profile').scrollIntoView({ behavior: 'smooth', block: 'start' });
-        return;
-      }
       var cp = e.target.closest('[data-copy]');
       if (cp && cur()) { var t = fills(cur())[cp.dataset.copy] || ''; if (navigator.clipboard) navigator.clipboard.writeText(t).then(function () { var l = cp.textContent; cp.textContent = 'Copied'; setTimeout(function () { cp.textContent = l; }, 1500); }); return; }
       var btn = e.target.closest('[data-act]'); if (!btn) return;
@@ -556,10 +565,10 @@ const steps = HIRE_STEPS.map((s) => ({ id: s.id, title: s.title, who: s.who || '
       else if (act === 'signed') run(h, 'signed', function () { return api('/api/new-hires', { action: 'signed', id: h.id }).then(function (r) { put(r.hire); }); });
       else if (act === 'finish') run(h, 'finish', function () { return finish(h); });
       else if (act === 'complete') run(h, 'complete', function () {
-        return api('/api/new-hires', { action: 'complete', id: h.id }).then(function () { hires = hires.filter(function (x) { return x.id !== h.id; }); sel = hires.length ? hires[0].id : null; return load(); });
+        return api('/api/new-hires', { action: 'complete', id: h.id }).then(function () { location.href = '/reception-onboarding'; return new Promise(function () {}); });
       });
       else if (act === 'remove') run(h, 'remove', function () {
-        return api('/api/new-hires', { action: 'remove', id: h.id }).then(function () { hires = hires.filter(function (x) { return x.id !== h.id; }); sel = hires.length ? hires[0].id : null; });
+        return api('/api/new-hires', { action: 'remove', id: h.id }).then(function () { location.href = '/reception-onboarding'; return new Promise(function () {}); });
       });
     });
     document.addEventListener('change', function (e) {
@@ -600,20 +609,22 @@ const steps = HIRE_STEPS.map((s) => ({ id: s.id, title: s.title, who: s.who || '
       }
       var b = $('ob-start'); b.disabled = true; b.setAttribute('aria-busy', 'true'); sayBox('Creating their profile…');
       api('/api/new-hires', Object.assign({ action: 'create' }, d)).then(function (r) {
-        var h = r.hire; put(h); sel = h.id; try { localStorage.setItem(SEL, sel); } catch (x) {}
-        ['first', 'last', 'personal', 'start', 'pay'].forEach(function (k) { $('f-' + k).value = ''; }); $('f-alsosup').checked = false; $('f-supervisor').value = '';
-        sayBox(''); busy[h.id] = 'start'; note(h, 'Creating their Drive folder…'); render();
-        if (window.innerWidth < 900) $('ob-profile').scrollIntoView({ behavior: 'smooth', block: 'start' });
-        return makeFolder(h).then(function (h2) {
-          if (h2.contractType === 'none') return;
-          if (!h2.folder.id) throw new Error('Their folder is ready, but the Google script needs updating before contracts can be sent (see docs/new-hire-folder).');
-          note(h2, 'Filling in and sending their contract…'); render();
-          return sendContract(h2);
-        }).then(function () { note(h, ''); }, function (e) { note(h, e.message, true); })
-          .then(function () { delete busy[h.id]; render(); });
-      }, function (e) { sayBox('Couldn’t create their profile: ' + e.message, true); })
-        .then(function () { b.disabled = false; b.removeAttribute('aria-busy'); });
+        location.href = pageFor(r.hire.id) + '&start=1';
+      }, function (e) { sayBox('Couldn’t create their profile: ' + e.message, true); b.disabled = false; b.removeAttribute('aria-busy'); });
     });
+
+    // Right after Start a new hire, on their page: make their Drive folder, then send the contract.
+    function startHire(h) {
+      if (h.folder && h.folder.url) return;
+      busy[h.id] = 'start'; note(h, 'Creating their Drive folder…'); render();
+      makeFolder(h).then(function (h2) {
+        if (h2.contractType === 'none') return;
+        if (!h2.folder.id) throw new Error('Their folder is ready, but the Google script needs updating before contracts can be sent (see docs/new-hire-folder).');
+        note(h2, 'Filling in and sending their contract…'); render();
+        return sendContract(h2);
+      }).then(function () { note(h, ''); }, function (e) { note(h, e.message, true); })
+        .then(function () { delete busy[h.id]; render(); });
+    }
 
     // Supervisors (everyone with the Clinical supervisor role on the Employee Portal).
     fetch('/api/new-hire-email', { credentials: 'same-origin' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (b) {
@@ -630,7 +641,7 @@ const steps = HIRE_STEPS.map((s) => ({ id: s.id, title: s.title, who: s.who || '
       var f = s.f, done = s.done || {};
       var imp = { folder: s.folder || null, contract: s.contract || null, account: s.account || null, welcome: s.welcome || null, finish: s.finish || [],
         contractSigned: !!done['employment-contract'] || cDone(s.contract),
-        done: { setup: done.gmailsetup && done['staff-admin'] && done.onboarding ? 1 : 0, slack: done.slack, simple: done.simple, paperwork: done.driveandpayroll, malpractice: done.malpractice, supervision: done.supervision, hours: done.hours, photos: done.photos, availibility: done.availibility, 'booking-id': done['booking-id'], website: done.website, 'psychology-today': done['psychology-today'] } };
+        done: { setup: done.gmailsetup && done['staff-admin'] && done.onboarding ? 1 : 0, slack: done.slack, simple: done.simple, paperwork: done.driveandpayroll, malpractice: done.malpractice, hours: done.hours, availibility: done.availibility, 'booking-id': done['booking-id'], website: done.website, 'psychology-today': done['psychology-today'] } };
       return api('/api/new-hires', { action: 'create', first: f.first, last: f.last, personal: f.personal || '', email: f.email || '', office: f.office || 'orem', role: f.role || 'therapist', alsosup: !!f.alsosup, supervisor: f.supervisor || '', start: f.start || '', pay: '', contractType: f.contract || 'none', import: imp })
         .then(function () { try { localStorage.removeItem('tt.onboard.v1'); } catch (e) {} }, function () {});
     }

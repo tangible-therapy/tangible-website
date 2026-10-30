@@ -37,6 +37,10 @@ The same project also has a small web app, **Front desk mailer** (doPost in the 
 src/data/welcome-email.ts and asks this web app to send it from frontdesk@ to the new hire's personal and
 Tangible addresses. Only the welcome email is accepted (fixed subject), it needs the key, and each person gets
 it once (the website also records welcomeSentAt on their staff record).
+It also answers kind "payrollStatus" (read-only, needs the key): the script records what happened with each
+new hire's payroll email by Drive folder id (Script property pstate:<folderId> = waiting | sent | failed + detail;
+"failed" also when the file mover sent a "NOT filed" email). The onboarding page shows it on the "Paperwork
+filed and payroll emailed" step and ticks the step itself once it's sent.
 
 Mailer setup (once, owner — Claude can't deploy or handle the key):
 1. In the Payroll email project choose **setupMailer** → **Run**. The log shows the mailer key.

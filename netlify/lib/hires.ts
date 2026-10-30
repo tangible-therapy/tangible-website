@@ -26,6 +26,8 @@ export type HireRecord = {
   account: Record<string, unknown> | null;
   welcome: { sentAt: string; to: string[]; already?: boolean } | null;
   finish: { ok: boolean; text: string }[];
+  // From frontdesk@'s Payroll email script (via the Front desk mailer): waiting | sent | failed.
+  payrollStatus?: { state: string; detail: string; at: string } | null;
   done: Record<string, { at: string; by: string }>;
   status: 'active' | 'completed';
   createdAt: string;
