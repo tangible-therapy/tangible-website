@@ -2,7 +2,7 @@
 // Staff accounts admin (owners + directors). Behind the staff gate; data comes from /api/staff-admin.
 // Names/emails are never written into the site's code — they live in Netlify Blobs.
 import Base from '../layouts/Base.astro';
-import { ROLES, OFFICES, ONBOARDING_STEPS, OWNER_EMAILS } from '../data/staff-access';
+import { ROLES, OFFICES, ONBOARDING_STEPS, OWNER_EMAILS, ONBOARDING_PREVIEW_FOR_OWNERS } from '../data/staff-access';
 const offices = OFFICES.map((o) => ({ id: o.id, label: o.label }));
 ---
 <Base title="Staff Accounts | Tangible Therapy" description="Manage staff accounts." noindex>
@@ -76,7 +76,7 @@ const offices = OFFICES.map((o) => ({ id: o.id, label: o.label }));
     </form>
   </dialog>
 
-  <script is:inline define:vars={{ ROLES, offices, STEPS: ONBOARDING_STEPS, OWNERS: OWNER_EMAILS }}>
+  <script is:inline define:vars={{ ROLES, offices, STEPS: ONBOARDING_STEPS, OWNERS: OWNER_EMAILS, PREVIEW: ONBOARDING_PREVIEW_FOR_OWNERS }}>
     (function () {
       var API = '/api/staff-admin';
       var people = [], me = '', editing = null;
@@ -134,7 +134,7 @@ const offices = OFFICES.map((o) => ({ id: o.id, label: o.label }));
         });
 
         // New hires still on their dashboard checklist (approved, orientation not complete). Finished ones first.
-        var nh = people.filter(function (p) { return p.status === 'approved' && !p.orientationComplete && OWNERS.indexOf(p.email) < 0; })
+        var nh = people.filter(function (p) { return p.status === 'approved' && (OWNERS.indexOf(p.email) < 0 ? !p.orientationComplete : PREVIEW && p.onboarding && p.onboarding.done && Object.keys(p.onboarding.done).length); })
           .sort(function (a, b) { return (b.onboarding && b.onboarding.submittedAt ? 1 : 0) - (a.onboarding && a.onboarding.submittedAt ? 1 : 0); });
         $('#onboarding').hidden = !nh.length;
         nhEl.innerHTML = '';
@@ -150,7 +150,7 @@ const offices = OFFICES.map((o) => ({ id: o.id, label: o.label }));
             call('POST', { approveOnboarding: p.email }).then(function (b) { people = b.people; render(); notify('Approved ' + (p.name || p.email) + '. The checklist is gone from their dashboard.'); }).catch(function (e) { ok.disabled = false; notify(e.message, true); });
           };
           nhEl.appendChild(el('div', { class: 'sa-row nh' + (ob.submittedAt ? ' ready' : '') }, [
-            el('div', { class: 'who' }, [el('strong', { text: p.name || p.email }), el('span', { text: p.email + ' · ' + (officeLabel[p.office] || p.office) })]),
+            el('div', { class: 'who' }, [el('strong', { text: (p.name || p.email) + (OWNERS.indexOf(p.email) >= 0 ? ' (preview)' : '') }), el('span', { text: p.email + ' · ' + (officeLabel[p.office] || p.office) })]),
             steps,
             el('div', { class: 'meta' }, [el('span', { class: ob.submittedAt ? 'done' : 'muted', text: status })]),
             el('div', { class: 'btns' }, [ok]),

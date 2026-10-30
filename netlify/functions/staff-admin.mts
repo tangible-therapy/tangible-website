@@ -4,7 +4,7 @@
 //   POST { approveOnboarding: email } → approve a new hire's finished checklist (orientation complete)
 //   DELETE ?email=...        → remove someone (they lose access within a minute)
 import { currentPerson, listPeople, getPerson, savePerson, deletePerson } from '../lib/staff-session.ts';
-import { canManage, isOwner, isWorkEmail, ROLES, OFFICES, type StaffRecord, type Role, type Office } from '../../src/data/staff-access.ts';
+import { canManage, isOwner, isOnboardingPreview, isWorkEmail, ROLES, OFFICES, type StaffRecord, type Role, type Office } from '../../src/data/staff-access.ts';
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
@@ -27,6 +27,8 @@ export default async (req: Request) => {
     if (body?.approveOnboarding) {
       const email = String(body.approveOnboarding).trim().toLowerCase();
       const p = await getPerson(email);
+      // Owner preview: approving just resets their practice checklist.
+      if (p && isOnboardingPreview(p)) { await savePerson({ ...p, onboarding: {} }); return json({ saved: [email], problems: [], people: await listPeople() }); }
       if (!p || isOwner(email)) return json({ error: 'That person isn\u2019t on the staff list.' }, 404);
       const now = new Date().toISOString();
       await savePerson({ ...p, orientationComplete: true, onboarding: { ...(p.onboarding || {}), approvedAt: now, approvedBy: me!.email } });

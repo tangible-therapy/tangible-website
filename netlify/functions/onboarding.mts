@@ -1,13 +1,14 @@
 // /api/onboarding — the new-hire checklist on the Employee Portal dashboard (Google sign-in only).
 //   GET                         → { show, steps, done, submittedAt, director, review? }
 //   POST { step, done: bool }   → tick/untick one step (slack | orientation | paperwork)
-// Shown to approved staff who haven't finished orientation (needsOnboarding in src/data/staff-access.ts).
+// Shown to approved staff who haven't finished orientation (needsOnboarding in src/data/staff-access.ts), and for
+// now to owners as a preview (ONBOARDING_PREVIEW_FOR_OWNERS).
 // When every step is ticked the steps lock and the person shows up as "ready for approval" on directors'
 // dashboards (GET returns `review` for owners/directors) and in Staff Admin. No email is sent (owner's choice,
 // Oct 2026). The director approves at /staff-admin (POST /api/staff-admin { approveOnboarding }), which marks
 // orientation complete, so the checklist disappears from the dashboard.
 import { currentPerson, getPerson, savePerson, listPeople } from '../lib/staff-session.ts';
-import { needsOnboarding, ONBOARDING_STEPS, OFFICES, canManage, type OnboardingStep, type StaffRecord } from '../../src/data/staff-access.ts';
+import { showsOnboarding, isOnboardingPreview, ONBOARDING_STEPS, OFFICES, canManage, type OnboardingStep, type StaffRecord } from '../../src/data/staff-access.ts';
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', 'cache-control': 'private, no-store' } });
@@ -18,7 +19,8 @@ const directorFor = (p: StaffRecord) => {
 };
 
 const view = (p: StaffRecord) => ({
-  show: needsOnboarding(p),
+  show: showsOnboarding(p),
+  preview: isOnboardingPreview(p),
   steps: ONBOARDING_STEPS,
   done: p.onboarding?.done || {},
   submittedAt: p.onboarding?.submittedAt || null,
@@ -33,7 +35,7 @@ export default async (req: Request) => {
     if (canManage(me)) {
       // Directors/owners: new hires who finished their checklist and are waiting for approval, own office first.
       out.review = (await listPeople())
-        .filter((p) => needsOnboarding(p) && p.onboarding?.submittedAt)
+        .filter((p) => showsOnboarding(p) && p.onboarding?.submittedAt)
         .map((p) => ({ email: p.email, name: p.name || p.email, office: p.office, officeLabel: (OFFICES.find((o) => o.id === p.office)?.label || p.office).replace(/ \(.*\)/, ''), submittedAt: p.onboarding!.submittedAt }))
         .sort((a, b) => (a.office === me.office ? 0 : 1) - (b.office === me.office ? 0 : 1) || a.submittedAt!.localeCompare(b.submittedAt!));
     }
@@ -47,7 +49,7 @@ export default async (req: Request) => {
   if (!ONBOARDING_STEPS.some((s) => s.id === step)) return json({ error: 'Unknown step.' }, 400);
 
   const p = (await getPerson(me.email))!;
-  if (!needsOnboarding(p)) return json(view(p));
+  if (!showsOnboarding(p)) return json(view(p));
   const ob = { ...(p.onboarding || {}) };
   if (ob.submittedAt) return json({ ...view(p), error: 'Your checklist was already sent to your director.' }, 409);
   const done = { ...(ob.done || {}) };

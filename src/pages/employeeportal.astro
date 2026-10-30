@@ -36,6 +36,7 @@ const defaultTargets = JSON.stringify(LICENSES[0].targets);
         <div>
           <p class="pt-eyebrow">New here?</p>
           <h2 id="ob-heading">Let’s get you set up</h2>
+          <p class="ob-preview" id="ob-preview" hidden>Preview: you see this because you’re the owner. Ticks are real; approving your finished checklist just resets it.</p>
           <p class="pt-muted" id="ob-sub">Work through these three steps. When they’re all ticked, your practice director sees it on their dashboard and will finish your onboarding with you.</p>
         </div>
         <p class="ob-count"><strong id="ob-n">0</strong> of 3 done</p>
@@ -337,6 +338,7 @@ const defaultTargets = JSON.stringify(LICENSES[0].targets);
         var card = $('ob-card');
         if (!ob || !ob.show) { card.hidden = true; return; }
         card.hidden = false;
+        $('ob-preview').hidden = !ob.preview;
         var done = ob.done || {}, locked = !!ob.submittedAt, n = 0;
         var o = orientationHere();
         // Orientation ticks itself once every lesson was opened and the skills review passed in this browser.
@@ -417,6 +419,7 @@ const defaultTargets = JSON.stringify(LICENSES[0].targets);
   .ob-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
   .ob-card h2, .ob-review h2 { font-size: 1.3rem; font-weight: 600; margin: .1rem 0 .3rem; color: var(--charcoal); }
   .ob-card .pt-eyebrow { margin: 0; }
+  .ob-preview { font-size: .8rem; background: #f6f4ec; border-radius: 8px; padding: .35rem .6rem; margin: .3rem 0; display: inline-block; }
   .ob-count { margin: 0; font-size: .95rem; color: #5d635e; white-space: nowrap; }
   .ob-count strong { color: var(--charcoal); font-size: 1.2rem; }
   .ob-bar { height: 6px; border-radius: 6px; background: #e6e9e6; overflow: hidden; margin: .9rem 0 .4rem; }
