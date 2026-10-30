@@ -21,9 +21,21 @@ async function signwell(path: string, init: RequestInit = {}) {
   if (!key) throw new Error('SignWell isn’t connected yet (see docs/new-hire-folder).');
   const r = await fetch(API + path, { ...init, headers: { 'X-Api-Key': key, accept: 'application/json', 'content-type': 'application/json', ...(init.headers || {}) } });
   if (!r.ok) {
-    const err = await r.json().catch(() => null);
-    const msg = err?.meta?.messages?.join(' ') || err?.message || err?.error || `SignWell answered ${r.status}.`;
-    throw new Error(r.status === 401 ? 'The SignWell API key isn’t accepted.' : `SignWell: ${msg}`);
+    const text = await r.text().catch(() => '');
+    let err: any = null;
+    try { err = JSON.parse(text); } catch {}
+    // 422s carry a nested "errors" object, e.g. { errors: { recipients: { recipient_2: { email: ['format is invalid.'] } } } }
+    const parts: string[] = [];
+    const walk = (v: any, path: string) => {
+      if (v == null) return;
+      if (typeof v === 'string') parts.push(path ? `${path}: ${v}` : v);
+      else if (Array.isArray(v)) v.forEach((x) => walk(x, path));
+      else if (typeof v === 'object') Object.entries(v).forEach(([k, x]) => walk(x, path ? `${path} ${k}` : k));
+    };
+    walk(err?.errors, '');
+    const msg = parts.join('; ') || err?.meta?.messages?.join(' ') || err?.message || err?.error || (text && text.slice(0, 300)) || `SignWell answered ${r.status}.`;
+    console.error('[signwell]', r.status, path, text.slice(0, 2000));
+    throw new Error(r.status === 401 ? 'The SignWell API key isn’t accepted.' : `SignWell (${r.status}): ${msg}`);
   }
   return r;
 }
@@ -73,7 +85,12 @@ export default async (req: Request, context: any) => {
         subject: `Employment contract to sign: ${name}`,
         message: `Please review and sign ${summary}.${director ? ` ${director.name} has signed as location director.` : ''} Once you sign, it goes to ${first} automatically. If something is wrong, decline it and let front desk know.`,
       });
+      if (signers.some((x) => x.email.toLowerCase() === personal.toLowerCase())) {
+        return json({ error: `The new hire's personal email is the same as ${signers.find((x) => x.email.toLowerCase() === personal.toLowerCase()).name}'s. Each signer needs a different email.` }, 400);
+      }
       signers.push({ name, email: personal });
+      // SignWell rejects a copied contact who is also a signer (e.g. testing with the front desk email).
+      const copyTo = signers.some((x) => x.email.toLowerCase() === CONTRACT_COPY_TO.email.toLowerCase()) ? [] : [CONTRACT_COPY_TO];
       // Text tags in the PDF refer to signers by their position in this list (1, 2, 3).
       const recipients = signers.map((s, i) => ({ id: String(i + 1), ...s }));
       const test = testMode(context);
@@ -91,7 +108,7 @@ export default async (req: Request, context: any) => {
           draft: false,
           subject: 'Your Tangible Therapy employment contract',
           message: `Hi ${first}, welcome to Tangible! Here is your employment contract (${CONTRACT_TYPES[b.type].toLowerCase()}). Please review and sign it. If you have any questions, contact our front desk at ${CONTRACT_COPY_TO.email}.`,
-          copied_contacts: [CONTRACT_COPY_TO],
+          copied_contacts: copyTo,
           metadata: { folder_id: b.folderId, hire: name, type: b.type, office },
         }),
       });
