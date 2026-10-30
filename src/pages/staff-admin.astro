@@ -2,7 +2,7 @@
 // Staff accounts admin (owners + directors). Behind the staff gate; data comes from /api/staff-admin.
 // Names/emails are never written into the site's code — they live in Netlify Blobs.
 import Base from '../layouts/Base.astro';
-import { ROLES, OFFICES } from '../data/staff-access';
+import { ROLES, OFFICES, ONBOARDING_STEPS, OWNER_EMAILS, ONBOARDING_PREVIEW_FOR_OWNERS } from '../data/staff-access';
 const offices = OFFICES.map((o) => ({ id: o.id, label: o.label }));
 ---
 <Base title="Staff Accounts | Tangible Therapy" description="Manage staff accounts." noindex>
@@ -23,6 +23,12 @@ const offices = OFFICES.map((o) => ({ id: o.id, label: o.label }));
         <h2>Waiting for approval</h2>
         <p class="sa-help">These people signed in with a work account but aren't set up yet. Choose their role and office, then approve.</p>
         <div id="sa-pending-list"></div>
+      </section>
+
+      <section id="onboarding" class="sa-panel newhire" hidden>
+        <h2>New hires</h2>
+        <p class="sa-help">Their dashboard shows a checklist: join Slack, complete Orientation, complete Onboarding. When they finish, they show up here and on directors’ dashboards. Approve them once they’re ready; the checklist then disappears and they’re marked as having completed orientation.</p>
+        <div id="sa-newhire-list"></div>
       </section>
 
       <section class="sa-panel">
@@ -53,6 +59,7 @@ const offices = OFFICES.map((o) => ({ id: o.id, label: o.label }));
           <div class="sa-checks">{ROLES.map((r) => <label class="chk"><input type="checkbox" name="roles" value={r.id} /> {r.label}</label>)}</div>
         </fieldset>
         <label>Home office<select name="office">{offices.map((o) => <option value={o.id}>{o.label}</option>)}</select></label>
+        <label>Supervisor <span class="sa-opt">(therapists and associates)</span><select name="supervisor"><option value="">None</option></select></label>
         <label class="chk"><input type="checkbox" name="done" /> Already completed orientation (current staff)</label>
       </div>
 
@@ -70,12 +77,12 @@ const offices = OFFICES.map((o) => ({ id: o.id, label: o.label }));
     </form>
   </dialog>
 
-  <script is:inline define:vars={{ ROLES, offices }}>
+  <script is:inline define:vars={{ ROLES, offices, STEPS: ONBOARDING_STEPS, OWNERS: OWNER_EMAILS, PREVIEW: ONBOARDING_PREVIEW_FOR_OWNERS }}>
     (function () {
       var API = '/api/staff-admin';
       var people = [], me = '', editing = null;
       var $ = function (s, r) { return (r || document).querySelector(s); };
-      var listEl = $('#sa-list'), pendEl = $('#sa-pending-list'), alertEl = $('#sa-alert');
+      var listEl = $('#sa-list'), pendEl = $('#sa-pending-list'), nhEl = $('#sa-newhire-list'), alertEl = $('#sa-alert');
       var dlg = $('#sa-dialog'), form = $('#sa-form');
       var roleLabel = {}; ROLES.forEach(function (r) { roleLabel[r.id] = r.label; });
       var officeLabel = {}; offices.forEach(function (o) { officeLabel[o.id] = o.label.replace(/ \(.*\)/, ''); });
@@ -127,6 +134,31 @@ const offices = OFFICES.map((o) => ({ id: o.id, label: o.label }));
           ]));
         });
 
+        // New hires still on their dashboard checklist (approved, orientation not complete). Finished ones first.
+        var nh = people.filter(function (p) { return p.status === 'approved' && (OWNERS.indexOf(p.email) < 0 ? !p.orientationComplete : PREVIEW && p.onboarding && p.onboarding.done && Object.keys(p.onboarding.done).length); })
+          .sort(function (a, b) { return (b.onboarding && b.onboarding.submittedAt ? 1 : 0) - (a.onboarding && a.onboarding.submittedAt ? 1 : 0); });
+        $('#onboarding').hidden = !nh.length;
+        nhEl.innerHTML = '';
+        nh.forEach(function (p) {
+          var ob = p.onboarding || {}, done = ob.done || {};
+          var clin = (p.roles || []).indexOf('therapist') >= 0 || (p.roles || []).indexOf('associate') >= 0 || OWNERS.indexOf(p.email) >= 0;
+          var steps = el('div', { class: 'chips' }, STEPS.filter(function (st) { return !st.clinician || clin; }).map(function (st) { return el('span', { class: 'chip ' + (done[st.id] ? 'ok' : 'no'), text: (done[st.id] ? '✓ ' : '○ ') + st.label }); }));
+          var status = ob.submittedAt ? 'Finished ' + when(ob.submittedAt) + ' · ready for your approval' : 'Still working on it';
+          var ok = el('button', { class: 'sa-btn primary', type: 'button', text: 'Approve' });
+          ok.disabled = !ob.submittedAt;
+          ok.title = ob.submittedAt ? '' : 'They haven’t finished their checklist yet. (To skip it, use Edit → Already completed orientation.)';
+          ok.onclick = function () {
+            ok.disabled = true;
+            call('POST', { approveOnboarding: p.email }).then(function (b) { people = b.people; render(); notify('Approved ' + (p.name || p.email) + '. The checklist is gone from their dashboard.'); }).catch(function (e) { ok.disabled = false; notify(e.message, true); });
+          };
+          nhEl.appendChild(el('div', { class: 'sa-row nh' + (ob.submittedAt ? ' ready' : '') }, [
+            el('div', { class: 'who' }, [el('strong', { text: (p.name || p.email) + (OWNERS.indexOf(p.email) >= 0 ? ' (preview)' : '') }), el('span', { text: p.email + ' · ' + (officeLabel[p.office] || p.office) })]),
+            steps,
+            el('div', { class: 'meta' }, [el('span', { class: ob.submittedAt ? 'done' : 'muted', text: status })]),
+            el('div', { class: 'btns' }, [ok]),
+          ]));
+        });
+
         var q = $('#sa-search').value.trim().toLowerCase(), f = $('#sa-office').value;
         var shown = people.filter(function (p) { return p.status !== 'pending' && (!f || p.office === f) && (!q || (p.name + ' ' + p.email).toLowerCase().indexOf(q) >= 0); });
         $('#sa-count').textContent = '(' + people.filter(function (p) { return p.status !== 'pending'; }).length + ')';
@@ -162,6 +194,14 @@ const offices = OFFICES.map((o) => ({ id: o.id, label: o.label }));
         form.querySelectorAll('[data-pane]').forEach(function (p) { p.hidden = p.dataset.pane !== name; });
         form.dataset.mode = name;
       }
+      // Supervisor choices: everyone with the Clinical supervisor role (not the person themself).
+      function fillSupervisors(current, self) {
+        var sel = form.elements['supervisor']; sel.innerHTML = '';
+        sel.appendChild(el('option', { value: '', text: 'None' }));
+        people.filter(function (x) { return x.status === 'approved' && (x.roles || []).indexOf('supervisor') >= 0 && x.email !== self; })
+          .forEach(function (x) { var o = el('option', { value: x.email, text: x.name || x.email }); if (x.email === current) o.selected = true; sel.appendChild(o); });
+        if (current && sel.value !== current) { var o = el('option', { value: current, text: current }); o.selected = true; sel.appendChild(o); }
+      }
       function openDialog(p) {
         editing = p || null; form.reset(); $('#sa-form-err').hidden = true;
         $('#sa-dlg-title').textContent = p ? 'Edit ' + (p.name || p.email) : 'Add people';
@@ -170,7 +210,8 @@ const offices = OFFICES.map((o) => ({ id: o.id, label: o.label }));
           form.elements['name'].value = p.name || ''; form.elements['email'].value = p.email; form.elements['email'].readOnly = true;
           form.querySelectorAll('[name=roles]').forEach(function (i) { i.checked = (p.roles || []).indexOf(i.value) >= 0; });
           form.elements['office'].value = p.office; form.elements['done'].checked = !!p.orientationComplete;
-        } else form.elements['email'].readOnly = false;
+          fillSupervisors(p.supervisor, p.email);
+        } else { form.elements['email'].readOnly = false; fillSupervisors('', ''); }
         dlg.showModal();
       }
       function formError(t) { var e = $('#sa-form-err'); e.textContent = t; e.hidden = false; }
@@ -202,7 +243,7 @@ const offices = OFFICES.map((o) => ({ id: o.id, label: o.label }));
           var email = form.elements['email'].value.trim().toLowerCase();
           if (!/@tangiblementalhealth\.com$/.test(email)) return formError('Use their @tangiblementalhealth.com email.');
           if (!roles.length) return formError('Pick at least one role.');
-          list = [{ name: form.elements['name'].value.trim(), email: email, roles: roles, office: form.elements['office'].value, status: 'approved', orientationComplete: form.elements['done'].checked }];
+          list = [{ name: form.elements['name'].value.trim(), email: email, roles: roles, office: form.elements['office'].value, status: 'approved', orientationComplete: form.elements['done'].checked, supervisor: form.elements['supervisor'].value }];
         }
         $('#sa-save').disabled = true;
         save(list).then(function () { dlg.close(); }).catch(function (e) { formError(e.message); }).finally(function () { $('#sa-save').disabled = false; });
@@ -226,6 +267,10 @@ const offices = OFFICES.map((o) => ({ id: o.id, label: o.label }));
   .sa-head .sa-btn.primary { background: #fff; color: var(--charcoal); border-color: #fff; }
   .sa-panel { background: #fff; border-radius: 28px; padding: 1.75rem 2rem; margin-bottom: 1.5rem; color: var(--charcoal); }
   .sa-panel.pending { border: 2px solid #e3b341; }
+  .sa-opt { font-size: .8rem; color: #8a8f8b; font-weight: 400; }
+  .sa-panel.newhire { border: 2px solid #bcd6c2; }
+  .sa-row.nh .chip.ok { background: #e3efe5; color: #23432c; } .sa-row.nh .chip.no { background: #f4f5f4; color: #6b716c; }
+  .sa-row.nh .btns button[disabled] { opacity: .45; cursor: not-allowed; }
   .sa-panel h2 { font-size: 1.35rem; margin: 0 0 .5rem; color: var(--charcoal); }
   .sa-count { font-weight: 300; color: #6b716c; }
   .sa-help { font-size: .9rem; color: #5d635e; margin: 0 0 1rem; }

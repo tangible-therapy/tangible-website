@@ -122,13 +122,17 @@ function contract_(body) {
   var runs = [], r = null;
   while ((r = b.findText('_{10,}', r))) runs.push(r);
   if (runs.length !== 3) throw new Error('Expected 3 signature lines (________) in the ' + t.label + ' contract, found ' + runs.length + '.');
-  var tags = ['{{s:' + coo + ':y::::200:32}}', '{{s:' + hire + ':y::::200:32}}', '{{af_n:' + hire + ':y::::200:18}}'];
+  var tags = ['{{s:' + coo + ':y::::180:26}}', '{{s:' + hire + ':y::::180:26}}', '{{af_n:' + hire + ':y::::180:16}}'];
   for (var i = runs.length - 1; i >= 0; i--) { // backwards, because two lines can share one paragraph
     var el = runs[i].getElement().asText(), s = runs[i].getStartOffset(), e = runs[i].getEndOffsetInclusive();
-    el.deleteText(s, e);
+    // Swap only as many underscores as the tag is wide and keep the rest (white), so the line keeps its
+    // width and whatever follows it (the EMPLOYEE column) stays where it was.
+    var len = e - s + 1, k = Math.min(len, Math.ceil(tagUnits_(tags[i]) / 0.556));
+    el.deleteText(s, s + k - 1);
     el.insertText(s, tags[i]);
-    el.setForegroundColor(s, s + tags[i].length - 1, '#ffffff');
-    el.setUnderline(s, s + tags[i].length - 1, false);
+    var end = s + tags[i].length + (len - k) - 1;
+    el.setForegroundColor(s, end, '#ffffff');
+    el.setUnderline(s, end, false);
   }
   removeSignatureImages_(b);
   if (dir) addDirectorBlock_(b, dir);
@@ -136,6 +140,13 @@ function contract_(body) {
 
   var pdf = DriveApp.getFileById(copy.id).getAs('application/pdf');
   return { docId: copy.id, docUrl: 'https://docs.google.com/document/d/' + copy.id + '/edit', fileName: 'Employment Contract - ' + name + '.pdf', pdf: Utilities.base64Encode(pdf.getBytes()) };
+}
+
+// Approximate width of a text tag in em (Arial), to know how many underscores (0.556em each) it replaces.
+function tagUnits_(t) {
+  var w = { '{': 0.334, '}': 0.334, ':': 0.278, 's': 0.5, 'y': 0.5, 'f': 0.278, '_': 0.556 }, u = 0;
+  for (var i = 0; i < t.length; i++) u += w[t[i]] || 0.556;
+  return u;
 }
 
 // Adds "LOCATION DIRECTOR:" with a signature space (SignWell signer 1) and their printed name under the
@@ -149,7 +160,7 @@ function addDirectorBlock_(body, name) {
   var at = body.getChildIndex(top) + 1;
   // Match the font of the existing signature block.
   var ref = hit.getElement().asText(), font = ref.getFontFamily(hit.getStartOffset()) || 'Arial', size = ref.getFontSize(hit.getStartOffset()) || 11;
-  var tag = '{{s:1:y::::200:32}}';
+  var tag = '{{s:1:y::::180:26}}';
   // Same spacing as the employer/employee block, so SignWell's signature box doesn't cover the labels.
   var lines = [['', false], ['LOCATION DIRECTOR:', true], ['', false], [tag, false], ['Signature', false], ['', false], [name, false], ['Printed Name', false]];
   for (var i = 0; i < lines.length; i++) {

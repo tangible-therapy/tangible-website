@@ -34,10 +34,45 @@ export type StaffRecord = {
   office: Office;
   status: 'approved' | 'pending';
   orientationComplete?: boolean;
+  supervisor?: string; // email of their clinical supervisor (set by Reception Onboarding or Staff Admin)
+  onboarding?: Onboarding;
   addedBy?: string;
   updatedAt?: string;
   lastSignIn?: string;
 };
+
+// New-hire checklist on the Employee Portal dashboard (/api/onboarding). Shown to approved staff who haven't
+// finished orientation; when every step is ticked they show up on directors' dashboards, and once a director
+// approves at /staff-admin, orientationComplete becomes true and the checklist disappears.
+export type OnboardingStep = 'slack' | 'orientation' | 'paperwork' | 'headshots' | 'supervision';
+// clinician: only for therapists and associates.
+export const ONBOARDING_STEPS: { id: OnboardingStep; label: string; clinician?: boolean }[] = [
+  { id: 'slack', label: 'Join Slack' },
+  { id: 'orientation', label: 'Complete Orientation' },
+  { id: 'paperwork', label: 'Complete Onboarding' },
+  { id: 'headshots', label: 'Schedule headshots', clinician: true },
+  { id: 'supervision', label: 'Schedule supervision', clinician: true },
+];
+// Who takes headshots (the new hire messages her on Slack).
+export const HEADSHOTS_CONTACT = 'Julie Clegg';
+export const isClinician = (r: StaffRecord | null) => !!r && (r.roles.includes('therapist') || r.roles.includes('associate'));
+// The steps this person's checklist has (owners previewing it see every step).
+export const stepsFor = (r: StaffRecord | null) =>
+  ONBOARDING_STEPS.filter((s) => !s.clinician || isClinician(r) || isOnboardingPreview(r));
+export type Onboarding = {
+  done?: Partial<Record<OnboardingStep, string>>; // step → when it was ticked (ISO)
+  lessons?: string[]; // orientation lessons opened (slugs), from any device
+  skillsReview?: string; // when the SimplePractice skills review was passed
+  submittedAt?: string; // all steps ticked; waiting for a director's approval
+  approvedAt?: string;
+  approvedBy?: string;
+};
+export const needsOnboarding = (r: StaffRecord | null) => !!r && r.status === 'approved' && !isOwner(r.email) && !r.orientationComplete;
+// TEMPORARY (Oct 2026): owners also see the checklist so they can try it. Their finished checklist shows up for
+// approval like a new hire's, and approving it just resets it (they're never marked as new). Set to false to turn off.
+export const ONBOARDING_PREVIEW_FOR_OWNERS = true;
+export const isOnboardingPreview = (r: StaffRecord | null) => ONBOARDING_PREVIEW_FOR_OWNERS && !!r && isOwner(r.email);
+export const showsOnboarding = (r: StaffRecord | null) => needsOnboarding(r) || isOnboardingPreview(r);
 
 export const isOwner = (email: string) => OWNER_EMAILS.includes(email.toLowerCase());
 export const isWorkEmail = (email?: string | null) => !!email && email.toLowerCase().endsWith('@' + WORK_DOMAIN);
@@ -49,7 +84,7 @@ export const canManage = (r: StaffRecord | null) => !!r && r.status === 'approve
 const RESTRICTED: { paths: string[]; roles: Role[] }[] = [
   {
     // Reception section
-    paths: ['/reception-portal', '/reception-onboarding', '/reception-onboarding-1', '/api/new-hire-folder', '/api/new-hire-email', '/scheduling-new-client', '/scheduling-new-client-1', '/crisis-call'],
+    paths: ['/reception-portal', '/reception-onboarding', '/reception-onboarding-1', '/api/new-hire-folder', '/api/new-hire-email', '/api/new-hire-contract', '/scheduling-new-client', '/scheduling-new-client-1', '/crisis-call'],
     roles: ['frontdesk', 'director'],
   },
   { paths: ['/staff-admin'], roles: ['director'] },
