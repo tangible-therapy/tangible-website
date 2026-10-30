@@ -870,34 +870,41 @@
    [
     {
      "t": "text",
-     "md": "## How to use Slack Videos"
+     "md": "# How to Use Slack"
     },
     {
      "t": "text",
-     "md": "## 1"
+     "md": "These three short videos from Slack cover what you'll use most. Watch them in order."
     },
     {
      "t": "text",
-     "md": "## 2"
-    },
-    {
-     "t": "text",
-     "md": "## 3"
+     "md": "### 1. Getting started\nA quick tour of Slack: channels, direct messages and finding your way around."
     },
     {
      "t": "youtube",
      "id": "FTuOS8E1LZk",
-     "start": "45"
+     "start": "45",
+     "title": "How to use Slack: Your quick start guide"
+    },
+    {
+     "t": "text",
+     "md": "### 2. Conversations and threads\nHow to post, reply in a thread and keep conversations tidy."
     },
     {
      "t": "youtube",
      "id": "zfjuEyRWHwM",
-     "start": "78"
+     "start": "78",
+     "title": "Conversations in Slack"
+    },
+    {
+     "t": "text",
+     "md": "### 3. Notifications\nHow to set notifications so you see what matters during work hours."
     },
     {
      "t": "youtube",
      "id": "6pvVQw03QZY",
-     "start": null
+     "start": null,
+     "title": "Essential guide to Slack notifications"
     }
    ]
   ]
@@ -1520,7 +1527,7 @@
     },
     {
      "t": "text",
-     "md": "**Disclaimer: This section does not apply to client identities. Being LGBT or a part of another minority group is not harmful behavior. Harm befalling a person due to their identity is not the fault of the identity holder.**\n\nA common misconception about acceptance is that it means approval; that to accept someone, we must agree with everything they do. A critical component of therapy is therapeutic accountability, or the skill to pushback on ideas that are unhelpful or harmful to the client. Acceptance is not the same as endorsement and we should be mindful not to encourage harmful behaviors or patterns.\n\nAcceptance still involves maintaining therapeutic accountability while staying compassionate. We can validate a client’s emotional reality (“It sounds like you were trying to protect yourself”) without validating the behavior itself (“That choice caused real harm, and it’s important we look at that together”). When therapists model this balance—empathy with accountability—we teach clients to hold the same nuanced compassion for themselves. They learn that they can face their own mistakes without collapsing into guilt or defensiveness, which opens the door to genuine growth."
+     "md": "A common misconception about acceptance is that it means approval; that to accept someone, we must agree with everything they do. A critical component of therapy is therapeutic accountability, or the skill to pushback on ideas that are unhelpful or harmful to the client. Acceptance is not the same as endorsement and we should be mindful not to encourage harmful behaviors or patterns.\n\nAcceptance still involves maintaining therapeutic accountability while staying compassionate. We can validate a client’s emotional reality (“It sounds like you were trying to protect yourself”) without validating the behavior itself (“That choice caused real harm, and it’s important we look at that together”). When therapists model this balance—empathy with accountability—we teach clients to hold the same nuanced compassion for themselves. They learn that they can face their own mistakes without collapsing into guilt or defensiveness, which opens the door to genuine growth.\n\n**Disclaimer: This section does not apply to client identities. Being LGBT or a part of another minority group is not harmful behavior. Harm befalling a person due to their identity is not the fault of the identity holder.**"
     }
    ]
   ]
