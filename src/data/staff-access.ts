@@ -72,9 +72,9 @@ export type Onboarding = {
   approvedBy?: string;
 };
 export const needsOnboarding = (r: StaffRecord | null) => !!r && r.status === 'approved' && !isOwner(r.email) && !r.orientationComplete;
-// TEMPORARY (Oct 2026): owners also see the checklist so they can try it. Their finished checklist shows up for
-// approval like a new hire's, and approving it just resets it (they're never marked as new). Set to false to turn off.
-export const ONBOARDING_PREVIEW_FOR_OWNERS = true;
+// Owner preview of the checklist (used for testing in Oct 2026; turned off 30 Oct 2026). true = owners also see
+// the checklist; their finished checklist shows up for approval, and approving it just resets it.
+export const ONBOARDING_PREVIEW_FOR_OWNERS = false;
 export const isOnboardingPreview = (r: StaffRecord | null) => ONBOARDING_PREVIEW_FOR_OWNERS && !!r && isOwner(r.email);
 export const showsOnboarding = (r: StaffRecord | null) => needsOnboarding(r) || isOnboardingPreview(r);
 
