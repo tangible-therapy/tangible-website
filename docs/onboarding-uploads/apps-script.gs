@@ -24,11 +24,14 @@ var EMPLOYEE_FOLDER_ID = '1DCzPfLaGhpOIepDvmZ0krxgQl61bahwN';
 var NOTIFY_TO = 'frontdesk@tangiblementalhealth.com';
 
 // How the script recognises the name questions (by question title, not case sensitive).
+// Files and folders use the LEGAL name: "Legal First Name" + "Last Name". "Preferred First Name" is only a
+// fallback (responses from before the legal-name question existed) and to find a folder front desk made
+// under the preferred name.
+var LEGAL_FIRST = /\blegal\s*first\s*name\b/i;
 var FIRST_NAME = /\bfirst\s*name\b/i;
 var LAST_NAME = /\b(last|sur)\s*name\b/i;
 var FULL_NAME = /\b(full|legal|your)?\s*name\b/i;
 // Name-like questions that are NOT the new hire's own name.
-// ("Preferred First Name" IS used: it's the form's only first-name question.)
 var NOT_THEIR_NAME = /emergency|contact|spouse|parent|supervisor|bank|account|reference|user|e-?mail|company|business|employer/i;
 
 /** Runs on every form submission (installed by setup()). */
@@ -107,7 +110,7 @@ function fileResponse_(response) {
 
 /** Picks the new hire's name out of the answers. Returns {full} or null. */
 function nameFrom_(items) {
-  var first = '', last = '', full = '';
+  var legal = '', first = '', last = '', full = '';
   items.forEach(function (ir) {
     var title = ir.getItem().getTitle();
     var type = ir.getItem().getType();
@@ -115,13 +118,16 @@ function nameFrom_(items) {
     if (NOT_THEIR_NAME.test(title)) return;
     var answer = clean_(ir.getResponse());
     if (!answer) return;
-    if (FIRST_NAME.test(title)) { if (!first) first = answer; }
+    if (LEGAL_FIRST.test(title)) { if (!legal) legal = answer; }
+    else if (FIRST_NAME.test(title)) { if (!first) first = answer; }
     else if (LAST_NAME.test(title)) { if (!last) last = answer; }
     else if (FULL_NAME.test(title)) { if (!full) full = answer; }
   });
-  if (first && last) full = first + ' ' + last;
+  var preferred = first && last ? titleCase_(first + ' ' + last) : '';
+  if ((legal || first) && last) full = (legal || first) + ' ' + last;
   if (!full) return null;
-  return { full: titleCase_(full) };
+  full = titleCase_(full);
+  return { full: full, alt: preferred && preferred !== full ? preferred : '' };
 }
 
 /**
@@ -141,6 +147,11 @@ function findFolder_(name) {
     if (!loose && shortKey_(f.getName()) === wantShort) loose = f;
   }
   if (exact || loose) return { folder: exact || loose, created: false };
+  if (name.alt) { // front desk may have made the folder under their preferred name
+    var altFound = findFolder_({ full: name.alt, noCreate: true });
+    if (altFound) return altFound;
+  }
+  if (name.noCreate) return null;
   var parts = name.full.split(' ');
   var folderName = parts.length > 2 ? parts[0] + ' ' + parts[parts.length - 1] : name.full;
   return { folder: parent.createFolder(folderName), created: true };
@@ -151,12 +162,14 @@ function setup() {
   var form = FormApp.openById(FORM_ID);
   var parent = DriveApp.getFolderById(EMPLOYEE_FOLDER_ID);
   console.log('Form: "' + form.getTitle() + '"   Employee folder: "' + parent.getName() + '"');
-  console.log('Questions (N = used as the name, F = file upload):');
+  console.log('Questions (N = used as the name, n = fallback first name, F = file upload):');
   form.getItems().forEach(function (item) {
     var t = item.getTitle(), type = item.getType(), mark = '   ';
     if (type === FormApp.ItemType.FILE_UPLOAD) mark = ' F ';
+    else if (LEGAL_FIRST.test(t)) mark = ' N ';
+    else if (FIRST_NAME.test(t)) mark = ' n ';
     else if ((type === FormApp.ItemType.TEXT || type === FormApp.ItemType.PARAGRAPH_TEXT) && !NOT_THEIR_NAME.test(t) &&
-             (FIRST_NAME.test(t) || LAST_NAME.test(t) || FULL_NAME.test(t))) mark = ' N ';
+             (LAST_NAME.test(t) || FULL_NAME.test(t))) mark = ' N ';
     if (type !== FormApp.ItemType.SECTION_HEADER && type !== FormApp.ItemType.PAGE_BREAK) console.log(mark + t);
   });
   ScriptApp.getProjectTriggers().forEach(function (tr) {
@@ -164,6 +177,21 @@ function setup() {
   });
   ScriptApp.newTrigger('onOnboardingSubmit').forForm(form).onFormSubmit().create();
   console.log('Done. New onboarding responses will now be filed automatically.');
+}
+
+/**
+ * One time: adds a required "Legal First Name" question just above "Preferred First Name" (skips if it's
+ * already there). Run setup afterwards to check the log.
+ */
+function addLegalNameQuestion() {
+  var form = FormApp.openById(FORM_ID);
+  var items = form.getItems();
+  for (var i = 0; i < items.length; i++) if (LEGAL_FIRST.test(items[i].getTitle())) { console.log('Already there.'); return; }
+  var target = -1;
+  for (var j = 0; j < items.length; j++) if (/preferred\s*first\s*name/i.test(items[j].getTitle())) { target = items[j].getIndex(); break; }
+  var q = form.addTextItem().setTitle('Legal First Name').setHelpText('As it appears on your W-4 and ID.').setRequired(true);
+  if (target >= 0) form.moveItem(q.getIndex(), target);
+  console.log('Added "Legal First Name"' + (target >= 0 ? ' above "Preferred First Name".' : ' at the end of the form.'));
 }
 
 /**

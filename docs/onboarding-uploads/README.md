@@ -4,10 +4,13 @@ Automates step 8 of /reception-onboarding ("File their paperwork and add them to
 submits the **New Employee Onboarding** Google Form (edit ID 1kLzKJSbZHlz5cee4f7oRGPO9lwodyPYpkhidu8P5Pto),
 a Google Apps Script:
 
-1. reads their name from the answers ("Preferred First Name" + "Last Name"; a full name question also works),
+1. reads their LEGAL name from the answers ("Legal First Name" + "Last Name"; "Legal First Name" was added to
+   the form for this on 29 Oct 2026 with addLegalNameQuestion(). Older responses fall back to "Preferred First
+   Name"),
 2. finds their **First Last** folder inside the shared Employee folder
    (https://drive.google.com/drive/folders/1DCzPfLaGhpOIepDvmZ0krxgQl61bahwN). Matching ignores capitals,
-   extra spaces and a middle name. If there's no folder yet, it creates one,
+   extra spaces and a middle name. If none matches the legal name it tries the preferred name (in case front
+   desk made the folder under it) before creating a new "Legal-first Last" folder,
 3. moves every uploaded file (W-4, direct deposit, license...) into that folder, renamed
    "First Last - <question>" (e.g. "Sarah Smith - W-4.pdf"),
 4. emails frontdesk@ a note with the folder link and the list of files, or what it couldn't do so front
