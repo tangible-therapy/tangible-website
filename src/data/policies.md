@@ -129,7 +129,7 @@ Conflicts of interest occur when your interests are placed at odds with the clie
 
 ## Payroll
 
-Payroll is processed bi-weekly, meaning you get paid every two weeks. Pay periods close one week before payroll is processed on Friday. Pay is sent by direct deposit to your bank account. Our calendar is our time card. Ensure that your calendar is an accurate reflection of your hours at the end of the day. Cancellations, reschedules and any other adjustments to a calendar should be changed within the same (business) day that the request is made in order to ensure accuracy.
+Payroll is processed bi-weekly, meaning you get paid every two weeks. Pay periods close the week before payroll is processed. Meaning that you will submit your hours and then be paid for those hours the following week. Pay is sent by direct deposit to your bank account. Our calendar is our time card. Ensure that your calendar is an accurate reflection of your hours at the end of the day. Cancellations, reschedules and any other adjustments to a calendar should be changed within the same (business) day that the request is made in order to ensure accuracy.
 
 Pay is calculated off of billable hours (sessions) and required meetings, including supervision if supervised in-house. Outside supervision costs will be covered but do not count towards billable hours. Notes, CEUs and other learning outside of sessions do not count towards your hours.
 
@@ -139,7 +139,7 @@ If you have a concern or question about payroll, please direct those questions t
 
 ## Submitting hours
 
-At the end of each pay period, you are responsible for submitting your hours. Submit them through the **Submit Hours** link in the Employee Portal or through the Slack reminder. If hours are not submitted before payroll is processed, they will be paid in the following pay period. We want you to get paid, so please submit your hours on time!
+At the end of each pay period, you are responsible for submitting your hours. Submit them through the Slack reminder that is posted on the day payroll closes, or any time through **Submit Hours** in the Employee Portal menu. If hours are not submitted before payroll is processed, they will be paid in the following pay period. We want you to get paid, so please submit your hours on time!
 
 ## Part-time vs. full-time employment status
 
