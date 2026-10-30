@@ -4,7 +4,7 @@ Automates step 8 of /reception-onboarding ("File their paperwork and add them to
 submits the **New Employee Onboarding** Google Form (edit ID 1kLzKJSbZHlz5cee4f7oRGPO9lwodyPYpkhidu8P5Pto),
 a Google Apps Script:
 
-1. reads their name from the answers (first + last name questions, or a full name question),
+1. reads their name from the answers ("Preferred First Name" + "Last Name"; a full name question also works),
 2. finds their **First Last** folder inside the shared Employee folder
    (https://drive.google.com/drive/folders/1DCzPfLaGhpOIepDvmZ0krxgQl61bahwN). Matching ignores capitals,
    extra spaces and a middle name. If there's no folder yet, it creates one,
@@ -26,6 +26,9 @@ Notes:
 - Each response is filed once (remembered in the script's properties). Nothing is ever deleted.
 - No passwords, keys or website settings are involved; the website itself doesn't change.
 - If a new hire submits the form twice, the second set of files is filed too (renamed the same way).
+
+Status: set up 29 Oct 2026 in brady@'s Apps Script (project "Onboarding file mover"), trigger installed.
+Files are named e.g. "Sarah Smith - W-4.pdf", "Sarah Smith - Professional license.pdf".
 
 ## One-time setup (owner, ~5 minutes — Claude can't do the Google approval)
 1. Signed in as **brady@tangiblementalhealth.com**, open https://script.google.com → **New project**.

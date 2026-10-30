@@ -28,7 +28,8 @@ var FIRST_NAME = /\bfirst\s*name\b/i;
 var LAST_NAME = /\b(last|sur)\s*name\b/i;
 var FULL_NAME = /\b(full|legal|your)?\s*name\b/i;
 // Name-like questions that are NOT the new hire's own name.
-var NOT_THEIR_NAME = /emergency|contact|spouse|parent|supervisor|bank|account|reference|preferred|nick|user|e-?mail|company|business|employer/i;
+// ("Preferred First Name" IS used: it's the form's only first-name question.)
+var NOT_THEIR_NAME = /emergency|contact|spouse|parent|supervisor|bank|account|reference|user|e-?mail|company|business|employer/i;
 
 /** Runs on every form submission (installed by setup()). */
 function onOnboardingSubmit(e) {
@@ -185,7 +186,12 @@ function titleCase_(s) {
   if (s !== s.toLowerCase() && s !== s.toUpperCase()) return s;
   return s.toLowerCase().replace(/(^|[\s'-])(\S)/g, function (m, a, b) { return a + b.toUpperCase(); });
 }
-function cleanTitle_(t) { return clean_(t).replace(/^(please\s+)?(upload|attach)\s+(a\s+|your\s+)?(copy\s+of\s+)?(your\s+)?/i, '').slice(0, 60) || 'Upload'; }
+function cleanTitle_(t) {
+  // "Upload your completed W-4 (download link on the onboarding page)" -> "W-4"
+  var s = String(t || '').replace(/\([^)]*\)/g, ' ');
+  s = clean_(s).replace(/^(please\s+)?(upload|attach)\s+(a\s+|your\s+)?(copy\s+of\s+)?(your\s+)?(completed\s+)?/i, '').slice(0, 60);
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : 'Upload';
+}
 function extension_(n) { var m = /\.[A-Za-z0-9]{1,5}$/.exec(n); return m ? m[0] : ''; }
 function fileUrl_(id) { return 'https://drive.google.com/file/d/' + id + '/view'; }
 function fileLinks_(uploads) { return uploads.map(function (u) { return '- ' + u.question + ': ' + fileUrl_(u.id); }).join('\n'); }
