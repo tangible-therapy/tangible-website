@@ -35,7 +35,7 @@ How it fits together:
   the Employees folder and view access to the contracts.
 - SignWell: the PDF is sent with SignWell text tags (white text, so they don't show), apply_signing_order on,
   reminders on. Deploy Previews send in **test mode** (free, watermarked, not legally binding); production
-  sends real contracts. Status is checked when someone opens the page (no webhook needed).
+  sends real contracts. When the last person signs, SignWell tells /api/signwell-webhook (netlify/functions/signwell-webhook.mts), which saves the signed PDF into their folder right away, so nobody has to open the page. The live site registers that webhook with SignWell automatically the first time it sends a contract. Previews are password-protected, so SignWell can't reach them; there the page's "Check again" (and every page visit) saves it instead. The webhook trusts nothing it's sent: it checks SignWell's event hash (HMAC with the webhook id, looked up from SignWell or env SIGNWELL_WEBHOOK_ID), then re-reads the document from SignWell and only saves completed contracts that carry our folder id.
 - Netlify environment variables (never in the repo): NEW_HIRE_FOLDER_SCRIPT = web app URL + `?key=<FOLDER_KEY>`;
   SIGNWELL_API_KEY = SignWell → Settings → API → API key. Without them the page explains what's missing and
   front desk does that step by hand.

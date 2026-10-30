@@ -2,44 +2,17 @@
 //   POST { first, last, personal, office, type, pay, start, folderId }
 //        → fills the right contract in Google (Apps Script "contract" action: copy of the Word master in the
 //          Management folder, saved as a Google Doc in their Employees folder) and sends the PDF through
-//          SignWell: location director (by office) → Hannah (COO) → the new hire; front desk gets the signed copy.
+//          SignWell: location director (by office) → Hannah (COO) → the new hire.
 //        ← { id, status, docUrl, testMode, recipients }
 //   GET ?id=<SignWell document id>
 //        ← { status, recipients: [{ name, signed }], signedUrl? } — once completed, the signed PDF is saved
-//          into their folder (Apps Script "saveSigned", skipped if it's already there).
+//          into their folder (Apps Script "saveSigned", skipped if it's already there). /api/signwell-webhook
+//          does the same the moment SignWell reports a completed contract.
 // Netlify env vars (never in the repo): SIGNWELL_API_KEY, NEW_HIRE_FOLDER_SCRIPT.
 // Deploy Previews send in SignWell test mode (free, watermarked, not legally binding); production sends for real.
 // Behind the staff gate with the reception role rule (staff-gate.ts config + src/data/staff-access.ts).
 import { json, denied, hireName, callScript, payWords, contractDate, CONTRACT_SIGNER, CONTRACT_COPY_TO, CONTRACT_TYPES, LOCATION_DIRECTORS } from '../lib/new-hire.ts';
-
-const API = 'https://www.signwell.com/api/v1';
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const EMAIL = /^[^\s@<>()]+@[^\s@<>()]+\.[a-z]{2,}$/i;
-
-async function signwell(path: string, init: RequestInit = {}) {
-  const key = Netlify.env.get('SIGNWELL_API_KEY');
-  if (!key) throw new Error('SignWell isn’t connected yet (see docs/new-hire-folder).');
-  const r = await fetch(API + path, { ...init, headers: { 'X-Api-Key': key, accept: 'application/json', 'content-type': 'application/json', ...(init.headers || {}) } });
-  if (!r.ok) {
-    const text = await r.text().catch(() => '');
-    let err: any = null;
-    try { err = JSON.parse(text); } catch {}
-    // 422s carry a nested "errors" object, e.g. { errors: { recipients: { recipient_2: { email: ['format is invalid.'] } } } }
-    const parts: string[] = [];
-    const walk = (v: any, path: string) => {
-      if (v == null) return;
-      if (typeof v === 'string') parts.push(path ? `${path}: ${v}` : v);
-      else if (Array.isArray(v)) v.forEach((x) => walk(x, path));
-      else if (typeof v === 'object') Object.entries(v).forEach(([k, x]) => walk(x, path ? `${path} ${k}` : k));
-    };
-    walk(err?.errors, '');
-    const msg = parts.join('; ') || err?.meta?.messages?.join(' ') || err?.message || err?.error || (text && text.slice(0, 300)) || `SignWell answered ${r.status}.`;
-    console.error('[signwell]', r.status, path, text.slice(0, 2000));
-    throw new Error(r.status === 401 ? 'The SignWell API key isn’t accepted.' : `SignWell (${r.status}): ${msg}`);
-  }
-  return r;
-}
-
+import { signwell, saveIfCompleted, ensureWebhook, UUID, EMAIL } from '../lib/signwell.ts';
 const testMode = (context: any) => (context?.deploy?.context ?? Netlify.env.get('CONTEXT')) !== 'production';
 
 export default async (req: Request, context: any) => {
@@ -116,29 +89,20 @@ export default async (req: Request, context: any) => {
         }),
       });
       const doc = await r.json();
+      // Live site only: make sure SignWell will tell /api/signwell-webhook when this contract is fully signed.
+      if (!test) await ensureWebhook(Netlify.env.get('URL') || new URL(req.url).origin).catch((e) => console.error('[signwell] webhook setup failed:', (e as Error).message));
       return json({ id: doc.id, status: String(doc.status || 'Sent'), docUrl: filled.docUrl || null, testMode: test, recipients: recipients.map((x) => ({ name: x.name, signed: false })) });
     }
 
     // GET: status
     const id = new URL(req.url).searchParams.get('id') || '';
     if (!UUID.test(id)) return json({ error: 'Unknown contract.' }, 400);
-    const doc = await (await signwell(`/documents/${id}`)).json();
+    const { doc, done, signedUrl } = await saveIfCompleted(id);
     const status = String(doc.status || '');
-    const done = /complete/i.test(status);
     const recipients = (doc.recipients || []).map((x: any) => ({
       name: String(x.name || x.email || ''),
       signed: done || !!x.signed_at || /signed|complete/i.test(String(x.status || '')),
     }));
-    let signedUrl: string | null = null;
-    if (done) {
-      const folderId = doc.metadata?.folder_id;
-      const hire = String(doc.metadata?.hire || recipients[1]?.name || 'employee');
-      if (folderId) {
-        const pdf = await (await signwell(`/documents/${id}/completed_pdf`, { headers: { accept: 'application/pdf' } })).arrayBuffer();
-        const saved = await callScript({ action: 'saveSigned', folderId, fileName: `Employment Contract - ${hire} (signed).pdf`, pdf: Buffer.from(pdf).toString('base64') });
-        signedUrl = saved.url || null;
-      }
-    }
     return json({ status, recipients, signedUrl, testMode: !!doc.test_mode });
   } catch (e) {
     return json({ error: (e as Error).message }, 502);
