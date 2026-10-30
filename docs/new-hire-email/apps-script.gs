@@ -5,7 +5,7 @@
  * asks this script to:
  *   1. create the person's Google Workspace account (first@tangiblementalhealth.com, or first + last initial,
  *      or first.last if those are taken; or exactly the address front desk typed),
- *   2. add them to the Google Groups listed in GROUPS below for everyone, their office and their role,
+ *   2. add them to the Google Groups for their role (GROUPS) and, for therapists/associates, their office,
  *   3. email their PERSONAL address a welcome message with a one-time temporary password. Google makes them
  *      choose their own password the first time they sign in.
  * The temporary password goes straight from Google to the new hire. It is never sent back to the website,
@@ -21,17 +21,21 @@
 
 var DOMAIN = 'tangiblementalhealth.com';
 
-// Which Google Groups new people join. Fill in the group addresses (run listGroups once to see them all).
-// "all" = everyone; then by office (orem / provo / sandy) and by role (therapist / associate / frontdesk / other).
+// Which Google Groups new people join (agreed with the owner, Oct 2026). Run listGroups to see every group.
+// "all" = everyone; then by role (therapist / associate / frontdesk / other).
 var GROUPS = {
   all: [],
-  orem: [],
-  provo: [],
-  sandy: [],
-  therapist: [],
-  associate: [],
-  frontdesk: [],
+  therapist: ['therapists@tangiblementalhealth.com'],
+  associate: ['therapists@tangiblementalhealth.com'],
+  frontdesk: ['reception@tangiblementalhealth.com'],
   other: [],
+};
+// Office groups are therapist groups, so only therapists and associates join them. Sandy has none yet.
+// directors@ and classroom_teachers@ are added by hand when they apply.
+var CLINICIAN_OFFICE_GROUPS = {
+  orem: ['oremoffice@tangiblementalhealth.com'],
+  provo: ['provooffice@tangiblementalhealth.com'],
+  sandy: [],
 };
 
 var OFFICE_LABEL = { orem: 'Orem', provo: 'Provo', sandy: 'Sandy' };
@@ -84,7 +88,8 @@ function doPost(e) {
       temp = null;
     }
 
-    var groups = [].concat(GROUPS.all, GROUPS[office] || [], GROUPS[role] || []).filter(function (g, i, a) { return g && a.indexOf(g) === i; });
+    var clinician = role === 'therapist' || role === 'associate';
+    var groups = [].concat(GROUPS.all, GROUPS[role] || [], clinician ? (CLINICIAN_OFFICE_GROUPS[office] || []) : []).filter(function (g, i, a) { return g && a.indexOf(g) === i; });
     var added = [], failed = [];
     groups.forEach(function (g) {
       try {

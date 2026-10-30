@@ -49,7 +49,7 @@ const stages: Stage[] = [
     when: 'After the contract is signed',
     steps: [
       { id: 'gmailsetup', title: 'Create their Tangible email and add to groups', body: `
-        <p>Fill in their name, personal email, office and role in the New hire box, then click the button. It creates <span class="ob-chip" data-fill="email">first@tangiblementalhealth.com</span> (or first name + last initial if that’s taken), adds them to their office’s Google Groups, and Google emails their personal address a temporary password they change the first time they sign in.</p>
+        <p>Fill in their name, personal email, office and role in the New hire box, then click the button. It creates <span class="ob-chip" data-fill="email">first@tangiblementalhealth.com</span> (or first name + last initial if that’s taken), adds them to their Google Groups (therapists + their office group, or reception), and Google emails their personal address a temporary password they change the first time they sign in.</p>
         <div class="ob-actions"><button type="button" class="pt-btn" id="ob-account">Create their email</button></div>
         <p class="ob-status" id="ob-account-status" role="status" aria-live="polite"></p>
         <p class="ob-folder" data-account hidden></p>

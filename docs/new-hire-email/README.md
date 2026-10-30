@@ -5,7 +5,9 @@ On /reception-onboarding, step 3 has a **Create their email** button. Front desk
 website then:
 - creates their Google Workspace account: first@tangiblementalhealth.com, or first + last initial, or
   first.last if those are taken (or exactly the address typed in the Tangible email box),
-- adds them to the Google Groups listed in the script's GROUPS for everyone, their office and their role,
+- adds them to their Google Groups: Therapist/Associate → therapists@ + their office group (oremoffice@ or
+  provooffice@; Sandy has none yet); Admin / front desk → reception@; Other → none. directors@ and
+  classroom_teachers@ are always added by hand. (GROUPS and CLINICIAN_OFFICE_GROUPS in the script.)
 - has Google email their personal address a one-time temporary password. Google makes them choose their own
   password the first time they sign in. The temporary password goes straight from Google to the new hire; it is
   never sent to the website, never logged and never stored.
@@ -34,8 +36,8 @@ Settings → Script properties (or archive the deployment).
 4. In the function menu at the top choose **listGroups** → **Run**. Google asks for permission:
    **Review permissions** → choose the account → **Allow** (it asks to manage users and groups and to send
    email as you). The log at the bottom lists every Google Group address.
-5. Fill in GROUPS near the top of the script with those addresses, e.g.
-   `all: ['team@tangiblementalhealth.com'], orem: ['orem@tangiblementalhealth.com'], ...` and **Save**.
+5. GROUPS and CLINICIAN_OFFICE_GROUPS near the top are already filled in (Oct 2026). If groups change, edit them, e.g.
+   `frontdesk: ['reception@tangiblementalhealth.com']`, then **Save** and deploy a new version.
 6. Choose **setup** → **Run**. The log shows "Admin access OK" and a long **account key**. Copy the key.
 7. **Deploy** → **New deployment** → gear icon → **Web app**. Description "New hire accounts",
    Execute as **Me**, Who has access **Anyone**. Click **Deploy** and copy the **Web app URL**.
