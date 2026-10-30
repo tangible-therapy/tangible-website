@@ -89,7 +89,7 @@ const RESTRICTED: { paths: string[]; roles: Role[] }[] = [
     paths: ['/reception-portal', '/reception-onboarding', '/api/new-hire-folder', '/api/new-hire-email', '/api/new-hire-contract', '/api/new-hire-welcome', '/api/new-hires', '/api/website-profile', '/employeeportal/website-profile', '/scheduling-new-client', '/scheduling-new-client-1', '/crisis-call'],
     roles: ['frontdesk', 'director'],
   },
-  { paths: ['/staff-admin'], roles: ['director'] },
+  { paths: ['/staff-admin', '/employeeportal/bugs'], roles: ['director'] },
   { paths: ['/hours'], roles: ['associate', 'supervisor'] },
 ];
 

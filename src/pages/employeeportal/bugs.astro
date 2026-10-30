@@ -1,0 +1,134 @@
+---
+// Bug jar (directors + owner only: RESTRICTED in src/data/staff-access.ts; the staff gate covers /employeeportal/*).
+// Lists what staff sent with the ladybug "Report an issue" button (src/components/BugReport.astro) via /api/bugs.
+// Directors move each report through In the jar → Squashing → Squashed, or delete it.
+import Base from '../../layouts/Base.astro';
+---
+<Base title="Bug Jar | Employee Portal | Tangible Therapy" description="Issues reported by Tangible staff." noindex>
+  <div class="pt-page bj">
+    <header class="bj-head">
+      <div class="bj-jar" aria-hidden="true">
+        <span class="bj-lid"></span>
+        <span class="bj-glass"><span class="bj-count" id="bj-jar-count">0</span></span>
+      </div>
+      <div>
+        <h1>Bug jar</h1>
+        <p class="pt-muted">Problems staff reported with the ladybug button. Move each one along as it gets fixed.</p>
+      </div>
+    </header>
+
+    <div class="bj-tabs" role="tablist" aria-label="Filter reports" id="bj-tabs">
+      <button type="button" role="tab" data-f="new" aria-selected="true">In the jar <span></span></button>
+      <button type="button" role="tab" data-f="squashing" aria-selected="false">Squashing <span></span></button>
+      <button type="button" role="tab" data-f="squashed" aria-selected="false">Squashed <span></span></button>
+      <button type="button" role="tab" data-f="all" aria-selected="false">All <span></span></button>
+    </div>
+
+    <p class="pt-soon" id="bj-msg">Loading…</p>
+    <ul class="bj-list" id="bj-list" hidden></ul>
+  </div>
+
+  <script is:inline>
+    (function () {
+      var $ = function (id) { return document.getElementById(id); };
+      var bugs = [], filter = 'new';
+      try { filter = sessionStorage.getItem('bj-filter') || 'new'; } catch (e) {}
+      var SEV = { tiny: { e: '🐜', t: 'Tiny', d: 'Just annoying' }, medium: { e: '🪲', t: 'Medium', d: 'Slows them down' }, big: { e: '🕷️', t: 'Big', d: 'Can’t get it done' } };
+      var ST = { new: 'In the jar', squashing: 'Squashing', squashed: 'Squashed' };
+      function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+      function when(iso) { var d = new Date(iso); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ', ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }); }
+      function device(ua) {
+        var s = String(ua || ''), size = (s.match(/·\s*(\d+×\d+)/) || [])[1] || '';
+        var b = /Edg\//.test(s) ? 'Edge' : /Chrome\//.test(s) ? 'Chrome' : /Firefox\//.test(s) ? 'Firefox' : /Safari\//.test(s) ? 'Safari' : 'Browser';
+        var o = /iPhone|iPad/.test(s) ? 'iPhone/iPad' : /Android/.test(s) ? 'Android' : /Mac OS X/.test(s) ? 'Mac' : /Windows/.test(s) ? 'Windows' : '';
+        return [b, o, size].filter(Boolean).join(', ');
+      }
+      function call(method, qs, body) {
+        return fetch('/api/bugs' + (qs || ''), { method: method, credentials: 'same-origin', headers: body ? { 'content-type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined })
+          .then(function (r) { return r.json().catch(function () { return {}; }).then(function (b) { if (!r.ok) throw new Error(b.error || 'Something went wrong.'); return b; }); });
+      }
+      function render() {
+        var counts = { new: 0, squashing: 0, squashed: 0, all: bugs.length };
+        bugs.forEach(function (b) { counts[b.status]++; });
+        document.querySelectorAll('#bj-tabs [data-f]').forEach(function (t) { t.setAttribute('aria-selected', String(t.dataset.f === filter)); t.querySelector('span').textContent = counts[t.dataset.f]; });
+        $('bj-jar-count').textContent = counts.new;
+        var list = $('bj-list'); list.innerHTML = '';
+        var shown = bugs.filter(function (b) { return filter === 'all' || b.status === filter; });
+        $('bj-msg').hidden = !!shown.length; list.hidden = !shown.length;
+        if (!shown.length) $('bj-msg').textContent = filter === 'new' ? 'The jar is empty. No bugs right now! 🎉' : filter === 'squashing' ? 'Nothing being worked on right now.' : filter === 'squashed' ? 'Nothing squashed yet.' : 'No reports yet.';
+        shown.forEach(function (b) {
+          var s = SEV[b.severity] || SEV.medium;
+          var li = el('li', 'bj-bug ' + b.status + ' sev-' + b.severity);
+          var top = el('div', 'bj-top');
+          var sev = el('span', 'bj-sev'); sev.appendChild(el('b', null, s.e)); sev.appendChild(document.createTextNode(s.t + ' · ' + s.d)); sev.querySelector('b').setAttribute('aria-hidden', 'true');
+          top.appendChild(sev);
+          top.appendChild(el('span', 'bj-when', when(b.at)));
+          li.appendChild(top);
+          li.appendChild(el('h2', null, b.what || 'Something went wrong'));
+          li.appendChild(el('p', 'bj-wrong', b.wrong));
+          var meta = el('p', 'bj-meta');
+          meta.appendChild(document.createTextNode((b.reporter ? b.reporter.name : 'Someone with the staff password') + ' on '));
+          if (b.page) { var a = el('a', null, b.page.length > 60 ? b.page.slice(0, 57) + '…' : b.page); a.href = b.page; a.target = '_blank'; a.rel = 'noopener'; meta.appendChild(a); } else meta.appendChild(document.createTextNode('an unknown page'));
+          if (b.device) meta.appendChild(document.createTextNode(' · ' + device(b.device)));
+          li.appendChild(meta);
+          var act = el('div', 'bj-actions');
+          var seg = el('div', 'bj-seg'); seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', 'Status');
+          ['new', 'squashing', 'squashed'].forEach(function (st) {
+            var btn = el('button', st === b.status ? 'on' : '', ST[st]); btn.type = 'button'; btn.setAttribute('aria-pressed', String(st === b.status));
+            btn.onclick = function () { if (st === b.status) return; call('PATCH', '', { id: b.id, status: st }).then(function (r) { Object.assign(b, r.bug); render(); }).catch(function (x) { alert(x.message); }); };
+            seg.appendChild(btn);
+          });
+          act.appendChild(seg);
+          var del = el('button', 'bj-del', 'Delete'); del.type = 'button';
+          del.onclick = function () {
+            if (!del.classList.contains('arm')) { del.classList.add('arm'); del.textContent = 'Click again to delete'; setTimeout(function () { del.classList.remove('arm'); del.textContent = 'Delete'; }, 4000); return; }
+            call('DELETE', '?id=' + encodeURIComponent(b.id)).then(function () { bugs = bugs.filter(function (x) { return x !== b; }); render(); }).catch(function (x) { alert(x.message); });
+          };
+          act.appendChild(del);
+          if (b.updatedBy) act.appendChild(el('span', 'bj-by', 'Last moved by ' + b.updatedBy));
+          li.appendChild(act);
+          list.appendChild(li);
+        });
+      }
+      document.querySelectorAll('#bj-tabs [data-f]').forEach(function (t) { t.onclick = function () { filter = t.dataset.f; try { sessionStorage.setItem('bj-filter', filter); } catch (e) {} render(); }; });
+      call('GET').then(function (b) { bugs = b.bugs || []; render(); })
+        .catch(function (e) { $('bj-msg').textContent = e.message === 'Only directors can see the bug jar.' ? 'The bug jar is for directors. Sign in with your work Google account.' : e.message; });
+    })();
+  </script>
+
+  <style is:global>
+    .bj-head { display: flex; align-items: center; gap: 1.2rem; margin-bottom: 1.4rem; }
+    .bj-head h1 { margin: 0 0 .2rem; font-size: clamp(1.8rem, 3.5vw, 2.4rem); color: var(--charcoal); }
+    .bj-jar { position: relative; flex: none; width: 64px; height: 76px; }
+    .bj-lid { position: absolute; left: 10px; right: 10px; top: 0; height: 12px; border-radius: 4px; background: #3b3f3c; }
+    .bj-glass { position: absolute; left: 4px; right: 4px; top: 10px; bottom: 0; border-radius: 12px 12px 18px 18px; background: linear-gradient(160deg, #eef5ef, #d9e7db); border: 2px solid #b9cbbc; display: grid; place-items: center; }
+    .bj-count { font-size: 1.5rem; font-weight: 600; color: #d9483b; font-variant-numeric: tabular-nums; }
+    .bj-tabs { display: inline-flex; flex-wrap: wrap; gap: .3rem; background: #e9ece9; border-radius: 300px; padding: 4px; margin-bottom: 1.2rem; }
+    .bj-tabs button { font: inherit; font-size: .88rem; border: 0; background: none; color: var(--charcoal); padding: .45rem 1rem; border-radius: 300px; cursor: pointer; }
+    .bj-tabs button span { color: #7a807b; margin-left: .2rem; font-variant-numeric: tabular-nums; }
+    .bj-tabs button[aria-selected=true] { background: #fff; font-weight: 500; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+    .bj-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .8rem; max-width: 820px; }
+    .bj-bug { position: relative; background: #fff; border-radius: 20px; padding: 1.1rem 1.3rem 1rem 1.5rem; box-shadow: 0 1px 2px rgba(0,0,0,.04); overflow: hidden; }
+    .bj-bug::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: #e2c46a; }
+    .bj-bug.sev-tiny::before { background: #b9cbbc; }
+    .bj-bug.sev-big::before { background: #d9483b; }
+    .bj-bug.squashed { opacity: .72; }
+    .bj-bug.squashed h2 { text-decoration: line-through; text-decoration-color: rgba(59,63,60,.45); }
+    .bj-top { display: flex; justify-content: space-between; gap: .5rem 1rem; flex-wrap: wrap; font-size: .8rem; color: #6b716c; }
+    .bj-sev { display: inline-flex; align-items: center; gap: .35rem; font-weight: 500; color: var(--charcoal); }
+    .bj-sev b { font-weight: 400; font-size: 1rem; }
+    .bj-bug h2 { font-size: 1.05rem; font-weight: 600; margin: .45rem 0 .3rem; color: var(--charcoal); line-height: 1.35; }
+    .bj-wrong { margin: 0 0 .6rem; white-space: pre-wrap; font-size: .92rem; line-height: 1.5; color: #3b3f3c; }
+    .bj-meta { margin: 0 0 .8rem; font-size: .8rem; color: #6b716c; line-height: 1.45; word-break: break-word; }
+    .bj-meta a { color: var(--charcoal); }
+    .bj-actions { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem .8rem; }
+    .bj-seg { display: inline-flex; border: 1px solid #cdd3ce; border-radius: 300px; overflow: hidden; }
+    .bj-seg button { font: inherit; font-size: .8rem; border: 0; background: #fff; color: var(--charcoal); padding: .4rem .85rem; cursor: pointer; }
+    .bj-seg button + button { border-left: 1px solid #cdd3ce; }
+    .bj-seg button.on { background: var(--charcoal); color: #fff; font-weight: 500; }
+    .bj-del { font: inherit; font-size: .8rem; border: 0; background: none; color: #8a1c14; cursor: pointer; padding: .3rem 0; text-decoration: underline; text-underline-offset: 3px; }
+    .bj-del.arm { font-weight: 600; }
+    .bj-by { font-size: .75rem; color: #8a8f8b; margin-left: auto; }
+    @media (max-width: 600px) { .bj-head { gap: .9rem; } .bj-jar { width: 50px; height: 60px; } .bj-by { margin-left: 0; width: 100%; } }
+  </style>
+</Base>
