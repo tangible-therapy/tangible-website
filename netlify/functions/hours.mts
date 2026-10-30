@@ -1,4 +1,6 @@
 // /api/hours — supervision hours tracker (page: /hours).
+// Associates' pay-period hours come in through Submit Hours (/api/submit-hours, kind "period"); here they only
+// add past hours in bulk (a date range) or fix older entries.
 // Who can see what:
 //   - an associate (role "associate"): logs their own hours ("My hours")
 //   - a supervisor (role "supervisor"): links associates as their supervisees and reviews their hours ("My supervisees")
@@ -79,7 +81,7 @@ export default async (req: Request) => {
   // ----- a supervisee's own entries -----
   if (action === 'add' || action === 'edit' || action === 'delete') {
     if (!canLog(me)) return json({ error: 'Only associates log hours. Ask a director to add the Associate role to your account.' }, 403);
-    const c = action === 'delete' ? null : cleanEntry(b.entry);
+    const c = action === 'delete' ? null : cleanEntry({ ...(b.entry || {}), kind: action === 'add' ? 'bulk' : b.entry?.kind });
     if (c?.error) return json({ error: c.error }, 400);
     return done(await updateLog(me.email, (log) => {
       const now = new Date().toISOString();
@@ -90,8 +92,10 @@ export default async (req: Request) => {
       }
       const e = log.entries.find((x) => x.id === String(b.id));
       if (!e) return 'That entry no longer exists.';
+      if (e.kind === 'period') return 'Pay-period hours come from Submit Hours. To change them, submit your hours again for that pay period.';
       if (e.status === 'approved') return 'Approved entries are locked. Ask your supervisor to reopen it first.';
       if (action === 'delete') { log.entries = log.entries.filter((x) => x !== e); return; }
+      if (!c!.value!.end) delete e.end;
       Object.assign(e, c!.value!, { status: 'pending', updatedAt: now });
       delete e.note;
     }));
