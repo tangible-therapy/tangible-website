@@ -63,6 +63,7 @@ export const stepsFor = (r: StaffRecord | null) =>
 export type Onboarding = {
   done?: Partial<Record<OnboardingStep, string>>; // step → when it was ticked (ISO)
   lessons?: string[]; // orientation lessons opened (slugs), from any device
+  quizzes?: Record<string, string>; // orientation quiz lesson slug → when it was passed with 100% (checked on the server)
   skillsReview?: string; // when the SimplePractice skills review was passed
   submittedAt?: string; // all steps ticked; waiting for a director's approval
   approvedAt?: string;

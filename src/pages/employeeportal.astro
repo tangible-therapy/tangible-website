@@ -344,7 +344,8 @@ const defaultTargets = JSON.stringify(LICENSES[0].targets);
         var sr = lsGet('spq.progress.v1') || {};
         var review = !!(ob && ob.skillsReview) || !!sr.finished;
         var localOnly = slugs.filter(function (s) { return seen[s] && (ob && ob.lessons || []).indexOf(s) < 0; });
-        return { viewed: n, total: slugs.length, review: review, localOnly: localOnly, reviewLocalOnly: !!sr.finished && !(ob && ob.skillsReview) };
+        var qz = Object.assign({}, lsGet('tt-orientation-quizzes') || {}, ob && ob.quizzes || {});
+        return { viewed: n, total: slugs.length, quizzes: Object.keys(qz).length, quizTotal: ob && ob.quizCount || 0, review: review, localOnly: localOnly, reviewLocalOnly: !!sr.finished && !(ob && ob.skillsReview) };
       }
       function obPost(step, done) {
         $('ob-msg').textContent = '';
@@ -382,7 +383,7 @@ const defaultTargets = JSON.stringify(LICENSES[0].targets);
         });
         card.querySelectorAll('[data-step]').forEach(function (li) { li.classList.toggle('next', !locked && li.dataset.step === next); });
         $('ob-orient-prog').hidden = !!done.orientation;
-        $('ob-orient-prog').textContent = o.viewed + ' of ' + o.total + ' lessons · skills review ' + (o.review ? 'passed' : 'not done');
+        $('ob-orient-prog').textContent = o.viewed + ' of ' + o.total + ' lessons · ' + (o.quizTotal ? 'quizzes ' + Math.min(o.quizzes, o.quizTotal) + ' of ' + o.quizTotal + ' passed · ' : '') + 'skills review ' + (o.review ? 'passed' : 'not done');
         $('ob-n').textContent = n; $('ob-total').textContent = ob.steps.length; $('ob-bar').style.width = Math.round(n / ob.steps.length * 100) + '%';
         var d = ob.director || {};
         card.classList.toggle('sent', locked);
