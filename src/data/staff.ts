@@ -35,6 +35,7 @@ export const newEmployeeLinks: StaffLink[] = [
 export const managementLinks: StaffLink[] = [
   { label: 'Orientation', href: 'https://academy.tangiblementalhealth.com', roles: ['director'] },
   { label: 'Staff Accounts', href: '/staff-admin', roles: ['director'] },
+  { label: 'Bug jar', href: '/employeeportal/bugs', roles: ['director'] },
 ];
 
 // Outside learning sites listed on /digital-products-2.

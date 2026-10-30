@@ -1,0 +1,133 @@
+---
+// "Report an issue": a ladybug button fixed bottom-right on every staff page (added in Base.astro for staffPaths).
+// Opens a short form; reports go to /api/bugs and show up for directors in the Bug jar (/employeeportal/bugs).
+// The page address and device are added automatically.
+---
+<div class="bug" data-bug>
+  <button type="button" class="bug-fab" aria-expanded="false" aria-controls="bug-panel" data-bug-open>
+    <svg class="bug-lady" viewBox="0 0 32 32" aria-hidden="true">
+      <circle cx="16" cy="7.5" r="4.5" fill="#2b2e2c" />
+      <path d="M12.5 5.5L10 2.5M19.5 5.5L22 2.5" stroke="#2b2e2c" stroke-width="1.6" stroke-linecap="round" fill="none" />
+      <ellipse cx="16" cy="18.5" rx="10.5" ry="11" fill="#d9483b" />
+      <path d="M16 8v21.5" stroke="#2b2e2c" stroke-width="1.4" />
+      <circle cx="11" cy="15" r="2" fill="#2b2e2c" /><circle cx="21" cy="15" r="2" fill="#2b2e2c" />
+      <circle cx="10.5" cy="22" r="1.7" fill="#2b2e2c" /><circle cx="21.5" cy="22" r="1.7" fill="#2b2e2c" />
+      <circle cx="16" cy="26.5" r="1.3" fill="#2b2e2c" />
+    </svg>
+    <span class="bug-fab-text">Report an issue</span>
+  </button>
+
+  <section class="bug-panel" id="bug-panel" role="dialog" aria-labelledby="bug-title" hidden>
+    <header class="bug-head">
+      <h2 id="bug-title">Spotted a bug?</h2>
+      <button type="button" class="bug-x" aria-label="Close" data-bug-close>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+      </button>
+    </header>
+
+    <form class="bug-form" data-bug-form novalidate>
+      <label class="bug-field">
+        <span>What were you trying to do?</span>
+        <input name="what" maxlength="200" autocomplete="off" placeholder="e.g. Claim a room for 2 PM" />
+      </label>
+      <label class="bug-field">
+        <span>What went wrong?</span>
+        <textarea name="wrong" rows="4" maxlength="2000" required placeholder="What happened, and what did you expect?"></textarea>
+      </label>
+      <fieldset class="bug-sev">
+        <legend>How bad is it?</legend>
+        <label><input type="radio" name="severity" value="tiny" /><span><b aria-hidden="true">🐜</b> Tiny<small>Just annoying</small></span></label>
+        <label><input type="radio" name="severity" value="medium" checked /><span><b aria-hidden="true">🪲</b> Medium<small>Slows me down</small></span></label>
+        <label><input type="radio" name="severity" value="big" /><span><b aria-hidden="true">🕷️</b> Big<small>I can't get it done</small></span></label>
+      </fieldset>
+      <p class="bug-note">We add this page's address and your device automatically. Please don't include client information.</p>
+      <p class="bug-err" data-bug-err role="alert" hidden></p>
+      <button class="bug-send" type="submit">Send to the bug jar</button>
+    </form>
+
+    <div class="bug-done" data-bug-done hidden>
+      <p class="bug-done-big" aria-hidden="true">🫙🐞</p>
+      <p><strong>Caught it!</strong> Your report is in the bug jar for the directors to squash.</p>
+      <button type="button" class="bug-send ghost" data-bug-again>Report another</button>
+    </div>
+  </section>
+</div>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('[data-bug]'); if (!root) return;
+    var fab = root.querySelector('[data-bug-open]'), panel = root.querySelector('.bug-panel');
+    var form = root.querySelector('[data-bug-form]'), err = root.querySelector('[data-bug-err]'), done = root.querySelector('[data-bug-done]');
+    function open() { panel.hidden = false; fab.setAttribute('aria-expanded', 'true'); root.classList.add('is-open'); setTimeout(function () { (done.hidden ? form.elements.what : root.querySelector('[data-bug-again]')).focus(); }, 30); }
+    function close() { panel.hidden = true; fab.setAttribute('aria-expanded', 'false'); root.classList.remove('is-open'); fab.focus(); }
+    fab.addEventListener('click', function () { panel.hidden ? open() : close(); });
+    root.querySelector('[data-bug-close]').addEventListener('click', close);
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !panel.hidden) close(); });
+    root.querySelector('[data-bug-again]').addEventListener('click', function () { done.hidden = true; form.hidden = false; form.reset(); form.elements.what.focus(); });
+    form.addEventListener('submit', function (e) {
+      e.preventDefault(); err.hidden = true;
+      var wrong = form.elements.wrong.value.trim();
+      if (wrong.length < 3) { err.textContent = 'Tell us what went wrong.'; err.hidden = false; form.elements.wrong.focus(); return; }
+      var btn = form.querySelector('.bug-send'); btn.disabled = true; btn.textContent = 'Sending…';
+      var sev = form.querySelector('input[name="severity"]:checked');
+      var body = {
+        what: form.elements.what.value, wrong: wrong, severity: sev ? sev.value : 'medium',
+        page: location.pathname + location.search,
+        device: navigator.userAgent + ' · ' + window.innerWidth + '×' + window.innerHeight,
+      };
+      fetch('/api/bugs', { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
+        .then(function (r) { return r.json().catch(function () { return {}; }).then(function (b) { if (!r.ok) throw new Error(b.error || 'That didn’t send. Please try again.'); }); })
+        .then(function () { form.hidden = true; done.hidden = false; form.reset(); root.querySelector('[data-bug-again]').focus(); })
+        .catch(function (x) { err.textContent = x.message; err.hidden = false; })
+        .finally(function () { btn.disabled = false; btn.textContent = 'Send to the bug jar'; });
+    });
+  })();
+</script>
+
+<style is:global>
+  .bug { --bug-red: #d9483b; --bug-ink: #2f3331; font-family: Poppins, system-ui, sans-serif; }
+  .bug [hidden] { display: none !important; }
+  .bug-fab { position: fixed; right: 20px; bottom: 20px; z-index: 8000; display: inline-flex; align-items: center; gap: .55rem; padding: .55rem 1.05rem .55rem .6rem; border: 0; border-radius: 300px; background: #fff; color: var(--bug-ink); font: inherit; font-size: .88rem; font-weight: 500; cursor: pointer; box-shadow: 0 6px 22px rgba(30, 36, 31, .22), 0 0 0 1px rgba(30, 36, 31, .06); transition: transform .15s ease, box-shadow .15s ease; }
+  .bug-fab:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(30, 36, 31, .26), 0 0 0 1px rgba(30, 36, 31, .06); }
+  .bug-fab:focus-visible { outline: 3px solid var(--bug-red); outline-offset: 3px; }
+  .bug-lady { width: 30px; height: 30px; flex: none; transform-origin: 50% 60%; }
+  .bug-fab:hover .bug-lady { animation: bug-wiggle .5s ease-in-out; }
+  .bug.is-open .bug-fab { opacity: 0; pointer-events: none; }
+  @keyframes bug-wiggle { 25% { transform: rotate(-12deg); } 75% { transform: rotate(12deg); } }
+  @media (prefers-reduced-motion: reduce) { .bug-fab:hover .bug-lady { animation: none; } .bug-fab { transition: none; } }
+
+  .bug-panel { position: fixed; right: 20px; bottom: 20px; z-index: 8001; width: min(370px, calc(100vw - 32px)); max-height: calc(100vh - 40px); overflow: auto; background: #fff; color: var(--bug-ink); border-radius: 22px; box-shadow: 0 24px 60px rgba(30, 36, 31, .3); }
+  .bug-head { display: flex; align-items: center; justify-content: space-between; gap: .6rem; padding: 1.1rem 1.1rem .4rem 1.3rem; background: radial-gradient(circle at 92% -30%, #fbe3df 0 38%, transparent 39%); }
+  .bug-head h2 { margin: 0; font-size: 1.15rem; font-weight: 600; color: var(--bug-ink); }
+  .bug-x { display: grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: 50%; background: #fff; cursor: pointer; }
+  .bug-x svg { width: 18px; height: 18px; stroke: var(--bug-ink); stroke-width: 2; stroke-linecap: round; }
+  .bug-x:hover { background: #f3f4f3; }
+  .bug-form, .bug-done { padding: .5rem 1.3rem 1.3rem; }
+  .bug-field { display: flex; flex-direction: column; gap: .3rem; margin-bottom: .85rem; font-size: .85rem; font-weight: 500; }
+  .bug-field input, .bug-field textarea { font: inherit; font-size: .92rem; font-weight: 400; padding: .6rem .75rem; border: 1px solid #cdd3ce; border-radius: 12px; background: #fff; color: var(--bug-ink); resize: vertical; }
+  .bug-field input:focus, .bug-field textarea:focus { outline: 2px solid var(--bug-red); outline-offset: 0; border-color: transparent; }
+  .bug-sev { border: 0; margin: 0 0 .8rem; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .4rem; }
+  .bug-sev legend { font-size: .85rem; font-weight: 500; margin-bottom: .35rem; padding: 0; }
+  .bug-sev label { cursor: pointer; }
+  .bug-sev input { position: absolute; opacity: 0; pointer-events: none; }
+  .bug-sev span { display: flex; flex-direction: column; align-items: center; text-align: center; gap: .05rem; padding: .55rem .3rem .5rem; border: 1.5px solid #dfe3df; border-radius: 14px; font-size: .85rem; font-weight: 500; line-height: 1.2; }
+  .bug-sev b { font-size: 1.3rem; font-weight: 400; line-height: 1.2; }
+  .bug-sev small { font-size: .7rem; font-weight: 400; color: #6b716c; }
+  .bug-sev input:checked + span { border-color: var(--bug-red); background: #fdf1ef; }
+  .bug-sev input:focus-visible + span { outline: 2px solid var(--bug-red); outline-offset: 2px; }
+  .bug-note { margin: 0 0 .8rem; font-size: .75rem; line-height: 1.45; color: #6b716c; }
+  .bug-err { margin: 0 0 .7rem; font-size: .82rem; color: #8a1c14; background: #fbeceb; border-radius: 10px; padding: .5rem .7rem; }
+  .bug-send { width: 100%; font: inherit; font-size: .92rem; font-weight: 500; border: 0; border-radius: 300px; padding: .75rem 1rem; background: var(--bug-ink); color: #fff; cursor: pointer; }
+  .bug-send:hover { background: #1f2321; }
+  .bug-send:disabled { opacity: .6; cursor: default; }
+  .bug-send.ghost { background: #fff; color: var(--bug-ink); border: 1px solid #cdd3ce; }
+  .bug-done { text-align: center; }
+  .bug-done p { margin: 0 0 1rem; font-size: .92rem; line-height: 1.5; }
+  .bug-done-big { font-size: 2.6rem; line-height: 1; margin: .4rem 0 .8rem !important; }
+  @media (max-width: 600px) {
+    .bug-fab { right: 14px; bottom: 14px; padding: .5rem; }
+    .bug-fab-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    .bug-panel { right: 12px; bottom: 12px; }
+  }
+  @media print { .bug { display: none; } }
+</style>
