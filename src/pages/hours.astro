@@ -25,7 +25,6 @@ for (const t of (await getFinderData()).therapists) {
       <header class="hr-head">
         <p class="hr-eyebrow">Licensure</p>
         <h1>Supervision Hours</h1>
-        <p class="hr-lede" >Your supervised hours toward licensure. Each pay period they come in through <a href="/employeeportal/submit-hours">Submit Hours</a>. Your supervisor approves them, and only approved hours count toward your totals.</p>
         <div class="hr-tabs" role="tablist" id="hr-tabs" hidden>
           <button type="button" role="tab" data-tab="mine" aria-selected="true">My hours</button>
           <button type="button" role="tab" data-tab="team" aria-selected="false">My supervisees</button>
@@ -548,7 +547,6 @@ for (const t of (await getFinderData()).therapists) {
           var saved = null; try { saved = sessionStorage.getItem('hr-tab'); } catch (e) {}
           tab(saved === 'team' ? 'team' : 'mine');
         } else if (b.canSupervise) {
-          document.querySelector('.hr-lede').textContent = 'See your supervisees\u2019 progress toward licensure and approve the hours they log.';
           tab('team');
         } else if (!b.canLog) {
           $('hr-status').innerHTML = ''; $('hr-status').appendChild(el('p', 'hr-muted', 'Supervision Hours is for associates and supervisors. Ask a director to update your role if you need it.'));
@@ -564,15 +562,13 @@ for (const t of (await getFinderData()).therapists) {
   .hr-head { margin-bottom: 1.5rem; }
   .hr-eyebrow { text-transform: uppercase; letter-spacing: .12em; font-size: .75rem; font-weight: 500; margin: 0 0 .35rem; color: #dfe5df; }
   .hr-eyebrow.dark { color: var(--slate); }
-  .hr-head h1 { color: #fff; margin: 0 0 .5rem; font-size: clamp(2rem, 4vw, 2.8rem); }
-  .hr-lede { color: #e8ece8; max-width: 62ch; margin: 0 0 1.25rem; }
+  .hr-head h1 { color: #fff; margin: 0 0 1rem; font-size: clamp(2rem, 4vw, 2.8rem); }
   .hr-tabs { display: inline-flex; background: rgba(255,255,255,.12); border-radius: 300px; padding: 4px; gap: 2px; }
   .hr-tabs button { font: inherit; font-size: .92rem; border: 0; background: none; color: #fff; padding: .55rem 1.2rem; border-radius: 300px; cursor: pointer; }
   .hr-tabs button[aria-selected=true] { background: #fff; color: var(--charcoal); font-weight: 500; }
   .hr-card { background: #fff; color: var(--charcoal); border-radius: 28px; padding: 1.75rem 2rem; margin-bottom: 1.25rem; }
   .hr-card h2 { font-size: 1.35rem; margin: 0 0 1rem; color: var(--charcoal); }
   .hr-form-help { margin: -.4rem 0 1rem; line-height: 1.5; }
-  .hr-lede a { color: #fff; }
   .hr-card h3 { font-size: 1.05rem; margin: 1.5rem 0 .75rem; color: var(--charcoal); }
   .hr-cols { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 1.25rem; align-items: start; }
   .hr-row-head { display: flex; justify-content: space-between; align-items: flex-start; gap: .75rem 1rem; flex-wrap: wrap; }
