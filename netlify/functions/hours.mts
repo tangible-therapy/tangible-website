@@ -6,7 +6,9 @@
 //   - a supervisor (role "supervisor"): links associates as their supervisees and reviews their hours ("My supervisees")
 //   - the owner: every log, and can move an associate between supervisors
 // GET  ?view=mine | team | log&email=
-// POST { action: 'add' | 'edit' | 'delete' | 'review' | 'link' | 'unlink' | 'settings', ... }
+// POST { action: 'add' | 'edit' | 'delete' | 'review' | 'approveAll' | 'link' | 'unlink' | 'settings', ... }
+//   approveAll: approves every entry waiting for approval from all of the caller's OWN supervisees (returned
+//   entries are left alone). The owner's button only covers people they supervise themselves.
 import { currentPerson, listPeople } from '../lib/staff-session.ts';
 import { readLog, updateLog, allLogs, cleanEntry, cleanTargets, defaultTargets, totals, type Log } from '../lib/hours.ts';
 import { isOwner, type StaffRecord } from '../../src/data/staff-access.ts';
@@ -102,6 +104,29 @@ export default async (req: Request) => {
   }
 
   // ----- supervisor actions -----
+  if (action === 'approveAll') {
+    if (!canSupervise(me)) return json({ error: 'Only supervisors can do this.' }, 403);
+    const mine = (await allLogs()).filter((l) => l.link?.supervisor === me.email && l.supervisee !== me.email && l.entries.some((e) => e.status === 'pending'));
+    let entries = 0, people = 0;
+    const failed: string[] = [];
+    for (const l of mine) {
+      let n = 0;
+      const r = await updateLog(l.supervisee, (log) => {
+        if (!canReview(me, log) || log.link?.supervisor !== me.email) return 'Not your supervisee.';
+        const now = new Date().toISOString();
+        n = 0;
+        for (const e of log.entries) {
+          if (e.status !== 'pending') continue;
+          e.status = 'approved'; e.supervisorNote = undefined; e.reviewedAt = now; e.reviewedBy = me.email; n++;
+        }
+        if (!n) return 'Nothing to change.';
+      });
+      if (r.error) { if (r.error !== 'Nothing to change.') failed.push(name(l.supervisee)); continue; }
+      entries += n; people++;
+    }
+    return json({ ok: true, entries, people, failed });
+  }
+
   const target = String(b.email || '').toLowerCase();
   if (!target) return json({ error: 'Missing supervisee.' }, 400);
 
