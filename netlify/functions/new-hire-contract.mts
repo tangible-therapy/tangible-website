@@ -84,7 +84,7 @@ export default async (req: Request, context: any) => {
           draft: false,
           subject: 'Your Tangible Therapy employment contract',
           message: `Hi ${first}, welcome to Tangible! Here is your employment contract (${CONTRACT_TYPES[b.type].toLowerCase()}). Please review and sign it. If you have any questions, contact our front desk at ${CONTRACT_COPY_TO.email}.`,
-          copied_contacts: copyTo,
+          ...(copyTo.length ? { copied_contacts: copyTo } : {}), // SignWell rejects an empty list
           metadata: { folder_id: b.folderId, hire: name, type: b.type, office },
         }),
       });
