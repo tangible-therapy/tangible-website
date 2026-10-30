@@ -147,6 +147,53 @@ function prettyDate_(ymd) {
 
 function label_(n) { return GmailApp.getUserLabelByName(n) || GmailApp.createLabel(n); }
 
+// ---------- "Front desk mailer" web app ----------
+// "Finish setup" on /reception-onboarding asks the website (/api/new-hire-welcome) to send the new hire's
+// welcome email; the website calls this web app so it goes out FROM frontdesk@. The website builds the text
+// (src/data/welcome-email.ts) and only sends to new hires. This side only accepts the welcome email, needs the
+// key, and sends each person's welcome once (unless the website asks to resend).
+// Deploy → New deployment → Web app, Execute as Me, Who has access Anyone. Netlify env var
+// NEW_HIRE_MAIL_SCRIPT = web app URL + ?key=<MAILER_KEY> (run setupMailer to make/see the key).
+function doPost(e) {
+  var key = PropertiesService.getScriptProperties().getProperty('MAILER_KEY');
+  if (!key || !e || !e.parameter || e.parameter.key !== key) return json_({ error: 'unauthorized' });
+  var b = {};
+  try { b = JSON.parse((e.postData && e.postData.contents) || '{}'); } catch (err) { return json_({ error: 'Bad request.' }); }
+  if (b.kind !== 'welcome' || b.subject !== 'Welcome to Tangible!') return json_({ error: 'Only the welcome email can be sent this way.' });
+  var to = (Array.isArray(b.to) ? b.to : []).map(function (x) { return String(x).trim().toLowerCase(); })
+    .filter(function (x) { return /^[^\s@,;]+@[^\s@,;]+\.[a-z]{2,}$/.test(x); }).slice(0, 2);
+  var body = String(b.body || '').slice(0, 4000);
+  if (!to.length || !body) return json_({ error: 'Missing recipient or text.' });
+  var lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    var props = PropertiesService.getScriptProperties(), doneKey = 'welcome:' + to.join(',');
+    if (props.getProperty(doneKey) && !b.resend) return json_({ sent: false, already: true, to: to });
+    GmailApp.sendEmail(to.join(','), b.subject, body, { name: 'Tangible Therapy' });
+    props.setProperty(doneKey, new Date().toISOString());
+    return json_({ sent: true, to: to });
+  } catch (err) {
+    return json_({ error: 'Gmail said: ' + (err && err.message ? err.message : err) });
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// Opening the web app link in a browser just says it's running (nothing else is shown).
+function doGet() { return json_({ ok: true, service: 'Front desk mailer' }); }
+
+/** Run once from the editor: makes the mailer key (if needed) and logs it for the Netlify variable. */
+function setupMailer() {
+  var props = PropertiesService.getScriptProperties();
+  if (!props.getProperty('MAILER_KEY')) props.setProperty('MAILER_KEY', Utilities.getUuid().replace(/-/g, ''));
+  console.log('Running as: ' + Session.getActiveUser().getEmail());
+  console.log('Mailer key (add it to the end of the web app URL as ?key=...): ' + props.getProperty('MAILER_KEY'));
+}
+
+function json_(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+}
+
 /** One-time setup: checks access, makes the labels and installs the 10-minute check. */
 function setup() {
   var me = Session.getActiveUser().getEmail();

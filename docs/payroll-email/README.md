@@ -31,6 +31,24 @@ Status: set up 29 Oct 2026 in frontdesk@'s Apps Script (project "Payroll email",
 New → More → Google Apps Script; script.google.com's own "New project" link failed with two accounts signed in).
 The "New hire folders" web app was redeployed the same day with the payroll-info change.
 
+## Front desk mailer (welcome email from frontdesk@)
+The same project also has a small web app, **Front desk mailer** (doPost in the script). "Finish setup" on
+/reception-onboarding calls the website's /api/new-hire-welcome, which builds the welcome email from
+src/data/welcome-email.ts and asks this web app to send it from frontdesk@ to the new hire's personal and
+Tangible addresses. Only the welcome email is accepted (fixed subject), it needs the key, and each person gets
+it once (the website also records welcomeSentAt on their staff record).
+
+Mailer setup (once, owner — Claude can't deploy or handle the key):
+1. In the Payroll email project choose **setupMailer** → **Run**. The log shows the mailer key.
+2. **Deploy** → **New deployment** → gear → **Web app**. Description "Front desk mailer", Execute as **Me**
+   (frontdesk@), Who has access **Anyone**. **Deploy** and copy the **Web app URL**. (Allow if Google asks.)
+3. Netlify → Project configuration → Environment variables → **Add a variable**: Key `NEW_HIRE_MAIL_SCRIPT`,
+   value = Web app URL + `?key=` + the mailer key, all scopes / deploy contexts. Never put it in the repo.
+4. Trigger a new deploy so the website picks it up.
+Without it, Finish setup still does everything else and says the welcome email has to be sent by hand.
+To cut access: delete MAILER_KEY in Project Settings → Script properties (or archive the deployment).
+Changing the code later: Deploy → Manage deployments → edit → Version: New version → Deploy (URL stays).
+
 ## One-time setup (front desk account, ~5 minutes — Claude can't do the Google approval)
 1. Signed in as **frontdesk@tangiblementalhealth.com**, open https://script.google.com → **New project**. Name it
    **Payroll email**.
