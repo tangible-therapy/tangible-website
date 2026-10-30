@@ -5,12 +5,16 @@
 import { getStore } from '@netlify/blobs';
 import { LICENSES, type LicenseId } from '../../src/data/hours.ts';
 
-export type Kind = 'week' | 'session';
+// week/session: older single entries. bulk: "Add past hours" on /hours (a date range, for catching up or hours
+// outside a pay period). period: one per pay period, written by Submit Hours (/api/submit-hours) — the normal way.
+export type Kind = 'week' | 'session' | 'bulk' | 'period';
 export type Status = 'pending' | 'approved' | 'returned';
 export type Entry = {
   id: string;
   kind: Kind;
-  date: string;              // YYYY-MM-DD (week: the Monday of that week)
+  date: string;              // YYYY-MM-DD (week: the Monday of that week; bulk/period: first day)
+  end?: string;              // bulk/period: last day (YYYY-MM-DD)
+  period?: string;           // period: the payroll sheet's tab name, e.g. "10.24.26 to 11.6.26"
   direct: number;            // direct client care hours
   individual: number;        // individual supervision hours
   group: number;             // group supervision hours
@@ -58,22 +62,44 @@ export async function allLogs(): Promise<Log[]> {
   return logs.filter(Boolean) as Log[];
 }
 
-const num = (v: unknown) => {
+const num = (v: unknown, max = 168) => {
   const n = Math.round(Number(v) * 4) / 4; // quarter hours
-  return Number.isFinite(n) && n >= 0 && n <= 168 ? n : NaN;
+  return Number.isFinite(n) && n >= 0 && n <= max ? n : NaN;
 };
 
-/** Validates hours fields from the browser. Returns the clean fields or an error message. */
-export function cleanEntry(raw: any): { value?: Pick<Entry, 'kind' | 'date' | 'direct' | 'individual' | 'group' | 'observation' | 'other'>; error?: string } {
-  const kind: Kind = raw?.kind === 'session' ? 'session' : 'week';
+/** Validates hours fields from the browser. Returns the clean fields or an error message.
+ *  New entries from /hours are "bulk" (a date range); week/session only appear when editing older entries. */
+export function cleanEntry(raw: any): { value?: Pick<Entry, 'kind' | 'date' | 'end' | 'direct' | 'individual' | 'group' | 'observation' | 'other'>; error?: string } {
+  const kind: Kind = raw?.kind === 'session' ? 'session' : raw?.kind === 'week' ? 'week' : 'bulk';
+  const okDate = (d: string) => /^\d{4}-\d{2}-\d{2}$/.test(d) && !isNaN(Date.parse(d + 'T12:00:00Z'));
   const date = String(raw?.date || '');
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || isNaN(Date.parse(date + 'T12:00:00Z'))) return { error: 'Please choose a date.' };
+  if (!okDate(date)) return { error: kind === 'bulk' ? 'Please choose the first day.' : 'Please choose a date.' };
   const today = new Date(Date.now() - 7 * 3600e3).toISOString().slice(0, 10); // Utah-ish
   if (date > today) return { error: "The date can't be in the future." };
-  const v = { kind, date: kind === 'week' ? mondayOf(date) : date, direct: num(raw.direct ?? 0), individual: num(raw.individual ?? 0), group: num(raw.group ?? 0), observation: num(raw.observation ?? 0), other: num(raw.other ?? 0) };
-  if ([v.direct, v.individual, v.group, v.observation, v.other].some(Number.isNaN)) return { error: 'Hours must be numbers between 0 and 168 (quarter hours are fine).' };
+  let end: string | undefined, days = kind === 'session' ? 1 : 7;
+  if (kind === 'bulk') {
+    end = String(raw?.end || date);
+    if (!okDate(end)) return { error: 'Please choose the last day.' };
+    if (end > today) return { error: "The last day can't be in the future." };
+    if (end < date) return { error: 'The last day is before the first day.' };
+    days = Math.round((Date.parse(end) - Date.parse(date)) / 864e5) + 1;
+  }
+  const max = 24 * days, n = (v: unknown) => num(v, Math.max(168, max));
+  const v = { kind, date: kind === 'week' ? mondayOf(date) : date, ...(end ? { end } : {}), direct: n(raw.direct ?? 0), individual: n(raw.individual ?? 0), group: n(raw.group ?? 0), observation: n(raw.observation ?? 0), other: n(raw.other ?? 0) };
+  if ([v.direct, v.individual, v.group, v.observation, v.other].some(Number.isNaN)) return { error: 'Hours must be numbers of 0 or more (quarter hours are fine).' };
   if (v.direct + v.individual + v.group + v.other === 0) return { error: 'Please enter some hours.' };
-  if (v.direct + v.individual + v.group + v.other > 168) return { error: 'That adds up to more than 168 hours (a whole week).' };
+  if (v.direct + v.individual + v.group + v.other > max) return { error: `That adds up to more than ${max.toLocaleString('en-US')} hours (24 hours a day for those dates).` };
+  if (v.observation > v.individual + v.group) return { error: "Direct observation hours are part of supervision, so they can't be more than the supervision hours." };
+  return { value: v };
+}
+
+/** Supervised hours for one pay period, from Submit Hours. Same rules as above, at most 24 h × days. */
+export function cleanPeriodHours(raw: any, start: string, end: string): { value?: Pick<Entry, 'direct' | 'individual' | 'group' | 'observation' | 'other'>; error?: string } {
+  const days = Math.max(1, Math.round((Date.parse(end) - Date.parse(start)) / 864e5) + 1), max = 24 * days;
+  const n = (v: unknown) => num(v, max);
+  const v = { direct: n(raw?.direct ?? 0), individual: n(raw?.individual ?? 0), group: n(raw?.group ?? 0), observation: n(raw?.observation ?? 0), other: n(raw?.other ?? 0) };
+  if ([v.direct, v.individual, v.group, v.observation, v.other].some(Number.isNaN)) return { error: 'Supervised hours must be numbers of 0 or more (quarter hours are fine).' };
+  if (v.direct + v.individual + v.group + v.other > max) return { error: 'Your supervised hours add up to more than the pay period allows.' };
   if (v.observation > v.individual + v.group) return { error: "Direct observation hours are part of supervision, so they can't be more than the supervision hours." };
   return { value: v };
 }

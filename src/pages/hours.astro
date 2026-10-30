@@ -1,6 +1,8 @@
 ---
 // Supervision hours tracker (staff-only; data from /api/hours, see netlify/functions/hours.mts).
-// Supervisees log weekly totals or single sessions; their supervisor approves them.
+// Associates submit each pay period's supervised hours on Submit Hours (/employeeportal/submit-hours); they show
+// up here as one entry per pay period. This page adds past hours in bulk (a date range) for catching up or hours
+// outside a pay period. Their supervisor approves everything.
 // Supervisors link their own supervisees and see everyone's progress. No client information is stored.
 import Base from '../layouts/Base.astro';
 import { LICENSES, licenseFromCredential } from '../data/hours';
@@ -23,7 +25,7 @@ for (const t of (await getFinderData()).therapists) {
       <header class="hr-head">
         <p class="hr-eyebrow">Licensure</p>
         <h1>Supervision Hours</h1>
-        <p class="hr-lede" >Log your supervised hours toward licensure. Your supervisor approves them, and only approved hours count toward your totals.</p>
+        <p class="hr-lede" >Your supervised hours toward licensure. Each pay period they come in through <a href="/employeeportal/submit-hours">Submit Hours</a>. Your supervisor approves them, and only approved hours count toward your totals.</p>
         <div class="hr-tabs" role="tablist" id="hr-tabs" hidden>
           <button type="button" role="tab" data-tab="mine" aria-selected="true">My hours</button>
           <button type="button" role="tab" data-tab="team" aria-selected="false">My supervisees</button>
@@ -37,24 +39,24 @@ for (const t of (await getFinderData()).therapists) {
 
         <div class="hr-cols">
           <article class="hr-card">
-            <h2 id="hr-form-title">Log hours</h2>
+            <h2 id="hr-form-title">Add past hours</h2>
+            <p class="hr-muted small hr-form-help" id="hr-form-help">For hours from before you started using <a href="/employeeportal/submit-hours">Submit Hours</a> (to bring your Supervision Hours up to date), or hours outside a pay period. Enter the totals for the whole date range.</p>
             <form id="hr-form" novalidate>
-              <div class="hr-seg" role="radiogroup" aria-label="Entry type">
-                <label><input type="radio" name="kind" value="week" checked /> A whole week</label>
-                <label><input type="radio" name="kind" value="session" /> One session</label>
-              </div>
-              <label class="hr-field"><span id="hr-date-label">Week of (any day that week)</span><input type="date" name="date" required /></label>
               <div class="hr-nums">
-                <label class="hr-field"><span>Direct client care</span><input type="number" name="direct" min="0" max="168" step="0.25" inputmode="decimal" placeholder="0" /></label>
-                <label class="hr-field"><span>Individual supervision</span><input type="number" name="individual" min="0" max="168" step="0.25" inputmode="decimal" placeholder="0" /></label>
-                <label class="hr-field"><span>Group supervision</span><input type="number" name="group" min="0" max="168" step="0.25" inputmode="decimal" placeholder="0" /></label>
-                <label class="hr-field"><span>…of which direct observation</span><input type="number" name="observation" min="0" max="168" step="0.25" inputmode="decimal" placeholder="0" /></label>
-                <label class="hr-field hr-wide"><span>Other work time <small>(notes, admin, trainings, consults…)</small></span><input type="number" name="other" min="0" max="168" step="0.25" inputmode="decimal" placeholder="0" /></label>
+                <label class="hr-field"><span>From</span><input type="date" name="date" required /></label>
+                <label class="hr-field"><span>To</span><input type="date" name="end" required /></label>
+              </div>
+              <div class="hr-nums">
+                <label class="hr-field"><span>Direct client care</span><input type="number" name="direct" min="0" step="0.25" inputmode="decimal" placeholder="0" /></label>
+                <label class="hr-field"><span>Individual supervision</span><input type="number" name="individual" min="0" step="0.25" inputmode="decimal" placeholder="0" /></label>
+                <label class="hr-field"><span>Group supervision</span><input type="number" name="group" min="0" step="0.25" inputmode="decimal" placeholder="0" /></label>
+                <label class="hr-field"><span>…of which direct observation</span><input type="number" name="observation" min="0" step="0.25" inputmode="decimal" placeholder="0" /></label>
+                <label class="hr-field hr-wide"><span>Other work time <small>(notes, admin, trainings, consults…)</small></span><input type="number" name="other" min="0" step="0.25" inputmode="decimal" placeholder="0" /></label>
               </div>
               <p class="hr-muted small" id="hr-week-total" aria-live="polite"></p>
               <p class="hr-err" id="hr-form-err" hidden></p>
               <div class="hr-actions">
-                <button class="hr-btn primary" type="submit" id="hr-save">Add hours</button>
+                <button class="hr-btn primary" type="submit" id="hr-save">Add past hours</button>
                 <button class="hr-btn" type="button" id="hr-cancel" hidden>Cancel edit</button>
               </div>
             </form>
@@ -126,6 +128,14 @@ for (const t of (await getFinderData()).therapists) {
       function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
       function h(n) { n = Math.round(n * 100) / 100; return n.toLocaleString('en-US') + (n === 1 ? ' hr' : ' hrs'); }
       function fmtDate(iso) { return new Date(iso + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+      function addDays(iso, n) { var x = new Date(iso + 'T12:00:00Z'); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); }
+      function fmtRange(a, b) { return a === b ? fmtDate(a) : new Date(a + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' – ' + fmtDate(b); }
+      function entryTitle(e) {
+        if (e.kind === 'period') return 'Pay period ' + fmtRange(e.date, e.end || e.date);
+        if (e.kind === 'bulk') return 'Past hours ' + fmtRange(e.date, e.end || e.date);
+        return (e.kind === 'week' ? 'Week of ' : '') + fmtDate(e.date);
+      }
+      var KIND = { week: 'Week', session: 'Session', bulk: 'Past hours (bulk)', period: 'Pay period' };
       function notify(t, bad) { var a = $('hr-alert'); a.textContent = t; a.className = 'hr-alert' + (bad ? ' bad' : ''); a.hidden = false; clearTimeout(notify.t); notify.t = setTimeout(function () { a.hidden = true; }, t.length > 90 ? 12000 : 6000); }
       function call(method, qs, body) {
         return fetch(API + (qs || ''), { method: method, credentials: 'same-origin', headers: body ? { 'content-type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined })
@@ -169,7 +179,7 @@ for (const t of (await getFinderData()).therapists) {
         list.forEach(function (e) {
           var row = el('div', 'hr-entry ' + e.status);
           var head = el('div', 'hr-entry-head');
-          head.appendChild(el('strong', null, (e.kind === 'week' ? 'Week of ' : '') + fmtDate(e.date)));
+          head.appendChild(el('strong', null, entryTitle(e)));
           head.appendChild(el('span', 'hr-chip ' + e.status, STATUS[e.status]));
           row.appendChild(head);
           var parts = [];
@@ -181,6 +191,7 @@ for (const t of (await getFinderData()).therapists) {
           var tot = e.direct + e.individual + e.group + (e.other || 0);
           head.insertBefore(el('span', 'hr-entry-total', h(tot)), head.lastChild);
           row.appendChild(el('p', 'hr-entry-hours', parts.join(' · ')));
+          if (e.kind === 'period' && opts.mine) row.appendChild(el('p', 'hr-muted small', 'From Submit Hours. To change it, submit your hours again for that pay period.'));
           if (e.supervisorNote && e.status === 'returned') row.appendChild(el('p', 'hr-entry-sup', 'Supervisor: ' + e.supervisorNote));
           var btns = el('div', 'hr-actions');
           (opts.buttons(e) || []).forEach(function (b) { var x = el('button', 'hr-btn small' + (b.cls ? ' ' + b.cls : ''), b.label); x.type = 'button'; x.onclick = b.go; btns.appendChild(x); });
@@ -192,9 +203,9 @@ for (const t of (await getFinderData()).therapists) {
 
       // ---------- CSV ----------
       function csv(log, who) {
-        var rows = [['Supervisee', 'Type', 'Date', 'Direct client care', 'Individual supervision', 'Group supervision', 'Direct observation', 'Other work time', 'Total', 'Status', 'Reviewed by', 'Reviewed at']];
+        var rows = [['Supervisee', 'Type', 'From', 'To', 'Direct client care', 'Individual supervision', 'Group supervision', 'Direct observation', 'Other work time', 'Total', 'Status', 'Reviewed by', 'Reviewed at']];
         log.entries.slice().sort(function (a, b) { return a.date < b.date ? -1 : 1; }).forEach(function (e) {
-          rows.push([who, e.kind === 'week' ? 'Week' : 'Session', e.date, e.direct, e.individual, e.group, e.observation, e.other || 0, e.direct + e.individual + e.group + (e.other || 0), STATUS[e.status], e.reviewedBy || '', e.reviewedAt ? e.reviewedAt.slice(0, 10) : '']);
+          rows.push([who, KIND[e.kind] || e.kind, e.date, e.end || (e.kind === 'week' ? addDays(e.date, 6) : e.date), e.direct, e.individual, e.group, e.observation, e.other || 0, e.direct + e.individual + e.group + (e.other || 0), STATUS[e.status], e.reviewedBy || '', e.reviewedAt ? e.reviewedAt.slice(0, 10) : '']);
         });
         var text = rows.map(function (r) { return r.map(function (c) { c = String(c); if (/^[=+\-@]/.test(c)) c = "'" + c; return /[",\n]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c; }).join(','); }).join('\n');
         var a = document.createElement('a');
@@ -214,16 +225,17 @@ for (const t of (await getFinderData()).therapists) {
           who.appendChild(el('h2', null, 'Supervisor: ' + mine.supervisorName));
         } else {
           who.appendChild(el('h2', null, 'No supervisor linked yet'));
-          who.appendChild(el('p', 'hr-muted', 'You can start logging now. Ask your supervisor to add you in Supervision Hours; your entries will then go to them for approval.'));
+          who.appendChild(el('p', 'hr-muted', 'Your hours are saved now. Ask your supervisor to add you in Supervision Hours; your entries will then go to them for approval.'));
         }
         top.appendChild(who); s.appendChild(top);
         s.appendChild(progress(mine.link, mine.approved, mine.pending));
 
         var box = $('hr-entries'); box.innerHTML = '';
         box.appendChild(entryList(mine.log.entries, {
-          empty: 'Nothing logged yet. Add your first week on the left.',
+          mine: true,
+          empty: 'Nothing yet. Submit your hours each pay period on Submit Hours, and add any past hours on the left.',
           buttons: function (e) {
-            if (e.status === 'approved') return [];
+            if (e.status === 'approved' || e.kind === 'period') return [];
             return [
               { label: 'Edit', go: function () { startEdit(e); } },
               { label: 'Delete', cls: 'danger', go: function () { if (confirm('Delete this entry?')) save({ action: 'delete', id: e.id }, 'Entry deleted.'); } },
@@ -231,29 +243,27 @@ for (const t of (await getFinderData()).therapists) {
           },
         }));
       }
-      function kindChanged() {
-        var k = $('hr-form').querySelector('[name=kind]:checked').value;
-        $('hr-date-label').textContent = k === 'week' ? 'Week of (any day that week)' : 'Date of the session';
-      }
       function startEdit(e) {
         editing = e; var f = $('hr-form');
-        f.querySelector('[name=kind][value=' + e.kind + ']').checked = true; kindChanged();
-        ['date', 'direct', 'individual', 'group', 'observation', 'other'].forEach(function (k) { f.elements[k].value = e[k] || ''; });
-        weekTotal();
+        ['direct', 'individual', 'group', 'observation', 'other'].forEach(function (k) { f.elements[k].value = e[k] || ''; });
         f.elements.date.value = e.date;
+        f.elements.end.value = e.end || (e.kind === 'week' ? addDays(e.date, 6) : e.date);
+        weekTotal();
         $('hr-form-title').textContent = 'Edit entry'; $('hr-save').textContent = 'Save changes'; $('hr-cancel').hidden = false;
         f.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
       function resetForm() {
-        editing = null; var f = $('hr-form'); f.reset(); kindChanged();
-        f.elements.date.value = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
-        $('hr-form-title').textContent = 'Log hours'; $('hr-save').textContent = 'Add hours'; $('hr-cancel').hidden = true; $('hr-form-err').hidden = true;
+        editing = null; var f = $('hr-form'); f.reset();
+        var today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+        f.elements.date.max = today; f.elements.end.max = today;
+        $('hr-form-title').textContent = 'Add past hours'; $('hr-save').textContent = 'Add past hours'; $('hr-cancel').hidden = true; $('hr-form-err').hidden = true;
         weekTotal();
       }
       function weekTotal() {
         var f = $('hr-form'), sum = 0;
         ['direct', 'individual', 'group', 'other'].forEach(function (k) { sum += Number(f.elements[k].value) || 0; });
         $('hr-week-total').textContent = sum ? 'Counts toward your total: ' + h(sum) : '';
+        if (f.elements.date.value) f.elements.end.min = f.elements.date.value;
       }
       ['direct', 'individual', 'group', 'other'].forEach(function (k) { $('hr-form').elements[k].addEventListener('input', weekTotal); });
       function save(body, msg) {
@@ -261,15 +271,15 @@ for (const t of (await getFinderData()).therapists) {
       }
       $('hr-form').addEventListener('submit', function (ev) {
         ev.preventDefault();
-        var f = this, entry = { kind: f.querySelector('[name=kind]:checked').value, date: f.elements.date.value };
+        var f = this, entry = { kind: 'bulk', date: f.elements.date.value, end: f.elements.end.value || f.elements.date.value };
         ['direct', 'individual', 'group', 'observation', 'other'].forEach(function (k) { entry[k] = f.elements[k].value === '' ? 0 : Number(f.elements[k].value); });
         $('hr-save').disabled = true;
-        save(editing ? { action: 'edit', id: editing.id, entry: entry } : { action: 'add', entry: entry }, editing ? 'Entry updated and sent for approval.' : 'Hours added and sent for approval.')
+        save(editing ? { action: 'edit', id: editing.id, entry: entry } : { action: 'add', entry: entry }, editing ? 'Entry updated and sent for approval.' : 'Past hours added and sent for approval.')
           .then(resetForm)
           .catch(function (e) { $('hr-form-err').textContent = e.message; $('hr-form-err').hidden = false; })
           .finally(function () { $('hr-save').disabled = false; });
       });
-      $('hr-form').querySelectorAll('[name=kind]').forEach(function (r) { r.onchange = kindChanged; });
+      $('hr-form').elements.date.addEventListener('change', weekTotal);
       $('hr-cancel').onclick = resetForm;
       $('hr-csv-mine').onclick = function () { csv(mine.log, mine.superviseeName || 'me'); };
 
@@ -423,6 +433,8 @@ for (const t of (await getFinderData()).therapists) {
   .hr-tabs button[aria-selected=true] { background: #fff; color: var(--charcoal); font-weight: 500; }
   .hr-card { background: #fff; color: var(--charcoal); border-radius: 28px; padding: 1.75rem 2rem; margin-bottom: 1.25rem; }
   .hr-card h2 { font-size: 1.35rem; margin: 0 0 1rem; color: var(--charcoal); }
+  .hr-form-help { margin: -.4rem 0 1rem; line-height: 1.5; }
+  .hr-lede a { color: #fff; }
   .hr-card h3 { font-size: 1.05rem; margin: 1.5rem 0 .75rem; color: var(--charcoal); }
   .hr-cols { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 1.25rem; align-items: start; }
   .hr-row-head { display: flex; justify-content: space-between; align-items: flex-start; gap: .75rem 1rem; flex-wrap: wrap; }

@@ -11,7 +11,7 @@ export const employeeLinks: StaffLink[] = [
   { label: 'Policies & Procedures', href: '/employeeportal/policies' },
   // Room finder + "use this room today" claims (src/pages/employeeportal/rooms.astro, /api/rooms)
   { label: 'Find a Room', href: '/employeeportal/rooms' },
-  // The "Submit Hours" Google Form is embedded on this page (published form ID: SUBMIT_HOURS_FORM below)
+  // Submit Hours: a form built into the portal (docs/payroll-hours); the Google Form below is only the backup
   { label: 'Submit Hours', href: '/employeeportal/submit-hours' },
   { label: 'Online Learning', href: '/digital-products-2' },
   // TODO: add the paystub portal address (left blank = button hidden)
@@ -23,7 +23,8 @@ export const employeeLinks: StaffLink[] = [
   { label: 'Trainings', href: '/ceu' },
 ];
 
-// Published ID of the "Submit Hours" Google Form shown on /employeeportal/submit-hours.
+// Published ID of the old "Submit Hours" Google Form. /employeeportal/submit-hours shows it only as a backup
+// (Google connection not set up, or the payroll sheet can't be reached).
 export const SUBMIT_HOURS_FORM = '1FAIpQLScqzjlYy0R3CTIllUWeO3S8ZrC0JPiHJVtlYSYKlogd3t_dYg';
 
 export const newEmployeeLinks: StaffLink[] = [
