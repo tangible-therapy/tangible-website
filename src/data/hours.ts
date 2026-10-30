@@ -24,3 +24,22 @@ export function licenseFromCredential(credential: string): LicenseId | 'licensed
   if (/MFT/.test(c)) return 'amft'; // AMFT, LAMFT, MFT-I
   return null;
 }
+
+// Brief overview of Utah DOPL licensure requirements shown on "My hours" (/hours), by license.
+// Checked against DOPL's application pages and Utah Code 58-60 on 30 Oct 2026. Requirements change; when they
+// do, update this and the default targets above together. Sources: DOPL CMHC + LCSW application pages, Utah Code
+// 58-60-305 (MFT, 2025), OPLR's SB 26 (2024) explainer.
+export const DOPL_RULES = [
+  '3,000 total hours of supervised experience',
+  '1,200 hours of direct client care',
+  '100 hours of direct clinical supervision, in real time',
+  'At least 25 of those supervision hours must be direct observation (your supervisor watches a live or recorded session, then you discuss it)',
+  'No more than 25 group supervision hours count (group = 3 or more supervisees)',
+];
+export const DOPL_OLDER_RULE =
+  'If your associate license was issued before May 1, 2024, the older rule is 1,000 hours of direct client care and 75 hours of direct clinical supervision (within the 3,000 total). The 2024 law change lets people who started their hours before May 1, 2024 apply under the older rule until January 1, 2027.';
+export const DOPL_BY_LICENSE: Record<LicenseId, { exam: string; extra?: string; url: string }> = {
+  acmhc: { exam: 'Pass the NCMHCE (National Clinical Mental Health Counseling Examination)', extra: '2 hours of suicide prevention continuing education', url: 'https://commerce.utah.gov/?p=20869' },
+  csw: { exam: 'Pass the ASWB Clinical exam', extra: '2 hours of suicide prevention continuing education', url: 'https://commerce.utah.gov/dopl/social-work/apply-for-a-license/licensed-clinical-social-worker/utah-applicants/' },
+  amft: { exam: 'Pass the National MFT Exam (AMFTRB)', url: 'https://commerce.utah.gov/dopl/marriage-and-family-therapy/apply-for-a-license/marriage-and-family-therapist/' },
+};
