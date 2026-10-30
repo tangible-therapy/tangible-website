@@ -130,12 +130,12 @@ function listGroups() {
 // ---- helpers ----
 
 function name_(s) {
-  return String(s || '').normalize('NFC').replace(/[^\p{L}\p{M}\s'’.-]/gu, '').replace(/\s+/g, ' ').trim().slice(0, 60);
+  return String(s || '').normalize('NFC').replace(/[^A-Za-z\u00C0-\u024F\s'\u2019.-]/g, '').replace(/\s+/g, ' ').trim().slice(0, 60);
 }
 
 // first@, then first + last initial, then first.last (letters only, accents removed).
 function suggestions_(first, last) {
-  var plain = function (s) { return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z]/g, ''); };
+  var plain = function (s) { return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z]/g, ''); };
   var f = plain(first.split(' ')[0]), l = plain(last);
   var out = [f, f + l.charAt(0), f + '.' + l].filter(function (x, i, a) { return x && a.indexOf(x) === i; });
   return out.map(function (x) { return x + '@' + DOMAIN; });
