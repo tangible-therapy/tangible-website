@@ -5,7 +5,7 @@
 import { currentPerson } from './staff-session.ts';
 import { canOpen } from '../../src/data/staff-access.ts';
 
-export { CONTRACT_SIGNER, CONTRACT_COPY_TO, CONTRACT_TYPES } from '../../src/data/contracts.ts';
+export { CONTRACT_SIGNER, CONTRACT_COPY_TO, CONTRACT_TYPES, LOCATION_DIRECTORS } from '../../src/data/contracts.ts';
 
 export const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', 'cache-control': 'private, no-store' } });

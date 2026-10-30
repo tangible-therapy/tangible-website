@@ -5,8 +5,9 @@ On /reception-onboarding, front desk fills in the New hire box and clicks **Star
    (https://drive.google.com/drive/folders/1DCzPfLaGhpOIepDvmZ0krxgQl61bahwN), or links the one that's already
    there, and ticks step 1. New folders get the Employees folder's sharing.
 2. if a contract type is chosen (Full time / Part time / Part-time evenings): fills in that contract and sends
-   it through **SignWell** — Hannah Brown (COO) signs first, then the new hire at their personal email; front
-   desk (frontdesk@) is emailed the signed copy. The page shows who still needs to sign ("Check again"), and
+   it through **SignWell** in this order: the **location director** for their office (Orem: Skyler Anderson,
+   Sandy: Arianne Buck), then **Hannah Brown (COO)**, then the new hire at their personal email. Provo's
+   director is Hannah, so Provo contracts go Hannah → new hire. Front desk (frontdesk@) is emailed the signed copy. The page shows who still needs to sign ("Check again"), and
    once everyone has signed it saves "Employment Contract - First Last (signed).pdf" into their folder, ticks
    step 2 and turns the Stop banner into Go.
 
@@ -14,12 +15,14 @@ What gets filled in on the contract (from the Word masters in the Management fol
 - "Employee Name Here" → their name; "8th day of July, 2025" → their **start date** (Effective Date);
   "sixty dollars ($60)" → their pay written out, e.g. "sixty-two dollars and fifty cents ($62.50)";
   "Brady Clegg" → "Hannah Brown"; the three ______ lines → hidden SignWell fields (Hannah's signature, the
-  new hire's signature, the new hire's printed name).
+  new hire's signature, the new hire's printed name); a "LOCATION DIRECTOR:" signature space with the
+  director's printed name is added under the signature block (not for Provo).
 - Keep those sample words and the three ______ lines in the masters, or the script stops with a clear message
   ("Couldn't find the pay rate…"). A filled Google Doc copy "(sent for signing)" is left in their folder.
 
 How it fits together:
-- Page: src/pages/reception-onboarding.astro. Signer, copy-to address and contract types: src/data/contracts.ts.
+- Page: src/pages/reception-onboarding.astro. COO signer, location directors, copy-to address and contract
+  types: src/data/contracts.ts.
 - Website functions (behind the staff gate with the reception role rule — paths in staff-gate.ts config and
   src/data/staff-access.ts): netlify/functions/new-hire-folder.mts (/api/new-hire-folder) and
   netlify/functions/new-hire-contract.mts (/api/new-hire-contract: POST sends, GET ?id= checks status and saves
@@ -58,6 +61,6 @@ SignWell:
 4. Test on a Deploy Preview (test mode): Start a new hire with a made-up name and your own email as the
    personal email. Hannah gets the test email first, then you. Delete the test folder afterwards.
 
-To change who signs or gets the copy: src/data/contracts.ts. To add a contract type: add the Word file's ID to
+To change who signs (COO or a location director) or gets the copy: src/data/contracts.ts. To add a contract type: add the Word file's ID to
 CONTRACTS in the script (same sample wording) and the same key to CONTRACT_TYPES in src/data/contracts.ts.
 To change the key: delete FOLDER_KEY in Project Settings → Script properties, run setup, update Netlify.

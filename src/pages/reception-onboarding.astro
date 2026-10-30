@@ -6,7 +6,7 @@
 // No logins or passwords on this page — point to the team password manager.
 import Base from '../layouts/Base.astro';
 import { OFFICES } from '../data/staff-access';
-import { CONTRACT_SIGNER as SIGNER, CONTRACT_TYPES } from '../data/contracts';
+import { CONTRACT_SIGNER as SIGNER, CONTRACT_TYPES, LOCATION_DIRECTORS } from '../data/contracts';
 const CONTRACT_SIGNER = SIGNER.name;
 
 const DRIVE_EMPLOYEES = 'https://drive.google.com/drive/u/0/folders/1DCzPfLaGhpOIepDvmZ0krxgQl61bahwN';
@@ -17,7 +17,7 @@ const SIMPLEPRACTICE = 'https://secure.simplepractice.com/calendar/appointments'
 const ext = 'target="_blank" rel="noopener"';
 const a = (href: string, text: string) => `<a href="${href}" ${ext}>${text}</a>`;
 
-const offices = OFFICES.map((o) => ({ id: o.id, label: o.label, director: o.director, email: o.directorEmail }));
+const offices = OFFICES.map((o) => ({ id: o.id, label: o.label, director: o.director, email: o.directorEmail, directorFull: LOCATION_DIRECTORS[o.id]?.name || o.director }));
 
 type Step = { id: string; title: string; who?: 'clinician' | 'associate'; tag?: string; body: string };
 type Stage = { title: string; when: string; steps: Step[]; gate?: string };
@@ -37,13 +37,13 @@ const stages: Stage[] = [
         <li>Name it with their first and last name: <span class="ob-chip" data-fill="full">First Last</span></li></ol>` },
       { id: 'employment-contract', title: 'Send the employment contract', body: `
         <div class="ob-contract" data-contract hidden></div>
-        <p>This happens automatically when you click <b>Start a new hire</b> with a contract chosen: the right contract is filled in with their name, start date and pay, and sent through SignWell to <b>${CONTRACT_SIGNER} first</b>, then to the new hire’s personal email. The signed copy is saved in their folder and emailed to front desk.</p>
+        <p>This happens automatically when you click <b>Start a new hire</b> with a contract chosen: the right contract is filled in with their name, start date and pay, and sent through SignWell for signing in this order: <b>their location director</b> (<span data-fill="directorName">the office director</span>), then <b>${CONTRACT_SIGNER}</b> (COO), then the new hire at their personal email. For Provo, ${CONTRACT_SIGNER} signs once. The signed copy is saved in their folder and emailed to front desk.</p>
         <p class="pt-muted">If you need to do it by hand:</p><ol>
         <li>Open the ${a(DRIVE_MANAGEMENT, 'Management folder')}.</li>
         <li>Right-click the right employment contract → <b>Make a copy</b>.</li>
         <li>Fill in the copy: name, pay, employment status, etc.</li>
         <li><b>File</b> → <b>Download</b> → <b>PDF</b>.</li>
-        <li>Send it to ${CONTRACT_SIGNER} (COO) to sign.</li>
+        <li>Send it to their location director, then ${CONTRACT_SIGNER} (COO), to sign.</li>
         <li>Then send it to the new employee to sign.</li>
         <li>Save the signed copy in their Google Drive folder.</li></ol>` },
     ],
@@ -347,6 +347,7 @@ let num = 0;
         emailOrPersonal: [email(), val('personal')].filter(Boolean).join(', ') || 'their email',
         office: o.label,
         director: o.director + ' (' + o.email + ')',
+        directorName: o.directorFull,
         staffline: [full || 'Name', email() || 'email', ROLE[$('f-role').value] || 'role', o.id].join(', '),
         welcomeBody: welcome,
         payrollBody: payroll,
@@ -438,9 +439,9 @@ let num = 0;
     }
     function sendContract() {
       say('Filling in and sending their contract…');
-      return api('/api/new-hire-contract', { first: val('first'), last: val('last'), personal: val('personal'), type: $('f-contract').value, pay: val('pay'), start: val('start'), folderId: state.folder.id })
+      return api('/api/new-hire-contract', { first: val('first'), last: val('last'), personal: val('personal'), office: $('f-office').value, type: $('f-contract').value, pay: val('pay'), start: val('start'), folderId: state.folder.id })
         .then(function (res) {
-          state.contract = { id: res.id, status: res.status, test: !!res.testMode, docUrl: res.docUrl, recipients: [{ name: signer, signed: false }, { name: (val('first') + ' ' + val('last')).trim(), signed: false }] };
+          state.contract = { id: res.id, status: res.status, test: !!res.testMode, docUrl: res.docUrl, recipients: res.recipients || [{ name: signer, signed: false }, { name: (val('first') + ' ' + val('last')).trim(), signed: false }] };
           save(); say(''); render();
         })
         .catch(function (e) { say('Their folder is ready, but the contract wasn’t sent: ' + e.message + ' Fix it and click “Send their contract”, or do it by hand (step 2).', true); render(); });

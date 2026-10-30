@@ -75,7 +75,7 @@ function employeeFolder_(id) {
 }
 
 // body: { folderId, type: fulltime|parttime|evening, name, date ("15th day of November, 2026"),
-//         pay ("sixty-five dollars ($65)"), signerName ("Hannah Brown") }
+//         pay ("sixty-five dollars ($65)"), signerName ("Hannah Brown"), directorName ("Skyler Anderson" or "") }
 function contract_(body) {
   var t = CONTRACTS[body.type];
   if (!t) return { error: 'Unknown contract type.' };
@@ -93,12 +93,16 @@ function contract_(body) {
   replaceFirst_(b, '[a-z][a-z -]* dollars \\(\\$[0-9][0-9.,]*\\)', body.pay, 'the pay rate (like "sixty dollars ($60)")');
   replaceFirst_(b, 'Brady Clegg', body.signerName, 'the employer printed name ("Brady Clegg")');
 
-  // Signature block: 1st line = employer signature, 2nd = employee signature, 3rd = employee printed name.
-  // They become SignWell text tags (signer 1 = Hannah, signer 2 = the new hire), coloured white so they don't show.
+  // Signers, in SignWell's signing order: location director (if any) → COO → new hire.
+  var dir = cleanName_(body.directorName);
+  var coo = dir ? 2 : 1, hire = dir ? 3 : 2;
+
+  // Signature block: 1st line = employer (COO) signature, 2nd = employee signature, 3rd = employee printed name.
+  // They become SignWell text tags, coloured white so they don't show.
   var runs = [], r = null;
   while ((r = b.findText('_{10,}', r))) runs.push(r);
   if (runs.length !== 3) throw new Error('Expected 3 signature lines (________) in the ' + t.label + ' contract, found ' + runs.length + '.');
-  var tags = ['{{s:1:y::::200:32}}', '{{s:2:y::::200:32}}', '{{af_n:2:y::::200:18}}'];
+  var tags = ['{{s:' + coo + ':y::::200:32}}', '{{s:' + hire + ':y::::200:32}}', '{{af_n:' + hire + ':y::::200:18}}'];
   for (var i = runs.length - 1; i >= 0; i--) { // backwards, because two lines can share one paragraph
     var el = runs[i].getElement().asText(), s = runs[i].getStartOffset(), e = runs[i].getEndOffsetInclusive();
     el.deleteText(s, e);
@@ -106,10 +110,33 @@ function contract_(body) {
     el.setForegroundColor(s, s + tags[i].length - 1, '#ffffff');
     el.setUnderline(s, s + tags[i].length - 1, false);
   }
+  if (dir) addDirectorBlock_(b, dir);
   doc.saveAndClose();
 
   var pdf = DriveApp.getFileById(copy.id).getAs('application/pdf');
   return { docId: copy.id, docUrl: 'https://docs.google.com/document/d/' + copy.id + '/edit', fileName: 'Employment Contract - ' + name + '.pdf', pdf: Utilities.base64Encode(pdf.getBytes()) };
+}
+
+// Adds "LOCATION DIRECTOR:" with a signature space (SignWell signer 1) and their printed name under the
+// existing employer/employee signature block (after the last "Printed Name" line).
+function addDirectorBlock_(body, name) {
+  var hit = null, r = null;
+  while ((r = body.findText('Printed Name', r))) hit = r;
+  if (!hit) throw new Error('Couldn’t find the "Printed Name" line to add the location director under.');
+  var top = hit.getElement();
+  while (top.getParent() && top.getParent().getType() !== DocumentApp.ElementType.BODY_SECTION) top = top.getParent();
+  var at = body.getChildIndex(top) + 1;
+  var tag = '{{s:1:y::::200:32}}';
+  var lines = [['', false], ['LOCATION DIRECTOR:', true], [tag, false], ['Signature', false], [name, false], ['Printed Name', false]];
+  for (var i = 0; i < lines.length; i++) {
+    var p = body.insertParagraph(at + i, lines[i][0]);
+    p.setAlignment(DocumentApp.HorizontalAlignment.LEFT).setIndentFirstLine(0).setIndentStart(0);
+    var tx = p.editAsText();
+    if (lines[i][0]) {
+      tx.setBold(lines[i][1]).setUnderline(false).setBackgroundColor(null);
+      if (lines[i][0] === tag) tx.setForegroundColor('#ffffff'); else tx.setForegroundColor('#000000');
+    }
+  }
 }
 
 function replaceFirst_(body, pattern, value, label) {
@@ -147,7 +174,7 @@ function setup() {
 /** Run from the editor to try the contract filling without SignWell: makes a filled copy in a "Contract test" folder. */
 function testContract() {
   var f = folder_({ name: 'Contract test' });
-  var out = contract_({ folderId: f.id, type: 'fulltime', name: 'Test Person', date: '1st day of December, 2026', pay: 'sixty-five dollars ($65)', signerName: 'Hannah Brown' });
+  var out = contract_({ folderId: f.id, type: 'fulltime', name: 'Test Person', date: '1st day of December, 2026', pay: 'sixty-five dollars ($65)', signerName: 'Hannah Brown', directorName: 'Skyler Anderson' });
   console.log(out.error || ('Filled contract: ' + out.docUrl + ' (PDF ' + Math.round(out.pdf.length * 3 / 4 / 1024) + ' KB). Delete the "Contract test" folder when done.'));
 }
 
