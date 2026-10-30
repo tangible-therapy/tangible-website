@@ -7,6 +7,8 @@
 // No logins or passwords on this page — point to the team password manager.
 import Base from '../layouts/Base.astro';
 import { OFFICES } from '../data/staff-access';
+import { CONTRACT_SIGNER as SIGNER, CONTRACT_TYPES, LOCATION_DIRECTORS } from '../data/contracts';
+const CONTRACT_SIGNER = SIGNER.name;
 
 const DRIVE_EMPLOYEES = 'https://drive.google.com/drive/u/0/folders/1DCzPfLaGhpOIepDvmZ0krxgQl61bahwN';
 const DRIVE_MANAGEMENT = 'https://drive.google.com/drive/folders/1Lmh1aH0YbyRgcfuunFafXil00kQi1zLI';
@@ -17,7 +19,7 @@ const SIMPLEPRACTICE = 'https://secure.simplepractice.com/calendar/appointments'
 const ext = 'target="_blank" rel="noopener"';
 const a = (href: string, text: string) => `<a href="${href}" ${ext}>${text}</a>`;
 
-const offices = OFFICES.map((o) => ({ id: o.id, label: o.label, director: o.director, email: o.directorEmail }));
+const offices = OFFICES.map((o) => ({ id: o.id, label: o.label, director: o.director, email: o.directorEmail, directorFull: LOCATION_DIRECTORS[o.id]?.name || o.director }));
 
 type Step = { id: string; title: string; who?: 'clinician' | 'associate'; tag?: string; body: string };
 type Stage = { title: string; when: string; steps: Step[]; gate?: string };
@@ -35,13 +37,16 @@ const stages: Stage[] = [
         <li>Open the ${a(DRIVE_EMPLOYEES, 'Employee folder')} in Google Drive.</li>
         <li>Click <b>New</b> → <b>New folder</b> (top left).</li>
         <li>Name it with their first and last name: <span class="ob-chip" data-fill="full">First Last</span></li></ol>` },
-      { id: 'employment-contract', title: 'Send the employment contract', body: `<ol>
+      { id: 'employment-contract', title: 'Send the employment contract', body: `
+        <div class="ob-contract" data-contract hidden></div>
+        <p>This happens automatically when you click <b>Start a new hire</b> with a contract chosen: the right contract is filled in with their name, start date and pay, and sent through SignWell for signing in this order: <b>their location director</b> (<span data-fill="directorName">the office director</span>), then <b>${CONTRACT_SIGNER}</b> (COO), then the new hire at their personal email. For Provo, ${CONTRACT_SIGNER} signs once. The signed copy is saved in their folder automatically (and shows here when it’s done).</p>
+        <p class="pt-muted">If you need to do it by hand:</p><ol>
         <li>Open the ${a(DRIVE_MANAGEMENT, 'Management folder')}.</li>
         <li>Right-click the right employment contract → <b>Make a copy</b>.</li>
         <li>Fill in the copy: name, pay, employment status, etc.</li>
         <li><b>File</b> → <b>Download</b> → <b>PDF</b>.</li>
-        <li>Send it to the office director (<span data-fill="director">the office director</span>) for approval.</li>
-        <li>Once approved, send it to the new employee to sign.</li>
+        <li>Send it to their location director, then ${CONTRACT_SIGNER} (COO), to sign.</li>
+        <li>Then send it to the new employee to sign.</li>
         <li>Save the signed copy in their Google Drive folder.</li></ol>` },
     ],
   },
@@ -170,12 +175,12 @@ let num = 0;
     <aside class="ob-side">
       <section class="pt-card ob-hire">
         <h2>New hire</h2>
-        <p class="pt-muted">Fill these in, then click Start a new hire to make their Google Drive folder. The emails and names below fill themselves, and Create their email (step 3) uses them to set up their Google account and Employee Portal access.</p>
+        <p class="pt-muted">Fill these in, then click Start a new hire. It makes their Google Drive folder and sends their contract for signing. The emails and names below fill themselves, and Create their email (step 3) uses them to set up their Google account and Employee Portal access.</p>
         <div class="ob-fields">
           <label class="pt-field">First name<input id="f-first" autocomplete="off"></label>
           <label class="pt-field">Last name<input id="f-last" autocomplete="off"></label>
           <label class="pt-field ob-wide">Tangible email<input id="f-email" type="email" autocomplete="off" placeholder="Suggested from first name"></label>
-          <label class="pt-field ob-wide">Personal email<input id="f-personal" type="email" autocomplete="off"></label>
+          <label class="pt-field ob-wide">Personal email<input id="f-personal" type="email" autocomplete="off" placeholder="Their contract is sent here"></label>
           <label class="pt-field">Office<select id="f-office">{offices.map((o) => <option value={o.id}>{o.label}</option>)}</select></label>
           <label class="pt-field">Role<select id="f-role">
             <option value="therapist">Therapist (licensed)</option>
@@ -187,11 +192,17 @@ let num = 0;
           <label class="pt-field ob-wide ob-chk"><input type="checkbox" id="f-alsosup"> Also a clinical supervisor</label>
           <label class="pt-field ob-wide" id="f-supervisor-wrap">Their supervisor<select id="f-supervisor"><option value="">Choose later</option></select></label>
           <label class="pt-field">Start date<input id="f-start" type="date"></label>
-          <label class="pt-field">Pay rate<input id="f-pay" autocomplete="off" placeholder="Not saved"></label>
+          <label class="pt-field">Pay per billable hr ($)<input id="f-pay" inputmode="decimal" autocomplete="off" placeholder="e.g. 60"></label>
+          <label class="pt-field ob-wide">Contract to send<select id="f-contract">
+            {Object.entries(CONTRACT_TYPES).map(([k, v]) => <option value={k}>{v}</option>)}
+            <option value="none">Don’t send a contract (I’ll do it by hand)</option>
+          </select></label>
         </div>
         <button type="button" class="pt-btn ob-start" id="ob-start">Start a new hire</button>
         <p class="ob-status" id="ob-status" role="status" aria-live="polite"></p>
         <p class="ob-folder" data-folder hidden></p>
+        <div class="ob-contract" data-contract hidden></div>
+        <button type="button" class="pt-btn ghost ob-send" id="ob-send" hidden>Send their contract</button>
         <p class="ob-folder" data-account hidden></p>
         <button type="button" class="ob-reset" id="ob-reset" hidden>Clear for the next hire</button>
       </section>
@@ -247,6 +258,13 @@ let num = 0;
   .ob .ob-fields input, .ob .ob-fields select { font: inherit; font-size: .9rem; color: var(--charcoal); border: 1px solid #c9cfca; border-radius: 10px; padding: .45rem .6rem; background: #fff; min-width: 0; width: 100%; box-sizing: border-box; min-height: 38px; }
   .ob .ob-start { width: 100%; }
   .ob .pt-btn[aria-busy=true], .ob .ob-start[aria-busy=true] { opacity: .6; cursor: progress; }
+  .ob .ob-send { width: 100%; margin-top: .6rem; }
+  .ob .ob-send[hidden] { display: none; }
+  .ob .ob-contract { font-size: .88rem; background: #f6f4ec; color: #4a4630; border-radius: 10px; padding: .55rem .75rem; margin: .6rem 0 0; line-height: 1.5; }
+  .ob .ob-contract[hidden] { display: none; }
+  .ob .ob-contract.ok { background: #e8f1ea; color: #23432c; }
+  .ob .ob-contract.bad { background: #fbe9e4; color: #6b2a17; }
+  .ob .ob-contract a { color: inherit; font-weight: 600; }
   .ob .ob-status { font-size: .85rem; margin: .6rem 0 0; }
   .ob .ob-status:empty { display: none; }
   .ob .ob-status.err { color: #8a2f1c; }
@@ -313,10 +331,10 @@ let num = 0;
   }
 </style>
 
-<script is:inline define:vars={{ offices }}>
+<script is:inline define:vars={{ offices, signer: SIGNER.name }}>
   (function () {
     var KEY = 'tt.onboard.v1';
-    var F = ['first', 'last', 'email', 'personal', 'office', 'role', 'start', 'supervisor'];
+    var F = ['first', 'last', 'email', 'personal', 'office', 'role', 'start', 'supervisor', 'contract'];
     var $ = function (id) { return document.getElementById(id); };
     var state = { f: {}, done: {} };
     try { var s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s && s.f && s.done) state = s; } catch (e) {}
@@ -354,6 +372,7 @@ let num = 0;
         emailOrPersonal: [email(), val('personal')].filter(Boolean).join(', ') || 'their email',
         office: o.label,
         director: o.director + ' (' + o.email + ')',
+        directorName: o.directorFull,
         staffline: [full || 'Name', email() || 'email', portalRoles().join('+') || 'role', o.id].join(', ') + (supName() ? ' · supervisor: ' + supName() : ''),
         supervisorName: supName() || 'set in the New hire box',
         welcomeBody: welcome,
@@ -390,12 +409,22 @@ let num = 0;
       $('ob-done').textContent = done; $('ob-total').textContent = all;
       $('ob-bar').style.width = (all ? Math.round(done / all * 100) : 0) + '%';
       var gate = document.querySelector('.ob-gate');
+      var c = state.contract, cText = contractText();
       if (gate) {
-        var signed = !!state.done['employment-contract'];
+        var signed = c ? isDone(c) : !!state.done['employment-contract'];
         gate.classList.toggle('ok', signed);
         gate.querySelector('strong').textContent = signed ? 'Go' : 'Stop';
-        gate.querySelector('span').textContent = signed ? 'Contract signed. You can move on to setting up their accounts.' : 'Don’t do any other steps until the employment contract is signed and saved.';
+        gate.querySelector('span').textContent = signed ? 'Contract signed. You can move on to setting up their accounts.'
+          : (c ? cText + ' Don’t do any other steps until it’s signed.' : 'Don’t do any other steps until the employment contract is signed and saved.');
       }
+      document.querySelectorAll('[data-contract]').forEach(function (n) {
+        n.hidden = !c; if (!c) return;
+        n.textContent = ''; n.className = 'ob-contract' + (isDone(c) ? ' ok' : isDead(c) ? ' bad' : '');
+        n.append(cText + ' ');
+        if (isDone(c) && c.signedUrl) { var l = document.createElement('a'); l.href = c.signedUrl; l.target = '_blank'; l.rel = 'noopener'; l.textContent = 'Open the signed contract'; n.append(l); }
+        else if (!isDone(c) && !isDead(c)) { var b = document.createElement('button'); b.type = 'button'; b.className = 'ob-mini'; b.dataset.recheck = '1'; b.textContent = checking ? 'Checking…' : 'Check again'; b.disabled = checking; n.append(b); }
+        else if (isDead(c)) { var r = document.createElement('button'); r.type = 'button'; r.className = 'ob-mini'; r.dataset.resend = '1'; r.textContent = 'Send a new contract'; n.append(r); }
+      });
       var started = state.folder && state.folder.url;
       document.querySelectorAll('[data-folder]').forEach(function (n) {
         n.hidden = !started;
@@ -422,8 +451,65 @@ let num = 0;
       });
       var acctBtn = $('ob-account'); if (acctBtn) acctBtn.hidden = !!acct;
       $('ob-start').hidden = !!started;
+      $('ob-send').hidden = !started || !!c || $('f-contract').value === 'none';
       $('ob-reset').hidden = !started && !Object.keys(state.done).length && !F.some(function (k) { return state.f[k]; });
     }
+
+    // ---- employment contract (SignWell, via /api/new-hire-contract) ----
+    var checking = false;
+    function isDone(c) { return /complete/i.test(c.status || ''); }
+    function isDead(c) { return /declin|expire|cancel/i.test(c.status || ''); }
+    function contractText() {
+      var c = state.contract; if (!c) return '';
+      var test = c.test ? ' (test mode, not binding)' : '';
+      if (isDone(c)) return 'Contract signed by everyone' + (c.signedUrl ? ' and saved to their folder' : '') + '.' + test;
+      if (isDead(c)) return 'The contract was ' + String(c.status).toLowerCase() + '.' + test;
+      var next = (c.recipients || []).filter(function (r) { return !r.signed; })[0];
+      return 'Contract sent' + test + '. Waiting for ' + (next ? next.name : signer) + ' to sign.';
+    }
+    function api(url, body) {
+      return fetch(url, body ? { method: 'POST', headers: { 'content-type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(body) } : { credentials: 'same-origin' })
+        .then(function (r) { return r.json().catch(function () { return { error: 'The website didn’t answer (status ' + r.status + ').' }; }); })
+        .then(function (res) { if (!res || res.error) throw new Error((res && res.error) || 'Something went wrong.'); return res; });
+    }
+    function contractProblem() {
+      if ($('f-contract').value === 'none') return '';
+      if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(val('personal'))) return 'Add their personal email. Their contract is sent there.';
+      if (!val('start')) return 'Add their start date. It goes on the contract.';
+      if (!(Number(val('pay').replace(/[$,\s]/g, '')) > 0)) return 'Add their pay per billable hour (e.g. 60). It goes on the contract.';
+      return '';
+    }
+    function sendContract() {
+      say('Filling in and sending their contract…');
+      return api('/api/new-hire-contract', { first: val('first'), last: val('last'), personal: val('personal'), office: $('f-office').value, type: $('f-contract').value, pay: val('pay'), start: val('start'), folderId: state.folder.id })
+        .then(function (res) {
+          state.contract = { id: res.id, status: res.status, test: !!res.testMode, docUrl: res.docUrl, recipients: res.recipients || [{ name: signer, signed: false }, { name: (val('first') + ' ' + val('last')).trim(), signed: false }] };
+          save(); say(''); render();
+        })
+        .catch(function (e) { say('Their folder is ready, but the contract wasn’t sent: ' + e.message + ' Fix it and click “Send their contract”, or do it by hand (step 2).', true); render(); });
+    }
+    function checkContract() {
+      var c = state.contract;
+      if (!c || !c.id || checking || (isDone(c) && c.signedUrl) || isDead(c)) return;
+      checking = true; render();
+      api('/api/new-hire-contract?id=' + encodeURIComponent(c.id))
+        .then(function (res) {
+          c.status = res.status; c.recipients = res.recipients && res.recipients.length ? res.recipients : c.recipients; c.signedUrl = res.signedUrl || c.signedUrl;
+          if (isDone(c)) state.done['employment-contract'] = 1;
+          save();
+        })
+        .catch(function (e) { say('Couldn’t check the contract: ' + e.message, true); })
+        .then(function () { checking = false; render(); });
+    }
+    document.addEventListener('click', function (e) {
+      if (e.target.closest('[data-recheck]')) checkContract();
+      if (e.target.closest('[data-resend]')) { delete state.contract; save(); render(); }
+    });
+    $('ob-send').addEventListener('click', function () {
+      var p = contractProblem(); if (p) { say(p, true); return; }
+      if (!state.folder || !state.folder.id) { say('Their folder link is from before contracts were added. Click “Clear for the next hire” and start again.', true); return; }
+      var b = $('ob-send'); b.disabled = true; sendContract().then(function () { b.disabled = false; });
+    });
 
     // "Start a new hire": creates (or finds) their folder in the shared Employee folder on Google Drive
     // through /api/new-hire-folder, then ticks step 1.
@@ -432,15 +518,18 @@ let num = 0;
     startBtn.addEventListener('click', function () {
       var first = val('first'), last = val('last');
       if (!first || !last) { say('Type their first and last name first.', true); (first ? $('f-last') : $('f-first')).focus(); return; }
+      var p = contractProblem(); if (p) { say(p + ' (Or choose “Don’t send a contract”.)', true); return; }
       startBtn.setAttribute('aria-busy', 'true'); startBtn.disabled = true; say('Creating their Drive folder…');
-      fetch('/api/new-hire-folder', { method: 'POST', headers: { 'content-type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ first: first, last: last }) })
-        .then(function (r) { return r.json().catch(function () { return { error: 'The folder service didn’t answer (status ' + r.status + ').' }; }); })
+      api('/api/new-hire-folder', { first: first, last: last })
         .then(function (res) {
-          if (!res || res.error || !res.url) throw new Error((res && res.error) || 'Something went wrong.');
-          state.folder = { url: res.url, name: res.name, created: !!res.created };
+          if (!res.url) throw new Error('Google didn’t return the folder link.');
+          state.folder = { id: res.id, url: res.url, name: res.name, created: !!res.created };
           state.done.googledrive = 1; save(); say(''); render();
-        })
-        .catch(function (e) { say('Couldn’t create the folder automatically: ' + e.message + ' You can make it by hand (step 1), or try again.', true); })
+          if ($('f-contract').value !== 'none') {
+            if (!res.id) { say('Their folder is ready, but the Google script needs updating before contracts can be sent (see docs/new-hire-folder).', true); return; }
+            return sendContract();
+          }
+        }, function (e) { say('Couldn’t create the folder automatically: ' + e.message + ' You can make it by hand (step 1), or try again.', true); })
         .then(function () { startBtn.removeAttribute('aria-busy'); startBtn.disabled = false; });
     });
 
@@ -506,6 +595,7 @@ let num = 0;
       render(); window.scrollTo(0, 0);
     });
     render();
+    checkContract(); // on every visit: picks up signatures and saves the signed PDF once it's complete
   })();
 </script>
 </Base>
