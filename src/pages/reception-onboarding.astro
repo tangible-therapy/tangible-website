@@ -538,7 +538,7 @@ let num = 0;
       if (!first || !last) { say('Type their first and last name first.', true); (first ? $('f-last') : $('f-first')).focus(); return; }
       var p = contractProblem(); if (p) { say(p + ' (Or choose “Don’t send a contract”.)', true); return; }
       startBtn.setAttribute('aria-busy', 'true'); startBtn.disabled = true; say('Creating their Drive folder…');
-      api('/api/new-hire-folder', { first: first, last: last, payRate: payRate(), startDate: val('start') })
+      api('/api/new-hire-folder', { first: first, last: last, payRate: payRate(), startDate: val('start'), office: $('f-office').value })
         .then(function (res) {
           if (!res.url) throw new Error('Google didn’t return the folder link.');
           state.folder = { id: res.id, url: res.url, name: res.name, created: !!res.created, payroll: res.payroll || null };
@@ -557,7 +557,7 @@ let num = 0;
       if (!state.folder || !state.folder.name || (!val('pay') && !val('start'))) return;
       var parts = state.folder.name.split(' '), last = parts.pop(), first = parts.join(' ');
       if (!first || !last) return;
-      api('/api/new-hire-folder', { first: first, last: last, payRate: payRate(), startDate: val('start') })
+      api('/api/new-hire-folder', { first: first, last: last, payRate: payRate(), startDate: val('start'), office: $('f-office').value })
         .then(function (res) { if (res.payroll) { state.folder.payroll = res.payroll; save(); render(); } })
         .catch(function (e) { say('Couldn’t save pay rate / start date to their folder: ' + e.message, true); });
     }

@@ -1,0 +1,227 @@
+---
+// Add/Update Website Profile (staff: front desk, directors, owner — reception rule in src/data/staff-access.ts).
+// A form built into the page (a Google Form with a photo upload can't be embedded) that adds or updates a
+// therapist on the "tangible sheets" Google Sheet through /api/website-profile → "New hire folders" Apps Script.
+// Only filled-in answers change anything; newer answers replace older. The website rebuilds from the sheet on
+// its own ~15 minutes later. A NEW therapist goes on the website once both a photo and a bio are in.
+// Docs: docs/website-profile/README.md.
+import Base from '../../layouts/Base.astro';
+
+const populations = ['Kids', 'Teens', 'Adults', 'Elderly', 'Couples', 'Families', 'LGBTQ+', 'Transgender'];
+const modalities = ['ACT', 'CBT', 'DBT', 'EFT', 'EMDR', 'ERP', 'IFS', 'Motivational Interviewing', 'Solution-focused', 'Family Therapy Models', 'Somatic', 'Mindfulness', 'Play Therapy', 'Gottman'];
+const diagnoses = ['Addiction', 'ADHD', 'Anxiety', 'Autism', 'Bipolar Disorder', 'BPD', 'Chronic Illness', 'Chronic Pain', 'Codependency', 'Couples', 'Depression', 'Divorce', 'Domestic Violence', 'Eating Disorders', 'Faith Transitions', 'Family Therapy', 'Grief', 'Infidelity', 'Infertility', 'LGBTQ', 'OCD', 'Parenting', 'Pregnancy, Prenatal, Postpartum', 'Psychosis', 'School Issues', 'Self Esteem', 'Self-Harming', 'Sex Therapy', 'Sleep or Insomnia', 'Spirituality/Religion', 'Substance Use', 'Trauma/PTSD', "Women's Issues", "Men's Issues", 'Life Transitions', 'Body Image'];
+const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const box = (group: string, items: string[]) => items.map((x) => ({ group, x }));
+---
+<Base title="Add/Update Website Profile | Employee Portal | Tangible Therapy" description="Add a therapist to the website or update their profile." noindex>
+<div class="pt-page wp">
+  <div class="pt-head">
+    <div>
+      <p class="pt-eyebrow">Reception</p>
+      <h1>Add/Update Website Profile</h1>
+    </div>
+  </div>
+
+  <p class="pt-soon wp-intro">Type their name. If they’re already on the website, you only need to fill in what’s changing: for a new photo, just add their name and the photo. Anything you leave blank stays as it is. A <b>new</b> therapist goes on the website once they have both a photo and a bio. Changes show on the website about 15 minutes after you submit.</p>
+
+  <form class="wp-form" id="wp-form" novalidate>
+    <section class="pt-card">
+      <h2>Who</h2>
+      <div class="wp-grid">
+        <label class="pt-field wp-wide">First and last name (as it should show on the website)
+          <input id="wp-name" list="wp-names" autocomplete="off" required placeholder="Start typing to see who’s already on the sheet">
+          <datalist id="wp-names"></datalist>
+        </label>
+        <p class="wp-found wp-wide" id="wp-found" role="status" aria-live="polite" hidden></p>
+        <label class="pt-field">Credential<input id="wp-credential" maxlength="40" placeholder="e.g. LCSW, ACMHC, AMFT"></label>
+        <label class="pt-field">Office (for someone new)<select id="wp-office">
+          <option value="">Choose…</option><option value="orem">Orem</option><option value="provo">Provo</option><option value="sandy">Sandy</option><option value="virtual">Virtual only</option>
+        </select></label>
+        <label class="pt-field">Gender<select id="wp-gender"><option value="">Keep as is</option><option>Female</option><option>Male</option><option>Non-binary</option></select></label>
+        <div class="pt-field wp-bday" role="group" aria-labelledby="wp-bday-label"><span id="wp-bday-label">Birthday (staff dashboard only)</span>
+          <div class="wp-bday-row">
+            <select id="wp-bmonth" aria-label="Birthday month"><option value="">Month</option>{months.map((m, i) => <option value={String(i + 1).padStart(2, '0')}>{m}</option>)}</select>
+            <select id="wp-bday" aria-label="Birthday day"><option value="">Day</option>{Array.from({ length: 31 }, (_, i) => <option value={String(i + 1).padStart(2, '0')}>{i + 1}</option>)}</select>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="pt-card">
+      <h2>Photo and bio</h2>
+      <div class="wp-grid">
+        <div class="pt-field wp-wide">Photo (JPG or PNG, portrait, face near the top)
+          <div class="wp-photo">
+            <img id="wp-preview" alt="" hidden>
+            <div>
+              <input type="file" id="wp-photo" accept="image/jpeg,image/png,image/heic,image/heif">
+              <p class="pt-muted" id="wp-photo-note">Leave empty to keep their current photo.</p>
+            </div>
+          </div>
+        </div>
+        <label class="pt-field wp-wide">Bio<textarea id="wp-bio" rows="8" maxlength="6000" placeholder="Leave empty to keep their current bio. Put a blank line between paragraphs."></textarea></label>
+        <label class="pt-field wp-wide">Search description (optional)<textarea id="wp-seo" rows="2" maxlength="300" placeholder="Short summary for Google. Leave empty and the website writes one from the bio."></textarea></label>
+      </div>
+    </section>
+
+    <section class="pt-card">
+      <h2>Who they see and how</h2>
+      <p class="pt-muted">Tick everything that applies. If you tick anything in a group, it replaces that whole group on the sheet. Leave a group empty to keep it as is.</p>
+      <fieldset class="wp-checks"><legend>Populations</legend>{box('ages', populations).map((o) => <label><input type="checkbox" name={o.group} value={o.x}> {o.x}</label>)}</fieldset>
+      <fieldset class="wp-checks"><legend>Modalities</legend>{box('modalities', modalities).map((o) => <label><input type="checkbox" name={o.group} value={o.x}> {o.x}</label>)}
+        <label class="wp-other">Other <input id="wp-mod-other" placeholder="comma separated"></label></fieldset>
+      <fieldset class="wp-checks"><legend>Diagnoses they’re comfortable working with</legend>{box('comfortable', diagnoses).map((o) => <label><input type="checkbox" name={o.group} value={o.x}> {o.x}</label>)}</fieldset>
+      <fieldset class="wp-checks"><legend>Diagnoses they specialize in</legend>{box('specialties', diagnoses).map((o) => <label><input type="checkbox" name={o.group} value={o.x}> {o.x}</label>)}</fieldset>
+    </section>
+
+    <section class="pt-card">
+      <h2>Booking</h2>
+      <div class="wp-grid">
+        <label class="pt-field">SimplePractice clinician ID<input id="wp-spid" maxlength="40" placeholder="Settings → Widgets → clinicianId"></label>
+        <label class="pt-field">Online booking<select id="wp-booking"><option value="">Keep as is</option><option>Yes</option><option>No</option></select></label>
+        <label class="pt-field">Show on website<select id="wp-show"><option value="">Keep as is</option><option>Yes</option><option>No</option></select></label>
+      </div>
+    </section>
+
+    <div class="wp-submit">
+      <button type="submit" class="pt-btn" id="wp-send">Save to the website</button>
+      <button type="button" class="pt-btn ghost" id="wp-clear">Clear the form</button>
+    </div>
+    <div class="pt-card wp-result" id="wp-result" role="status" aria-live="polite" hidden></div>
+  </form>
+  <p class="pt-note">Saves to the “tangible sheets” Google Sheet (website profiles, modalities and openings tabs; birthdays go to a private Birthdays tab). New people are added under their office, with their openings left for front desk to fill in on the openings tab. Insurance is still updated on the sheet’s Insurances tab.</p>
+</div>
+
+<style is:global>
+  .wp .wp-intro { max-width: 860px; line-height: 1.55; }
+  .wp .wp-form { display: flex; flex-direction: column; gap: 1rem; max-width: 860px; }
+  .wp .wp-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .8rem; }
+  .wp .wp-wide { grid-column: 1 / -1; }
+  .wp input:not([type=checkbox]):not([type=file]), .wp select, .wp textarea { font: inherit; font-size: .92rem; color: var(--charcoal); border: 1px solid #c9cfca; border-radius: 10px; padding: .5rem .65rem; background: #fff; width: 100%; box-sizing: border-box; min-height: 40px; }
+  .wp textarea { resize: vertical; line-height: 1.5; }
+  .wp fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+  .wp legend { font-size: .78rem; color: #5d635e; padding: 0; margin-bottom: .25rem; }
+  .wp .wp-bday-row { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: .4rem; }
+  .wp .wp-found { margin: 0; font-size: .88rem; border-radius: 10px; padding: .55rem .75rem; background: #f6f4ec; color: #4a4630; line-height: 1.5; }
+  .wp .wp-found.ok { background: #e8f1ea; color: #23432c; }
+  .wp .wp-photo { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-top: .3rem; }
+  .wp .wp-photo img { width: 96px; height: 120px; object-fit: cover; object-position: 50% 20%; border-radius: 12px; background: #eef0ee; }
+  .wp .wp-photo .pt-muted { margin-top: .3rem; }
+  .wp .wp-checks { display: flex; flex-wrap: wrap; gap: .35rem .5rem; margin-top: 1rem; }
+  .wp .wp-checks legend { width: 100%; font-size: .9rem; font-weight: 600; color: var(--charcoal); margin-bottom: .4rem; }
+  .wp .wp-checks label { display: inline-flex; align-items: center; gap: .35rem; font-size: .86rem; color: var(--charcoal); background: #f4f6f4; border-radius: 300px; padding: .3rem .7rem; cursor: pointer; }
+  .wp .wp-checks label:has(input:checked) { background: var(--sage); }
+  .wp .wp-checks .wp-other { background: none; padding-left: 0; }
+  .wp .wp-checks .wp-other input { width: 14rem; min-height: 32px; padding: .3rem .6rem; }
+  .wp .wp-submit { display: flex; gap: .6rem; flex-wrap: wrap; }
+  .wp .wp-submit .pt-btn { min-height: 44px; padding: .65rem 1.4rem; font-size: .95rem; }
+  .wp .pt-btn[aria-busy=true] { opacity: .6; cursor: progress; }
+  .wp .wp-result h2 { margin-bottom: .4rem; }
+  .wp .wp-result ul { margin: .3rem 0 0; padding-left: 1.2rem; line-height: 1.55; }
+  .wp .wp-result.err { background: #fbe9e4; color: #6b2a17; }
+  @media (max-width: 760px) { .wp .wp-grid { grid-template-columns: minmax(0, 1fr); } }
+</style>
+
+<script is:inline>
+  (function () {
+    var $ = function (id) { return document.getElementById(id); };
+    var form = $('wp-form'), found = $('wp-found'), result = $('wp-result'), photo = null, lastLookup = '';
+
+    function api(url, body) {
+      return fetch(url, body ? { method: 'POST', headers: { 'content-type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(body) } : { credentials: 'same-origin' })
+        .then(function (r) { return r.json().catch(function () { return { error: 'The website didn’t answer (status ' + r.status + ').' }; }); })
+        .then(function (res) { if (!res || res.error) throw new Error((res && res.error) || 'Something went wrong.'); return res; });
+    }
+    function el(tag, text) { var n = document.createElement(tag); if (text != null) n.textContent = text; return n; }
+
+    // Name suggestions: everyone already on the sheet.
+    api('/api/website-profile?names=1').then(function (res) {
+      var dl = $('wp-names');
+      (res.names || []).forEach(function (n) { var o = document.createElement('option'); o.value = n; dl.appendChild(o); });
+    }).catch(function () {});
+
+    // Look the person up so staff can see what's there and only fill in changes.
+    function lookup() {
+      var name = $('wp-name').value.trim().replace(/\s+/g, ' ');
+      if (name.split(' ').length < 2 || name === lastLookup) return;
+      lastLookup = name;
+      found.hidden = false; found.className = 'wp-found wp-wide'; found.textContent = 'Checking the sheet…';
+      api('/api/website-profile?name=' + encodeURIComponent(name)).then(function (res) {
+        if (name !== lastLookup) return;
+        found.textContent = '';
+        if (!res.found) {
+          found.append('Not on the sheet yet. Saving will add ' + name + ' as a new therapist, so choose their office. They go on the website once they have a photo and a bio.');
+          return;
+        }
+        found.className = 'wp-found wp-wide ok';
+        var p = res.profile || {}, m = res.modalities || {}, bits = [];
+        if (p.credential || (res.openings && res.openings.credential)) bits.push('credential ' + (p.credential || res.openings.credential));
+        bits.push(p.photo ? 'has a photo' : 'no photo yet');
+        bits.push(p.bio ? 'has a bio' : 'no bio on the sheet (a website bio may already exist)');
+        if (m.ages) bits.push('populations: ' + m.ages);
+        if (m.modalities) bits.push('modalities: ' + m.modalities);
+        if (m.specialties) bits.push('specialties: ' + m.specialties);
+        if (res.birthday) bits.push('birthday saved');
+        found.append('Found ' + (p.name || m.name || name) + ' on the sheet: ' + bits.join(' · ') + '. Only fill in what should change.');
+        if (p.status) { found.append(el('br')); found.append('Website status: ' + p.status); }
+      }).catch(function (e) { found.textContent = 'Couldn’t check the sheet: ' + e.message; });
+    }
+    $('wp-name').addEventListener('change', lookup);
+    $('wp-name').addEventListener('blur', lookup);
+
+    // Photo: shrink to max 1600 px and send as JPEG (keeps uploads small; also turns PNG into JPEG).
+    $('wp-photo').addEventListener('change', function () {
+      var f = this.files && this.files[0];
+      photo = null; $('wp-preview').hidden = true; $('wp-photo-note').textContent = 'Leave empty to keep their current photo.';
+      if (!f) return;
+      var img = new Image(), url = URL.createObjectURL(f);
+      img.onload = function () {
+        var s = Math.min(1, 1600 / Math.max(img.naturalWidth, img.naturalHeight));
+        var c = document.createElement('canvas'); c.width = Math.round(img.naturalWidth * s); c.height = Math.round(img.naturalHeight * s);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        var data = c.toDataURL('image/jpeg', 0.88);
+        photo = { type: 'image/jpeg', data: data.split(',')[1] };
+        $('wp-preview').src = data; $('wp-preview').hidden = false;
+        $('wp-photo-note').textContent = 'Ready: ' + c.width + ' × ' + c.height + (img.naturalHeight < img.naturalWidth ? '. Tip: a portrait (taller than wide) photo crops best.' : '.');
+        URL.revokeObjectURL(url);
+      };
+      img.onerror = function () { $('wp-photo-note').textContent = 'This browser can’t open that photo. If it’s an iPhone (HEIC) photo, save it as a JPG first and try again.'; this.value = ''; URL.revokeObjectURL(url); }.bind(this);
+      img.src = url;
+    });
+
+    function checked(group) { return [].slice.call(form.querySelectorAll('input[name="' + group + '"]:checked')).map(function (i) { return i.value; }); }
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var name = $('wp-name').value.trim().replace(/\s+/g, ' ');
+      result.hidden = false; result.className = 'pt-card wp-result';
+      if (name.split(' ').length < 2) { result.className += ' err'; result.textContent = 'Enter their first and last name.'; $('wp-name').focus(); return; }
+      var mods = checked('modalities').concat($('wp-mod-other').value.split(',').map(function (x) { return x.trim(); }).filter(Boolean));
+      var bday = $('wp-bmonth').value && $('wp-bday').value ? $('wp-bmonth').value + '-' + $('wp-bday').value : '';
+      var body = {
+        name: name, credential: $('wp-credential').value.trim(), office: $('wp-office').value, gender: $('wp-gender').value,
+        bio: $('wp-bio').value.trim(), seo: $('wp-seo').value.trim(), spId: $('wp-spid').value.trim(),
+        booking: $('wp-booking').value, show: $('wp-show').value, birthday: bday,
+        ages: checked('ages'), modalities: mods, comfortable: checked('comfortable'), specialties: checked('specialties'),
+        photo: photo,
+      };
+      var btn = $('wp-send'); btn.disabled = true; btn.setAttribute('aria-busy', 'true');
+      result.textContent = 'Saving to the sheet…';
+      api('/api/website-profile', body).then(function (res) {
+        result.textContent = '';
+        result.append(el('h2', 'Saved: ' + (res.name || name)));
+        var ul = el('ul'); (res.changes || []).forEach(function (c) { ul.append(el('li', c)); }); result.append(ul);
+        if ((res.notes || []).length) { var nl = el('ul'); res.notes.forEach(function (n) { nl.append(el('li', n)); }); result.append(el('p', 'Heads up:')); result.append(nl); }
+        result.append(el('p', 'The website updates about 15 minutes after the last change to the sheet.'));
+        lastLookup = ''; lookup();
+      }).catch(function (e2) { result.className += ' err'; result.textContent = 'Couldn’t save: ' + e2.message; })
+        .then(function () { btn.disabled = false; btn.removeAttribute('aria-busy'); });
+    });
+
+    $('wp-clear').addEventListener('click', function () {
+      form.reset(); photo = null; lastLookup = ''; $('wp-preview').hidden = true; found.hidden = true; result.hidden = true;
+      $('wp-photo-note').textContent = 'Leave empty to keep their current photo.'; window.scrollTo(0, 0);
+    });
+  })();
+</script>
+</Base>
