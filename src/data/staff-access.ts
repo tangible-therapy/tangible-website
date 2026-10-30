@@ -23,8 +23,8 @@ export type Office = 'orem' | 'provo' | 'sandy';
 // dashboard = that office's Team Dashboard sheet is connected to the website (docs/office-dashboards).
 export const OFFICES: { id: Office; label: string; director: string; directorEmail: string; dashboard: boolean }[] = [
   { id: 'orem', label: 'Orem (and telehealth)', director: 'Skyler', directorEmail: 'skyler@tangiblementalhealth.com', dashboard: true },
-  { id: 'provo', label: 'Provo', director: 'Hannah', directorEmail: 'hannah@tangiblementalhealth.com', dashboard: false },
-  { id: 'sandy', label: 'Sandy', director: 'Arianne', directorEmail: 'arianne@tangiblementalhealth.com', dashboard: false },
+  { id: 'provo', label: 'Provo', director: 'Hannah', directorEmail: 'hannah@tangiblementalhealth.com', dashboard: true },
+  { id: 'sandy', label: 'Sandy', director: 'Arianne', directorEmail: 'arianne@tangiblementalhealth.com', dashboard: true },
 ];
 
 export type StaffRecord = {

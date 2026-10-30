@@ -14,11 +14,23 @@
  * Setup steps: docs/office-dashboards/README.md in the website repo.
  */
 
-// office id (matches the website) -> that office's Team Dashboard sheet. Add Provo/Sandy later.
+// office id (matches the website) -> that office's Team Dashboard sheet.
 var OFFICE_SHEETS = {
   orem: '12Scfxhll_c7G-_EoVRegjdqJ-qE62yel7-_oSKIlcCA',
+  sandy: '10T86giJbKm4oxbZALHsAHXXi1PZzmkDXP_46tR6PjEY',
+  provo: '1lDT71w4l9p2yEuxk-4ZfL6QP_myeCNyTef3Z0gfKhp4',
 };
-var SCHEDULE_TAB_SUFFIX = 'Master Schedule';   // tabs like "Office A Master Schedule"
+var SCHEDULE_TAB_SUFFIX = 'Master Schedule';   // Orem: tabs like "Office A Master Schedule" (one per building)
+// Offices whose room schedule tab is named differently. For each building, the FIRST tab in `tabs` that exists
+// is used, and `name` is what the website calls the building. Keep `name` the same when the tab changes
+// (room claims on the website are saved under it).
+var OFFICE_SCHEDULES = {
+  sandy: [{ tabs: ['Office Master Schedule'], name: 'Sandy office' }],
+  // Provo's new hours start Nov 2 2026. When the old "Hours & Rooms" tab is retired and "nov 2 Hours & Rooms"
+  // is renamed to "Hours & Rooms", the second name keeps working with no change here.
+  provo: [{ tabs: ['nov 2 Hours & Rooms', 'Hours & Rooms'], name: 'Provo office' }],
+};
+var COLORS_TAB = 'colors';   // optional extra colour key: names typed in coloured cells (Provo has one)
 var TRAINING_TAB = 'Training Meeting';
 var SUGGESTIONS_TAB = 'Training Suggestions';
 
@@ -57,16 +69,45 @@ function doPost(e) {
 function buildFeed_(office) {
   var ss = SpreadsheetApp.openById(OFFICE_SHEETS[office]);
   var out = { office: office, generatedAt: new Date().toISOString(), timeZone: ss.getSpreadsheetTimeZone(), training: [], schedules: [] };
-  ss.getSheets().forEach(function (sh) {
-    var name = sh.getName();
-    if (name.indexOf(SCHEDULE_TAB_SUFFIX) >= 0) {
-      var range = sh.getDataRange();
-      out.schedules.push(parseSchedule(name.replace(SCHEDULE_TAB_SUFFIX, '').trim(), range.getDisplayValues(), range.getBackgrounds()));
-    }
-  });
+  var extraKey = {};
+  var colorsTab = ss.getSheetByName(COLORS_TAB);
+  if (colorsTab) { var cr = colorsTab.getDataRange(); extraKey = parseColorList(cr.getDisplayValues(), cr.getBackgrounds()); }
+  var read = function (sh, name) {
+    var range = sh.getDataRange();
+    out.schedules.push(parseSchedule(name, range.getDisplayValues(), withoutBanding_(sh, range.getBackgrounds()), extraKey));
+  };
+  if (OFFICE_SCHEDULES[office]) {
+    OFFICE_SCHEDULES[office].forEach(function (b) {
+      for (var i = 0; i < b.tabs.length; i++) { var sh = ss.getSheetByName(b.tabs[i]); if (sh) { read(sh, b.name); return; } }
+      out.schedules.push({ name: b.name, rooms: [], error: 'tab not found: ' + b.tabs.join(' / ') });
+    });
+  } else {
+    ss.getSheets().forEach(function (sh) {
+      var name = sh.getName();
+      if (name.indexOf(SCHEDULE_TAB_SUFFIX) >= 0) read(sh, name.replace(SCHEDULE_TAB_SUFFIX, '').trim());
+    });
+  }
   var t = ss.getSheetByName(TRAINING_TAB);
   if (t) out.training = parseTraining(t.getDataRange().getDisplayValues());
   return out;
+}
+
+// "Alternating colors" (Format > Alternating colors, used on Provo's sheet) come back as cell colours, so the
+// striped rows would look booked. Turn the stripe and header colours back into white inside the striped range.
+function withoutBanding_(sh, bgs) {
+  var lc = function (c) { return String(c || '').toLowerCase(); };
+  sh.getBandings().forEach(function (band) {
+    var br = band.getRange(), r0 = br.getRow() - 1, c0 = br.getColumn() - 1;
+    var stripes = [lc(band.getFirstRowColor()), lc(band.getSecondRowColor())].filter(String);
+    var head = lc(band.getHeaderRowColor());
+    for (var r = r0; r < r0 + br.getNumRows() && r < bgs.length; r++) {
+      for (var c = c0; c < c0 + br.getNumColumns() && c < bgs[r].length; c++) {
+        var bg = lc(bgs[r][c]);
+        if (stripes.indexOf(bg) >= 0 || (r === r0 && head && bg === head)) bgs[r][c] = '#ffffff';
+      }
+    }
+  });
+  return bgs;
 }
 
 // ---------- parsing (plain JavaScript, also tested in the website repo) ----------
@@ -76,14 +117,15 @@ function isBlankColor(c) { c = String(c || '').toLowerCase(); return !c || c ===
 function parseTraining(values) {
   var head = (values[0] || []).map(function (h) { return String(h).toLowerCase(); });
   var col = function (re, fallback) { for (var i = 0; i < head.length; i++) if (re.test(head[i])) return i; return fallback; };
-  var c = { date: col(/^date/, 0), topic: col(/topic/, 1), trainer: col(/^trainer/, 2), skill: col(/skill/, 3), dsm: col(/^dsm/, 4), extra: col(/additional/, 5) };
+  // Columns are found by their heading (Provo's are in a different order). No "Additional" column = left blank.
+  var c = { date: col(/^date/, 0), topic: col(/topic/, 1), trainer: col(/^trainer/, 2), skill: col(/skill/, 3), dsm: col(/^dsm/, 4), extra: col(/additional/, -1) };
   var rows = [];
   for (var r = 1; r < values.length; r++) {
     var v = values[r], d = String(v[c.date] || '').trim();
     var m = d.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
     if (!m) continue;
     var iso = m[3] + '-' + ('0' + m[1]).slice(-2) + '-' + ('0' + m[2]).slice(-2);
-    var get = function (k) { return String(v[c[k]] || '').trim(); };
+    var get = function (k) { return c[k] < 0 ? '' : String(v[c[k]] || '').trim(); };
     rows.push({ date: iso, topic: get('topic'), trainer: get('trainer'), skill: get('skill'), dsm: get('dsm'), extra: get('extra') });
   }
   rows.sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
@@ -97,19 +139,43 @@ function toMinutes(t) {
   return h * 60 + +m[2];
 }
 
-function parseSchedule(name, values, bgs) {
+// A list of names typed in coloured cells (e.g. Provo's "colors" tab) -> { colour: name }.
+function parseColorList(values, bgs) {
+  var key = {};
+  for (var r = 0; r < values.length; r++) for (var c = 0; c < values[r].length; c++) {
+    var label = String(values[r][c] || '').trim(), bg = String(bgs[r][c] || '').toLowerCase();
+    if (label && !isBlankColor(bg) && !key[bg]) key[bg] = label;
+  }
+  return key;
+}
+
+function parseSchedule(name, values, bgs, extraKey) {
   var DAYS = ['M', 'T', 'W', 'Th', 'F', 'S', 'Su'];
   var head = -1;
   for (var r = 0; r < values.length && head < 0; r++) if (String(values[r][0]).trim().toLowerCase() === 'time') head = r;
   if (head < 1) return { name: name, rooms: [], error: 'no Time row' };
 
-  // Colour key: text in the rows above the room row, matched to the first coloured, empty cell to its right.
+  // Colour key: names in the rows above the room row. A name typed in a coloured cell (Sandy) uses that colour.
+  // Otherwise it is matched to a coloured, empty square: to its right (Orem: "Arianne ■"), or to its left when the
+  // row starts with a square (Provo: "■ Kade"). Labels ending in ":" ("Full-time:") are headings, not names.
   var legend = {};
   for (var lr = 0; lr < head - 1; lr++) {
     var row = values[lr];
+    var isName = function (c) { var t = String(row[c] || '').trim(); return !!t && !/:$/.test(t); };
+    var isSquare = function (c) { return c >= 0 && c < row.length && !String(row[c] || '').trim() && !isBlankColor(bgs[lr][c]); };
+    var squaresFirst = false;
+    for (var f = 0; f < row.length; f++) { if (isName(f)) break; if (isSquare(f)) { squaresFirst = true; break; } }
     for (var c = 0; c < row.length; c++) {
-      var label = String(row[c] || '').trim();
-      if (!label) continue;
+      if (!isName(c)) continue;
+      var label = String(row[c]).trim();
+      if (!isBlankColor(bgs[lr][c])) { legend[String(bgs[lr][c]).toLowerCase()] = label; continue; }
+      if (squaresFirst) {
+        for (var kl = c - 1; kl >= 0 && kl >= c - 8; kl--) {
+          if (String(row[kl] || '').trim()) break;
+          if (isSquare(kl)) { legend[String(bgs[lr][kl]).toLowerCase()] = label; break; }
+        }
+        continue;
+      }
       for (var k = c + 1; k < row.length && k <= c + 8; k++) {
         if (String(row[k] || '').trim()) break;
         if (!isBlankColor(bgs[lr][k])) { legend[String(bgs[lr][k]).toLowerCase()] = label; break; }
@@ -129,9 +195,13 @@ function parseSchedule(name, values, bgs) {
     current.days[day] = { col: col };
   }
 
-  // Time rows: the first time label, then every row is 30 minutes.
+  // Names from the extra colour list fill in colours the key above doesn't have.
+  if (extraKey) Object.keys(extraKey).forEach(function (bg) { if (!legend[bg]) legend[bg] = extraKey[bg]; });
+
+  // Time rows start at the first time label (rows between the day letters and it, like Provo's grey bar, are
+  // skipped); every row after it is 30 minutes.
   var start = null, first = head + 1;
-  for (var tr = head + 1; tr < values.length && start === null; tr++) { var mm = toMinutes(values[tr][0]); if (mm !== null) { start = mm - (tr - first) * 30; } }
+  for (var tr = head + 1; tr < values.length && start === null; tr++) { var mm = toMinutes(values[tr][0]); if (mm !== null) { start = mm; first = tr; } }
   if (start === null) return { name: name, rooms: [], error: 'no times' };
   var last = first;
   for (var lr2 = first; lr2 < values.length; lr2++) if (toMinutes(values[lr2][0]) !== null) last = lr2 + 1; // label rows + the half-hour row after
@@ -169,11 +239,13 @@ function setup() {
 }
 
 // Shows what the website will receive, so you can check names and rooms look right.
-function testFeed() {
-  var f = buildFeed_('orem');
+function testFeed() { testOffice_('orem'); testOffice_('sandy'); testOffice_('provo'); }
+function testOffice_(office) {
+  var f = buildFeed_(office);
+  Logger.log('===== ' + office);
   Logger.log('Training meetings: ' + f.training.length + ' (next: ' + JSON.stringify(f.training.filter(function (t) { return t.date >= new Date().toISOString().slice(0, 10); })[0]) + ')');
   f.schedules.forEach(function (s) {
-    Logger.log(s.name + ': ' + s.rooms.length + ' rooms. Colour key: ' + JSON.stringify(s.legend));
+    Logger.log(s.name + ': ' + s.rooms.length + ' rooms' + (s.error ? ' (' + s.error + ')' : '') + '. Colour key: ' + JSON.stringify(s.legend));
     s.rooms.forEach(function (r) { Logger.log('  ' + r.label + ' Monday: ' + JSON.stringify(r.days.M || [])); });
   });
 }
