@@ -15,8 +15,25 @@ Find a Room is its own page, /employeeportal/rooms. There, staff can also tap **
 saved by the website (Netlify Blobs store "room-claims", /api/rooms), not written into the sheet, so the Master Schedule is
 never changed. Associates also see their supervised hours on the dashboard (from the Hours Tracker).
 
-Only Orem is connected so far (`dashboard: true` in `src/data/staff-access.ts`). Directors and the owner
-can view other offices with the "View office" picker.
+Orem, Provo and Sandy are all connected (`dashboard: true` in `src/data/staff-access.ts`, since 30 Oct 2026).
+Directors and the owner can view other offices with the "View office" picker.
+
+## How each office's sheet is laid out
+
+| Office | Sheet | Room schedule tab(s) | Colour key |
+|---|---|---|---|
+| Orem | Orem Team Dashboard | every tab ending "Master Schedule" (Office A, Office B) | name, then a coloured square to its right |
+| Sandy | Sandy Team Dashboard | "Office Master Schedule" (shown as "Sandy office") | names typed in coloured cells |
+| Provo | Provo Team Dashboard | "nov 2 Hours & Rooms", or "Hours & Rooms" if that tab is gone (shown as "Provo office") | coloured square, then the name; plus the "colors" tab |
+
+- Which tab each office uses is `OFFICE_SCHEDULES` in the script. Provo is set to the new Nov 2 2026 hours. When
+  the old tab is retired and "nov 2 Hours & Rooms" is renamed "Hours & Rooms", nothing needs changing. If a
+  differently named tab should be used, edit `OFFICE_SCHEDULES` and deploy a new version.
+- Provo's "colors" tab (names typed in coloured cells) adds people who aren't in the key at the top of the schedule.
+- Provo's sheet uses Format > Alternating colors (grey stripes on the hour rows); the script ignores those stripes.
+- Training Meeting columns are found by their headings (Date, Topic, Trainer, Skill, DSM, Additional), so their
+  order doesn't matter. Provo has no "Additional Items" column, so that line stays empty for Provo.
+- "Suggest a training topic" writes to each sheet's "Training Suggestions" tab (Provo's was added 30 Oct 2026).
 
 ## How it works
 
@@ -47,8 +64,14 @@ can view other offices with the "View office" picker.
 If you change the script later: **Deploy → Manage deployments → Edit → Version: New version → Deploy**
 (the address stays the same).
 
-## Adding Provo or Sandy
+## Checking what the website will see
 
-1. Add the office's sheet ID to `OFFICE_SHEETS` in the script (and in apps-script.gs), redeploy a new version.
-   The sheet needs the same tab names: "… Master Schedule", "Training Meeting", "Training Suggestions".
+In the script editor choose **testFeed** and click **Run**. The execution log lists, for each office, the next
+training meeting, every room with its Monday bookings, and the colour key it found. A colour that shows as
+"Booked" isn't in the key: add that person to the key at the top of the schedule (or Provo's "colors" tab).
+
+## Adding another office
+
+1. Add the office's sheet ID to `OFFICE_SHEETS` in the script (and in apps-script.gs). If its schedule tab isn't
+   named "… Master Schedule", add it to `OFFICE_SCHEDULES`. Deploy a new version.
 2. Set `dashboard: true` for that office in `src/data/staff-access.ts`.
