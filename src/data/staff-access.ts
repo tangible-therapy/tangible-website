@@ -51,6 +51,8 @@ export const ONBOARDING_STEPS: { id: OnboardingStep; label: string }[] = [
 ];
 export type Onboarding = {
   done?: Partial<Record<OnboardingStep, string>>; // step → when it was ticked (ISO)
+  lessons?: string[]; // orientation lessons opened (slugs), from any device
+  skillsReview?: string; // when the SimplePractice skills review was passed
   submittedAt?: string; // all steps ticked; waiting for a director's approval
   approvedAt?: string;
   approvedBy?: string;
