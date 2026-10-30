@@ -12,6 +12,7 @@ const DRIVE_EMPLOYEES = 'https://drive.google.com/drive/u/0/folders/1DCzPfLaGhpO
 const DRIVE_MANAGEMENT = 'https://drive.google.com/drive/folders/1Lmh1aH0YbyRgcfuunFafXil00kQi1zLI';
 const ONBOARDING_SHEET = 'https://docs.google.com/spreadsheets/d/1i2OFTCSZUwcAvJD7pckJT0h9BPsUk2wvuAS0IjgjWZ8/edit?gid=0#gid=0';
 const THERAPIST_SHEET = 'https://docs.google.com/spreadsheets/d/1QIrJbIzoNtenFfOqAGBJzyx3nYSPVkLqOu7ECwLx-Kw/edit';
+const SLACK = 'https://tangibletherapy.slack.com';
 const SIMPLEPRACTICE = 'https://secure.simplepractice.com/calendar/appointments';
 const ext = 'target="_blank" rel="noopener"';
 const a = (href: string, text: string) => `<a href="${href}" ${ext}>${text}</a>`;
@@ -69,9 +70,9 @@ const stages: Stage[] = [
         <li>Roles: <b>Therapist</b> for licensed clinicians, <b>Associate (pre-licensed)</b> for anyone logging supervised hours, <b>Admin / front desk</b> for reception. Someone can have more than one.</li>
         <li>If they sign in before they’re added, they show up as <b>pending</b> and the director just clicks Approve.</li></ol>
         <p class="ob-tip">Until Google sign-in is switched on for the live site, also send them the staff password from the team password manager.</p>` },
-      { id: 'slack', title: 'Invite them to Slack', body: `<ol>
-        <li>Open Slack and click <b>Tangible Therapy</b> (top left).</li>
-        <li>Click <b>Invite people</b> and enter their Tangible email.</li></ol>` },
+      { id: 'slack', title: 'Get them on Slack', body: `
+        <p>Nothing to do here. Anyone with a Tangible email can join ${a(SLACK, 'Tangible’s Slack')} on their own, and the welcome email (step below) includes the link. Tick this once they’ve joined.</p>
+        <p class="pt-muted">If they can’t get in: open Slack, click <b>Tangible Therapy</b> (top left) → <b>Invite people</b>, and enter their Tangible email.</p>` },
       { id: 'simple', who: 'clinician', title: 'Add them to SimplePractice', body: `<ol>
         <li>Open ${a(SIMPLEPRACTICE, 'SimplePractice')} → <b>Settings</b> → <b>Team</b> → <b>Team members</b>.</li>
         <li>Click <b>Add new team member</b> (top right).</li>
@@ -332,7 +333,8 @@ let num = 0;
         '1. Go to the Employee Portal: https://tangiblementalhealth.com/employeeportal\n' +
         '2. Sign in with your new Tangible email (' + (email() || '[Tangible email]') + '). You should have an email from Google about your new account.\n' +
         '3. Under “New employees”, open Orientation. It covers important things you’ll need for your work at Tangible, so take the time you need. It takes about an hour.\n' +
-        '4. When you’ve finished Orientation, complete Onboarding (also under “New employees”).\n\n' +
+        '4. When you’ve finished Orientation, complete Onboarding (also under “New employees”).\n' +
+        '5. Join our team Slack at https://tangibletherapy.slack.com. Sign up with your Tangible email address.\n\n' +
         'If you have any questions, just reach out and we’ll help you through it.\n\n' +
         'When you’ve finished both, please contact your practice director, ' + o.director + ' (' + o.email + '), to set up a time to finish onboarding.\n\n' +
         'Welcome aboard!';
