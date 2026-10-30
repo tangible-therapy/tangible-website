@@ -45,7 +45,7 @@ export type StaffRecord = {
 // New-hire checklist on the Employee Portal dashboard (/api/onboarding). Shown to approved staff who haven't
 // finished orientation; when every step is ticked they show up on directors' dashboards, and once a director
 // approves at /staff-admin, orientationComplete becomes true and the checklist disappears.
-export type OnboardingStep = 'slack' | 'orientation' | 'paperwork' | 'headshots' | 'supervision';
+export type OnboardingStep = 'slack' | 'orientation' | 'paperwork' | 'headshots' | 'supervision' | 'inperson';
 // clinician: only for therapists and associates.
 export const ONBOARDING_STEPS: { id: OnboardingStep; label: string; clinician?: boolean }[] = [
   { id: 'slack', label: 'Join Slack' },
@@ -53,6 +53,8 @@ export const ONBOARDING_STEPS: { id: OnboardingStep; label: string; clinician?: 
   { id: 'paperwork', label: 'Complete Onboarding' },
   { id: 'headshots', label: 'Schedule headshots', clinician: true },
   { id: 'supervision', label: 'Schedule supervision', clinician: true },
+  // Always last, and can only be ticked once every other step is done (checked in /api/onboarding).
+  { id: 'inperson', label: 'Schedule In-Person Onboarding' },
 ];
 // Who takes headshots (the new hire messages her on Slack).
 export const HEADSHOTS_CONTACT = 'Julie Clegg';
