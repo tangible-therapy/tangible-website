@@ -13,7 +13,7 @@ The Employee Portal (/employeeportal) shows each person their home office's dash
 
 Find a Room is its own page, /employeeportal/rooms. There, staff can also tap **Use this room** to claim a room for today; claims are
 saved by the website (Netlify Blobs store "room-claims", /api/rooms), not written into the sheet, so the Master Schedule is
-never changed. Associates also see their supervised hours on the dashboard (from the Hours Tracker).
+never changed. Associates also see their supervised hours on the dashboard (from Supervision Hours, /hours).
 
 Orem, Provo and Sandy are all connected (`dashboard: true` in `src/data/staff-access.ts`, since 30 Oct 2026).
 Directors and the owner can view other offices with the "View office" picker.

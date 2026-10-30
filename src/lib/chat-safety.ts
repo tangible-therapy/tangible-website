@@ -13,7 +13,7 @@ const STAFF_PATHS = [...staffPaths, '/files/', '/staff-login', '/staff-logout', 
 // Phrases that only belong to staff material (lower case; matched as whole words/phrases).
 const STAFF_PHRASES = [
   'employee portal', 'staff portal', 'staff password', 'password manager', 'staff gate',
-  'payroll', 'paystub', 'passdown', 'hours tracker', 'supervisee', 'supervised hours',
+  'payroll', 'paystub', 'passdown', 'hours tracker', 'supervision hours', 'supervisee', 'supervised hours',
   'team dashboard', 'master schedule', 'training meeting', 'skill assignment',
   'reception portal', 'start of day', 'end of day checklist', 'policies & procedures', 'policies and procedures',
   'employee handbook', 'new employee orientation', 'onboarding form', 'direct deposit', 'w-4',

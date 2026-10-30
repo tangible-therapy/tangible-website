@@ -15,7 +15,7 @@ export const HIRE_STEPS: OnboardingStepDef[] = [
   { id: 'simple', title: 'Added to SimplePractice', who: 'clinician' },
   { id: 'paperwork', title: 'Paperwork filed and payroll emailed' },
   { id: 'malpractice', title: 'Added to malpractice insurance', who: 'clinician' },
-  { id: 'hours', title: 'Linked in the Hours Tracker', who: 'associate' },
+  { id: 'hours', title: 'Linked in Supervision Hours', who: 'associate' },
   { id: 'availibility', title: 'Availability set up in SimplePractice', who: 'clinician' },
   { id: 'booking-id', title: 'SimplePractice booking ID found', who: 'clinician' },
   { id: 'website', title: 'Added to the website', who: 'clinician' },
