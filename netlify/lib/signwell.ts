@@ -1,5 +1,6 @@
 // SignWell API helpers shared by /api/new-hire-contract and /api/signwell-webhook.
 // Netlify env var SIGNWELL_API_KEY (never in the repo).
+import { markSignedByFolder } from './hires.ts';
 import { callScript } from './new-hire.ts';
 
 const API = 'https://www.signwell.com/api/v1';
@@ -67,6 +68,8 @@ export async function saveIfCompleted(id: string): Promise<{ doc: any; done: boo
     const pdf = await (await signwell(`/documents/${id}/completed_pdf`, { headers: { accept: 'application/pdf' } })).arrayBuffer();
     const saved = await callScript({ action: 'saveSigned', folderId, fileName: `Employment Contract - ${hire} (signed).pdf`, pdf: Buffer.from(pdf).toString('base64') });
     signedUrl = saved.url || null;
+    // The contract is now in their folder: turn their Reception Onboarding profile green.
+    await markSignedByFolder(String(folderId), signedUrl);
   }
   return { doc, done, signedUrl };
 }

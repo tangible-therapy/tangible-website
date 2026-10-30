@@ -23,7 +23,7 @@ export default async (req: Request) => {
   const no = await denied(req);
   if (no) return no;
   const target = Netlify.env.get('NEW_HIRE_MAIL_SCRIPT');
-  if (!target) return json({ error: 'The front desk email connection isn’t set up yet, so send the welcome email by hand (step 7).' }, 503);
+  if (!target) return json({ error: 'The front desk email connection isn’t set up yet, so send the welcome email by hand (under “Doing it by hand” in their profile).' }, 503);
 
   const b = await req.json().catch(() => ({}) as any);
   const first = clean(b.first), email = mail(b.email), personal = mail(b.personal);

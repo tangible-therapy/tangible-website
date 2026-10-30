@@ -85,7 +85,7 @@ export const canManage = (r: StaffRecord | null) => !!r && r.status === 'approve
 const RESTRICTED: { paths: string[]; roles: Role[] }[] = [
   {
     // Reception section
-    paths: ['/reception-portal', '/reception-onboarding', '/reception-onboarding-1', '/api/new-hire-folder', '/api/new-hire-email', '/api/new-hire-contract', '/api/new-hire-welcome', '/scheduling-new-client', '/scheduling-new-client-1', '/crisis-call'],
+    paths: ['/reception-portal', '/reception-onboarding', '/reception-onboarding-1', '/api/new-hire-folder', '/api/new-hire-email', '/api/new-hire-contract', '/api/new-hire-welcome', '/api/new-hires', '/scheduling-new-client', '/scheduling-new-client-1', '/crisis-call'],
     roles: ['frontdesk', 'director'],
   },
   { paths: ['/staff-admin'], roles: ['director'] },

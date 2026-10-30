@@ -1,17 +1,22 @@
 ---
-// Reception: step-by-step checklist for onboarding a new employee (front desk + directors).
-// Redesigned Oct 2026: plain HTML in the Employee Portal style (.pt-*), grouped into 4 stages with a
-// "new hire" panel that fills the email templates, a per-browser checklist (localStorage tt.onboard.v1)
-// and role-aware steps (clinician-only / associate-only). Old #anchors are kept as step ids.
-// Step 3 "Create their email" → /api/new-hire-email (docs/new-hire-email/).
-// "Finish setup" (New hire box, two clicks, once the contract is signed) runs everything after the contract in one
-// go: email + groups + portal access, payroll info on their folder, and the welcome email from frontdesk@
-// (/api/new-hire-welcome, docs/payroll-email/ "Front desk mailer").
+// Reception: onboarding new employees (front desk + directors).
+// Oct 30 2026 redesign: each new hire gets a PROFILE (shared by everyone at the front desk, stored on the
+// website via /api/new-hires → Netlify Blobs "new-hires", netlify/lib/hires.ts). The left side has the
+// "New hire" box (Start a new hire: Drive folder + contract through SignWell) and the list of people being
+// onboarded, each with a status (red: waiting for the employment contract; green: ready / in progress).
+// Their profile shows the contract first; everything else stays hidden until the contract is signed —
+// automatically when SignWell's signed PDF is saved into their folder (netlify/lib/signwell.ts), or with the
+// two-click "Employee contract signed" override. Then a checklist (src/data/onboarding-steps.ts): one
+// "Automatic setup" item with the two-click Finish setup button (email + groups + Employee Portal, payroll
+// info, welcome email from frontdesk@), then the manual steps, each with "How?" instructions. "Onboarding
+// complete" (two clicks) only works once every step for their role is ticked; the profile then moves to
+// Completed. APIs: /api/new-hire-folder, /api/new-hire-contract, /api/new-hire-email, /api/new-hire-welcome.
 // No logins or passwords on this page — point to the team password manager.
 import Base from '../layouts/Base.astro';
 import { OFFICES } from '../data/staff-access';
 import { CONTRACT_SIGNER as SIGNER, CONTRACT_TYPES, LOCATION_DIRECTORS } from '../data/contracts';
 import { WELCOME_TEMPLATE } from '../data/welcome-email';
+import { HIRE_STEPS } from '../data/onboarding-steps';
 const CONTRACT_SIGNER = SIGNER.name;
 
 const DRIVE_EMPLOYEES = 'https://drive.google.com/drive/u/0/folders/1DCzPfLaGhpOIepDvmZ0krxgQl61bahwN';
@@ -24,170 +29,92 @@ const ext = 'target="_blank" rel="noopener"';
 const a = (href: string, text: string) => `<a href="${href}" ${ext}>${text}</a>`;
 
 const offices = OFFICES.map((o) => ({ id: o.id, label: o.label, director: o.director, email: o.directorEmail, directorFull: LOCATION_DIRECTORS[o.id]?.name || o.director }));
+const contractTypes = CONTRACT_TYPES as Record<string, string>;
 
-type Step = { id: string; title: string; who?: 'clinician' | 'associate'; tag?: string; body: string };
-type Stage = { title: string; when: string; steps: Step[]; gate?: string };
-
-const stages: Stage[] = [
-  {
-    title: 'Get the contract signed',
-    when: 'As soon as the hire is confirmed',
-    gate: 'Stop here. Don’t do any other steps until the employment contract is signed and saved.',
-    steps: [
-      { id: 'googledrive', title: 'Create their Google Drive folder', body: `
-        <p class="ob-folder" data-folder hidden></p>
-        <p>This happens automatically when you click <b>Start a new hire</b> at the top: their folder is made inside the shared ${a(DRIVE_EMPLOYEES, 'Employee folder')}, so everyone who has that folder can see it.</p>
-        <p class="pt-muted">If that didn’t work, make it by hand:</p><ol>
-        <li>Open the ${a(DRIVE_EMPLOYEES, 'Employee folder')} in Google Drive.</li>
-        <li>Click <b>New</b> → <b>New folder</b> (top left).</li>
-        <li>Name it with their first and last name: <span class="ob-chip" data-fill="full">First Last</span></li></ol>` },
-      { id: 'employment-contract', title: 'Send the employment contract', body: `
-        <div class="ob-contract" data-contract hidden></div>
-        <p>This happens automatically when you click <b>Start a new hire</b> with a contract chosen: the right contract is filled in with their name, start date and pay, and sent through SignWell for signing in this order: <b>their location director</b> (<span data-fill="directorName">the office director</span>), then <b>${CONTRACT_SIGNER}</b> (COO), then the new hire at their personal email. For Provo, ${CONTRACT_SIGNER} signs once. The signed copy is saved in their folder automatically (and shows here when it’s done).</p>
-        <p class="pt-muted">If you need to do it by hand:</p><ol>
-        <li>Open the ${a(DRIVE_MANAGEMENT, 'Management folder')}.</li>
-        <li>Right-click the right employment contract → <b>Make a copy</b>.</li>
-        <li>Fill in the copy: name, pay, employment status, etc.</li>
-        <li><b>File</b> → <b>Download</b> → <b>PDF</b>.</li>
-        <li>Send it to their location director, then ${CONTRACT_SIGNER} (COO), to sign.</li>
-        <li>Then send it to the new employee to sign.</li>
-        <li>Save the signed copy in their Google Drive folder.</li></ol>` },
-    ],
-  },
-  {
-    title: 'Set up their accounts',
-    when: 'After the contract is signed',
-    steps: [
-      { id: 'gmailsetup', title: 'Create their Tangible email and add to groups', tag: 'Automatic', body: `
-        <p class="ob-tip">Done by <b>Finish setup</b> in the New hire box (it appears once the contract is signed). Use the button below only to do this step on its own, for example to try again.</p>
-        <p>Fill in the New hire box (name, personal email, office, role and supervisor), then click the button. It creates <span class="ob-chip" data-fill="email">first@tangiblementalhealth.com</span> (or first name + last initial if that’s taken), adds them to their Google Groups (therapists + their office group, or reception), Google emails their personal address a temporary password they change the first time they sign in, and it <b>adds them to the Employee Portal</b> with the role, office and supervisor from the New hire box (next step).</p>
-        <div class="ob-actions"><button type="button" class="pt-btn" id="ob-account">Create their email</button></div>
-        <p class="ob-status" id="ob-account-status" role="status" aria-live="polite"></p>
-        <p class="ob-folder" data-account hidden></p>
-        <p class="pt-muted">If the button isn’t working, do it by hand in the Google Admin console:</p><ol>
-        <li>Open the ${a('https://admin.google.com/ac/users', 'Google Admin console')} → <b>Users</b> → <b>Add new user</b>.</li>
-        <li>Enter their name. Use their first name for the email address: <span class="ob-chip" data-fill="email">first@tangiblementalhealth.com</span>. If it’s taken, use first name + last initial.</li>
-        <li>Put their personal email as the secondary email (Google sends their setup link there).</li>
-        <li>Click <b>Add new user</b>.</li></ol>
-        <h4>Add to Google Groups</h4><ol>
-        <li>In the left menu, open <b>Directory</b> → <b>Groups</b>.</li>
-        <li>Hover over a group and click <b>Add members</b>.</li>
-        <li>Add them to the groups for their office (<span data-fill="office">their office</span>).</li></ol>` },
-      { id: 'staff-admin', title: 'Employee Portal access', tag: 'Automatic', body: `
-        <p>Done by <b>Create their email</b> above: it adds them to the Employee Portal with their role, office and supervisor, so they can sign in with their Tangible Google account right away. Their dashboard then shows a new-hire checklist (Slack, Orientation, Onboarding, and for clinicians headshots and supervision).</p>
-        <p class="ob-folder" data-portal hidden></p>
-        <p class="pt-muted">Directors can change roles, office or supervisor later in ${a('/staff-admin', 'Staff Admin')}. If the button isn’t working, ask <span data-fill="director">the office director</span> to add them there and leave <b>Already completed orientation</b> unticked: <span class="ob-chip" data-fill="staffline">Name, email, role, office</span> <button type="button" class="ob-mini" data-copy="staffline">Copy</button></p>
-        <p class="ob-tip">Until Google sign-in is switched on for the live site, also send them the staff password from the team password manager.</p>` },
-      { id: 'slack', title: 'Get them on Slack', body: `
-        <p>Nothing to do here. Anyone with a Tangible email can join ${a(SLACK, 'Tangible’s Slack')} on their own, and the checklist on their Employee Portal dashboard walks them through it. Tick this once they’ve joined.</p>
-        <p class="pt-muted">If they can’t get in: open Slack, click <b>Tangible Therapy</b> (top left) → <b>Invite people</b>, and enter their Tangible email.</p>` },
-      { id: 'simple', who: 'clinician', title: 'Add them to SimplePractice', body: `<ol>
-        <li>Open ${a(SIMPLEPRACTICE, 'SimplePractice')} → <b>Settings</b> → <b>Team</b> → <b>Team members</b>.</li>
-        <li>Click <b>Add new team member</b> (top right).</li>
-        <li>Enter their legal name and Tangible email → <b>Continue</b>.</li>
-        <li>Choose <b>Clinician</b> and <b>Full client list</b> → <b>Continue</b>.</li>
-        <li>Turn on all permissions → <b>Continue</b>.</li>
-        <li>If they need supervision, pick their supervisor from the dropdown. Specialty: <b>Counselor</b>.</li>
-        <li>Send the invitation and finish setup.</li></ol>` },
-    ],
-  },
-  {
-    title: 'Paperwork and payroll',
-    when: 'Once their email works',
-    steps: [
-      { id: 'onboarding', title: 'Send the welcome email', tag: 'Automatic', body: `
-        <p class="ob-tip"><b>Finish setup</b> in the New hire box sends this email for you from frontdesk@, to their personal and Tangible email, right after their account is made. It’s only ever sent once. Use “Open in Gmail” below only if Finish setup says it couldn’t send it.</p>
-        <p>The email below is filled in from the New hire box. It points them to the Employee Portal, where a checklist on their dashboard walks them through Slack, Orientation and Onboarding. When they finish, they show up for their director to approve (on the director’s dashboard and in Staff Admin).</p>
-        <div class="ob-mail">
-          <p class="ob-mail-meta"><b>To:</b> <span data-fill="emailOrPersonal">their email</span><br><b>Subject:</b> Welcome to Tangible!</p>
-          <pre class="ob-mail-body" data-fill="welcomeBody"></pre>
-        </div>
-        <div class="ob-actions"><a class="pt-btn" data-mail="welcome" href="#" ${ext}>Open in Gmail</a><button type="button" class="pt-btn ghost" data-copy="welcomeBody">Copy text</button></div>` },
-      { id: 'driveandpayroll', title: 'File their paperwork and add them to payroll', tag: 'Automatic', body: `<ol>
-        <li>Make sure their <b>pay per billable hour</b> and <b>start date</b> are filled in the New hire box at the top. They’re saved on their Drive folder, and the payroll email needs both.</li>
-        <li>Wait for their answers in the ${a(ONBOARDING_SHEET, 'Onboarding responses')} sheet (you’ll also get the usual “New response” email).</li>
-        <li>Their uploaded files are moved into their ${a(DRIVE_EMPLOYEES, 'Google Drive folder')} automatically, named with their <b>legal</b> name, like “Robert Smith - W-4”. Within a few minutes you’ll get an email, <b>“Onboarding files filed: <i>their name</i>”</b>, with the folder link.</li>
-        <li>Within about 10 minutes after that, payroll (nsbcpayroll@gmail.com) is emailed automatically from frontdesk@ with their legal name, pay rate and start date, and the <b>W-4 and direct deposit form attached</b>. The “Onboarding files filed” email gets the Gmail label <b>Payroll sent</b>.</li></ol>
-        <h4>Check it worked</h4><ol>
-        <li>Open the folder link in the “Onboarding files filed” email and make sure all four files are there: <b>W-4</b>, <b>Direct Deposit form</b>, <b>Professional license</b> and <b>Professional photo</b>, each starting with their name.</li>
-        <li>Open the W-4 and direct deposit form once to make sure they’re the right, readable documents.</li>
-        <li>In frontdesk@’s <b>Sent</b> folder, open <b>“New employee: <i>their name</i>”</b> and check the pay rate, start date and the two attachments.</li></ol>
-        <h4>If it didn’t work</h4><ul>
-        <li><b>You got “Payroll email waiting: <i>their name</i>”:</b> it says what’s missing. If it’s the pay rate or start date, type their name, pay rate and start date in the New hire box and click Start a new hire (it finds their existing folder and saves them). It sends at the next check, within 10 minutes. If a file is missing, see below.</li>
-        <li><b>The filing email says “NOT filed” or “Some onboarding files NOT filed”:</b> it lists the files it couldn’t move, with links. Download each one and upload it into their folder by hand, then send the payroll email by hand (button below). Payroll isn’t emailed automatically in this case.</li>
-        <li><b>No “Onboarding files filed” email after 15 minutes:</b> check your spam folder, then look in the ${a(DRIVE_EMPLOYEES, 'Employee folder')} for their name. If the files aren’t there, open their row in the ${a(ONBOARDING_SHEET, 'Onboarding responses')} sheet, click each file link in the upload columns, download the file and upload it into their folder. Send the payroll email by hand and tell Brady.</li>
-        <li><b>Nothing in Sent 30 minutes after the filing email:</b> send the payroll email by hand (button below) and tell Brady.</li>
-        <li><b>It made a second folder</b> (the email says “Created a new folder” but you’d already made one): move the files into the right folder and delete the empty extra one. Then send payroll by hand, since the new folder has no pay rate.</li>
-        <li><b>A file is missing because they didn’t upload it</b> (or uploaded the wrong thing): ask them to email it to you and save it in their folder named like the others (“<i>Their Name</i> - W-4” or “<i>Their Name</i> - Direct Deposit form”). The payroll email then goes out by itself within 10 minutes.</li></ul>
-        <div class="ob-actions"><a class="pt-btn ghost" data-mail="payroll" href="#" ${ext}>Send payroll email by hand</a></div>
-        <p class="ob-tip">Sending by hand: Gmail can’t attach the files for you. Add the W-4 and direct deposit form before sending. Don’t do this if the automatic email already went out (check Sent first).</p>
-        <p class="ob-tip">For Brady: filing is the “Onboarding file mover” project in brady@’s Google Apps Script; the payroll email is the “Payroll email” project in frontdesk@’s. Each project’s <b>Executions</b> page shows every run and any error. Setup notes: docs/onboarding-uploads and docs/payroll-email in the website repo.</p>` },
-      { id: 'malpractice', who: 'clinician', title: 'Add them to malpractice insurance', body: `<ol>
-        <li>Open the ${a('https://www.insure-portal.com/User/', 'malpractice insurance portal')} and sign in (the login is in the team password manager).</li>
-        <li>Click <b>Make changes to my policy</b> → <b>Add something</b> → <b>Add an employee</b>.</li>
-        <li>Add them and click <b>Save</b>.</li></ol>` },
-    ],
-  },
-  {
-    title: 'Get them ready to see clients',
-    when: 'After onboarding is finished',
-    steps: [
-      { id: 'supervision', who: 'clinician', title: 'Schedule supervision', body: `
-        <p>Their dashboard checklist shows them who their supervisor is (<span data-fill="supervisorName">set in the New hire box</span>) and asks them to message them on Slack to set up a regular time. Tick this once it’s on both calendars.</p>
-        <p class="pt-muted">If they haven’t, reach out to their supervisor and find a time that works for both, then add a recurring event to both calendars.</p>` },
-      { id: 'hours', who: 'associate', tag: 'New', title: 'Link them in the Hours Tracker', body: `
-        <p>Pre-licensed associates log their supervised hours in the ${a('/hours', 'Hours Tracker')}.</p><ol>
-        <li>Make sure they have the <b>Associate (pre-licensed)</b> role in Staff Admin (step above).</li>
-        <li>Ask their clinical supervisor to open the Hours Tracker → <b>My supervisees</b> → add them, and set their license track, start date and hour targets.</li>
-        <li>If they were already linked to a different supervisor, that supervisor has to remove them first.</li></ol>` },
-      { id: 'photos', who: 'clinician', title: 'Schedule headshots', body: `
-        <p>Their dashboard checklist asks them to message Julie Clegg on Slack to schedule headshots (and to wear semi-professional clothes in neutral colors, not gray or black). Tick this once it’s scheduled.</p>
-        <p class="pt-muted">If they haven’t, coordinate a time with Julie and the new employee.</p>` },
-      { id: 'availibility', who: 'clinician', title: 'Set up their availability in SimplePractice', body: `<ol>
-        <li>Open ${a(SIMPLEPRACTICE, 'SimplePractice')} and go to their calendar.</li>
-        <li>Click the gear icon (top right) → <b>View availability schedule</b>.</li>
-        <li>Click a time to add availability and title it <b>Opening</b>. Their schedule is in the ${a(ONBOARDING_SHEET, 'Onboarding responses')} sheet.</li>
-        <li>Set it to repeat on the right days. Different time windows are added one at a time.</li>
-        <li>Pick the right location and tick <b>Telehealth</b>.</li>
-        <li>Make sure the services match the screenshot below, then <b>Save</b>. Repeat for other times.</li></ol>
-        <img class="ob-shot" src="/images/screenshot-2025-11-24-at-3-57-40-pm-b0f670.png" alt="SimplePractice availability window showing the services to offer" width="858" height="570" loading="lazy" decoding="async">` },
-      { id: 'booking-id', who: 'clinician', tag: 'New', title: 'Find their SimplePractice booking ID', body: `
-        <p>This makes the <b>Book now</b> button on their website profile open their own calendar.</p><ol>
-        <li>In SimplePractice go to <b>Settings</b> → <b>Widgets</b> → <b>Appointment request</b>.</li>
-        <li>Preview their row and copy the <b>clinicianId</b> number.</li>
-        <li>Paste it in the <b>SimplePractice clinician ID</b> column of their row in the website profiles tab (next step).</li></ol>
-        <p class="ob-tip">Their booking page only shows times once their availability and new-client services are set up (step above).</p>` },
-      { id: 'website', who: 'clinician', tag: 'New', title: 'Add them to the website', body: `
-        <p>No code needed. The website reads the ${a(THERAPIST_SHEET, 'tangible sheets')} Google Sheet.</p><ol>
-        <li>In the <b>website profiles</b> tab, add a row: Name, Credential, Photo (Google Drive link to their headshot), Bio, SimplePractice clinician ID, Online booking and Show on website. SEO description is optional.</li>
-        <li>Add them to the <b>openings</b>, <b>modalities</b> and <b>Insurances</b> tabs too, spelling their name exactly the same.</li>
-        <li>Their profile goes live about 15 minutes after the last edit, but only once the photo link works. The <b>Website status</b> column says what’s missing.</li></ol>` },
-      { id: 'psychology-today', who: 'clinician', title: 'Create their Psychology Today profile', body: `<p class="pt-muted">Step-by-step instructions haven’t been written yet.</p>` },
-    ],
-  },
-];
-const total = stages.reduce((n, s) => n + s.steps.length, 0);
-let num = 0;
+// "How?" instructions, shown under each step in a profile. <span data-f="..."> is filled in per person:
+// full, first, email, personal, office, director, directorName, supervisorName, staffline.
+const HOW: Record<string, string> = {
+  folder: `<p>Their folder is made automatically by <b>Start a new hire</b>, inside the shared ${a(DRIVE_EMPLOYEES, 'Employee folder')}. If that didn’t work, make it by hand:</p><ol>
+    <li>Open the ${a(DRIVE_EMPLOYEES, 'Employee folder')} in Google Drive.</li>
+    <li>Click <b>New</b> → <b>New folder</b> and name it <span class="ob-chip" data-f="full">First Last</span>.</li></ol>`,
+  contract: `<p><b>Start a new hire</b> fills in the right contract with their name, start date and pay, and sends it through SignWell in this order: their location director (<span data-f="directorName">the office director</span>), then <b>${CONTRACT_SIGNER}</b> (COO), then the new hire at their personal email. When everyone has signed, the signed copy is saved into their folder and this profile turns green by itself.</p>
+    <p class="pt-muted">To do it by hand:</p><ol>
+    <li>Open the ${a(DRIVE_MANAGEMENT, 'Management folder')}, right-click the right employment contract → <b>Make a copy</b>.</li>
+    <li>Fill in the copy (name, pay, employment status), then <b>File</b> → <b>Download</b> → <b>PDF</b>.</li>
+    <li>Send it to their location director, then ${CONTRACT_SIGNER} (COO), then the new employee to sign.</li>
+    <li>Save the signed copy in their folder, then click <b>Employee contract signed</b> here.</li></ol>`,
+  setup: `<p><b>Finish setup</b> does all of this in one go. If something didn’t work, here’s how to do that part by hand.</p>
+    <h4>Tangible email and groups</h4><ol>
+    <li>Open the ${a('https://admin.google.com/ac/users', 'Google Admin console')} → <b>Users</b> → <b>Add new user</b>.</li>
+    <li>Use their first name for the address: <span class="ob-chip" data-f="email">first@tangiblementalhealth.com</span> (first name + last initial if it’s taken). Put their personal email as the secondary email, then <b>Add new user</b>.</li>
+    <li><b>Directory</b> → <b>Groups</b> → add them to the groups for their office (<span data-f="office">their office</span>).</li></ol>
+    <h4>Employee Portal access</h4>
+    <p>Ask <span data-f="director">the office director</span> to add them in ${a('/staff-admin', 'Staff Admin')} and leave <b>Already completed orientation</b> unticked: <span class="ob-chip" data-f="staffline">Name, email, role, office</span> <button type="button" class="ob-mini" data-copy="staffline">Copy</button></p>
+    <p class="ob-tip">Until Google sign-in is switched on for the live site, also send them the staff password from the team password manager.</p>
+    <h4>Welcome email</h4>
+    <div class="ob-mail"><p class="ob-mail-meta"><b>To:</b> <span data-f="emailOrPersonal">their email</span><br><b>Subject:</b> Welcome to Tangible!</p><pre class="ob-mail-body" data-f="welcomeBody"></pre></div>
+    <div class="ob-actions"><a class="pt-btn ghost" data-mail="welcome" href="#" ${ext}>Open in Gmail</a><button type="button" class="pt-btn ghost" data-copy="welcomeBody">Copy text</button></div>
+    <h4>Payroll info</h4>
+    <p>Their pay and start date are saved on their Drive folder so the payroll email to Chelsea can go out by itself once their paperwork comes in (see “Paperwork filed and payroll emailed”).</p>`,
+  slack: `<p>Nothing to do: anyone with a Tangible email can join ${a(SLACK, 'Tangible’s Slack')} on their own, and their Employee Portal checklist walks them through it. Tick this once they’ve joined.</p>
+    <p class="pt-muted">If they can’t get in: open Slack, click <b>Tangible Therapy</b> (top left) → <b>Invite people</b>, and enter <span data-f="email">their Tangible email</span>.</p>`,
+  simple: `<ol>
+    <li>Open ${a(SIMPLEPRACTICE, 'SimplePractice')} → <b>Settings</b> → <b>Team</b> → <b>Team members</b> → <b>Add new team member</b>.</li>
+    <li>Enter their legal name and <span data-f="email">Tangible email</span> → <b>Continue</b>.</li>
+    <li>Choose <b>Clinician</b> and <b>Full client list</b> → <b>Continue</b>, turn on all permissions → <b>Continue</b>.</li>
+    <li>If they need supervision, pick their supervisor. Specialty: <b>Counselor</b>. Send the invitation.</li></ol>`,
+  paperwork: `<p>This happens by itself once they fill out the onboarding form from their Employee Portal checklist:</p><ol>
+    <li>Their uploads are moved into their ${a(DRIVE_EMPLOYEES, 'Drive folder')} with their legal name (“<span data-f="full">Name</span> - W-4” and so on), and frontdesk@ gets <b>“Onboarding files filed: <span data-f="full">Name</span>”</b>.</li>
+    <li>Within about 10 minutes, Chelsea (nsbcpayroll@gmail.com) gets the payroll email from frontdesk@ with the W-4 and direct deposit form attached, and the filing email gets the Gmail label <b>Payroll sent</b>.</li></ol>
+    <p>Tick this once you see “New employee: <span data-f="full">Name</span>” in frontdesk@’s <b>Sent</b> folder with both attachments.</p>
+    <h4>If it didn’t work</h4><ul>
+    <li><b>“Payroll email waiting”</b>: it says what’s missing. Fix the pay or start date in this profile’s details, or save the missing file in their folder named like the others. It then sends within 10 minutes.</li>
+    <li><b>“NOT filed”</b> or no filing email after 15 minutes: move the files into their folder by hand from the ${a(ONBOARDING_SHEET, 'Onboarding responses')} sheet, send payroll by hand (below) and tell Brady.</li></ul>
+    <div class="ob-actions"><a class="pt-btn ghost" data-mail="payroll" href="#" ${ext}>Send payroll email by hand</a></div>
+    <p class="ob-tip">Gmail can’t attach the files for you: add the W-4 and direct deposit form before sending, and check Sent first so it doesn’t go twice.</p>`,
+  malpractice: `<ol>
+    <li>Open the ${a('https://www.insure-portal.com/User/', 'malpractice insurance portal')} and sign in (the login is in the team password manager).</li>
+    <li><b>Make changes to my policy</b> → <b>Add something</b> → <b>Add an employee</b>, add them and <b>Save</b>.</li></ol>`,
+  supervision: `<p>Their dashboard checklist tells them their supervisor (<span data-f="supervisorName">set in their details</span>) and asks them to set up a regular time on Slack. Tick this once it’s on both calendars.</p>
+    <p class="pt-muted">If they haven’t, reach out to their supervisor, find a time, and add a recurring event to both calendars.</p>`,
+  hours: `<ol>
+    <li>Make sure they have the <b>Associate (pre-licensed)</b> role.</li>
+    <li>Ask their clinical supervisor to open the ${a('/hours', 'Hours Tracker')} → <b>My supervisees</b> → add them and set their license track, start date and hour targets.</li></ol>`,
+  photos: `<p>Their dashboard checklist asks them to message Julie Clegg on Slack to schedule headshots (semi-professional clothes in neutral colors, not gray or black). Tick this once it’s scheduled.</p>`,
+  availibility: `<ol>
+    <li>Open ${a(SIMPLEPRACTICE, 'SimplePractice')}, go to their calendar → gear icon → <b>View availability schedule</b>.</li>
+    <li>Click a time, title it <b>Opening</b> (their schedule is in the ${a(ONBOARDING_SHEET, 'Onboarding responses')} sheet), set it to repeat, pick the location and tick <b>Telehealth</b>.</li>
+    <li>Make sure the services match the screenshot, then <b>Save</b>. Add each time window separately.</li></ol>
+    <img class="ob-shot" src="/images/screenshot-2025-11-24-at-3-57-40-pm-b0f670.png" alt="SimplePractice availability window showing the services to offer" width="858" height="570" loading="lazy" decoding="async">`,
+  'booking-id': `<ol>
+    <li>In SimplePractice go to <b>Settings</b> → <b>Widgets</b> → <b>Appointment request</b>.</li>
+    <li>Preview their row and copy the <b>clinicianId</b> number into the <b>SimplePractice clinician ID</b> column of their row in the website profiles tab.</li></ol>`,
+  website: `<p>No code needed. The website reads the ${a(THERAPIST_SHEET, 'tangible sheets')} Google Sheet.</p><ol>
+    <li>In <b>website profiles</b>, add a row: Name, Credential, Photo (Drive link to their headshot), Bio, SimplePractice clinician ID, Online booking and Show on website.</li>
+    <li>Add them to the <b>openings</b>, <b>modalities</b> and <b>Insurances</b> tabs, spelling their name the same.</li>
+    <li>It goes live about 15 minutes after the last edit, once the photo link works. The <b>Website status</b> column says what’s missing.</li></ol>`,
+  'psychology-today': `<p class="pt-muted">Step-by-step instructions haven’t been written yet.</p>`,
+};
+const steps = HIRE_STEPS.map((s) => ({ id: s.id, title: s.title, who: s.who || '', auto: !!s.auto }));
 ---
 <Base title={"Onboarding New Employees | Tangible Therapy"} description={""} noindex>
 <div class="pt-page ob">
   <div class="pt-head">
     <div>
       <p class="pt-eyebrow">Reception</p>
-      <h1>Onboarding a new employee</h1>
+      <h1>Onboarding new employees</h1>
     </div>
-    <p class="pt-muted ob-count" aria-live="polite"><span id="ob-done">0</span> of <span id="ob-total">{total}</span> steps done</p>
+    <p class="pt-muted ob-count" aria-live="polite" id="ob-count"></p>
   </div>
 
   <div class="ob-layout">
     <aside class="ob-side">
       <section class="pt-card ob-hire">
         <h2>New hire</h2>
-        <p class="pt-muted">Fill these in, then click Start a new hire. It makes their Google Drive folder and sends their contract for signing. Once the contract is signed, <b>Finish setup</b> appears here and does the rest in one go: their email, portal access, payroll info and welcome email.</p>
+        <p class="pt-muted">Fill these in and click <b>Start a new hire</b>. It makes their profile, their Google Drive folder and sends their contract for signing.</p>
         <div class="ob-fields">
           <label class="pt-field">First name<input id="f-first" autocomplete="off"></label>
           <label class="pt-field">Last name<input id="f-last" autocomplete="off"></label>
-          <label class="pt-field ob-wide">Tangible email<input id="f-email" type="email" autocomplete="off" placeholder="Suggested from first name"></label>
           <label class="pt-field ob-wide">Personal email<input id="f-personal" type="email" autocomplete="off" placeholder="Their contract is sent here"></label>
           <label class="pt-field">Office<select id="f-office">{offices.map((o) => <option value={o.id}>{o.label}</option>)}</select></label>
           <label class="pt-field">Role<select id="f-role">
@@ -202,527 +129,518 @@ let num = 0;
           <label class="pt-field">Start date<input id="f-start" type="date"></label>
           <label class="pt-field">Pay per billable hr ($)<input id="f-pay" inputmode="decimal" autocomplete="off" placeholder="e.g. 60"></label>
           <label class="pt-field ob-wide">Contract to send<select id="f-contract">
-            {Object.entries(CONTRACT_TYPES).map(([k, v]) => <option value={k}>{v}</option>)}
+            {Object.entries(contractTypes).map(([k, v]) => <option value={k}>{v}</option>)}
             <option value="none">Don’t send a contract (I’ll do it by hand)</option>
           </select></label>
         </div>
         <button type="button" class="pt-btn ob-start" id="ob-start">Start a new hire</button>
         <p class="ob-status" id="ob-status" role="status" aria-live="polite"></p>
-        <p class="ob-folder" data-folder hidden></p>
-        <p class="ob-folder ob-payroll" data-payroll hidden></p>
-        <div class="ob-contract" data-contract hidden></div>
-        <button type="button" class="pt-btn ghost ob-send" id="ob-send" hidden>Send their contract</button>
-        <p class="ob-folder" data-account hidden></p>
-        <div class="ob-finish" id="ob-finish" hidden>
-          <p class="ob-finish-title">Contract signed. Finish setting them up</p>
-          <p class="ob-finish-what">One button, two clicks. It creates their Tangible email and adds them to their groups, gives them Employee Portal access, saves their pay and start date for the automatic payroll email, and emails them the welcome email from frontdesk@.</p>
-          <button type="button" class="pt-btn ob-go" id="ob-go">Finish setup</button>
-          <ul class="ob-results" id="ob-results" hidden></ul>
-        </div>
-        <button type="button" class="ob-reset" id="ob-reset" hidden>Clear for the next hire</button>
       </section>
-      <nav class="pt-card ob-nav" aria-label="Onboarding steps">
-        <div class="ob-bar"><i id="ob-bar"></i></div>
-        {stages.map((s, si) => (
-          <div class="ob-nav-stage">
-            <p class="ob-nav-title">{si + 1}. {s.title}</p>
-            <ul>{s.steps.map((st) => <li data-nav={st.id} data-who={st.who}><a href={`#${st.id}`}>{st.title}</a></li>)}</ul>
-          </div>
-        ))}
+
+      <nav class="pt-card ob-people" aria-label="People being onboarded">
+        <h2>Being onboarded</h2>
+        <ul class="ob-list" id="ob-list"></ul>
+        <p class="pt-muted ob-empty" id="ob-list-empty" hidden>Nobody yet. Add a new hire above.</p>
+        <details class="ob-done-list" id="ob-done-wrap" hidden>
+          <summary>Completed (<span id="ob-done-n">0</span>)</summary>
+          <ul id="ob-done-ul"></ul>
+        </details>
       </nav>
     </aside>
 
-    <div class="ob-main">
-      {stages.map((s, si) => (
-        <section class="ob-stage" data-stage={si}>
-          <header class="ob-stage-head">
-            <span class="ob-stage-num">Stage {si + 1}</span>
-            <h2>{s.title}</h2>
-            <p class="pt-muted">{s.when}</p>
-          </header>
-          {s.steps.map((st) => { num++; return (
-            <article class="pt-card ob-step" id={st.id} data-step={st.id} data-who={st.who}>
-              <label class="ob-check">
-                <input type="checkbox" data-check={st.id}>
-                <span class="ob-num" aria-hidden="true">{num}</span>
-                <span class="ob-title">{st.title}{st.tag && <em class="ob-tag">{st.tag}</em>}</span>
-              </label>
-              <p class="ob-skip">Not needed for this role. Skip it or tick it if it applies.</p>
-              <div class="ob-body" set:html={st.body} />
-            </article>
-          ); })}
-          {s.gate && <div class="ob-gate" role="note"><strong>Stop</strong><span>{s.gate}</span></div>}
-        </section>
-      ))}
-      <p class="pt-note">Your ticks and the new hire’s details are saved in this browser only. Pay rate isn’t kept in this browser; it’s saved only on their Drive folder for the payroll email. Use “Clear for the next hire” to clear everything (it doesn’t delete their Drive folder).</p>
-    </div>
+    <main class="ob-main" id="ob-profile" aria-live="polite">
+      <div class="pt-card ob-placeholder"><p class="pt-muted">Loading…</p></div>
+    </main>
   </div>
+
 </div>
 
 <style is:global>
-  .ob h4 { font-size: .95rem; font-weight: 600; margin: 1rem 0 .3rem; }
-  .ob .ob-count { font-size: .95rem; }
-  .ob .ob-count span { font-weight: 600; color: var(--charcoal); }
-  .ob .ob-layout { display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: 1.5rem; align-items: start; }
-  .ob .ob-side { position: sticky; top: 1rem; display: flex; flex-direction: column; gap: 1rem; max-height: calc(100vh - 2rem); overflow: auto; }
+  .ob h2 { font-size: 1.15rem; font-weight: 600; margin: 0 0 .3rem; }
+  .ob h4 { font-size: .92rem; font-weight: 600; margin: 1rem 0 .3rem; }
+  .ob .ob-layout { display: grid; grid-template-columns: 330px minmax(0, 1fr); gap: 1.5rem; align-items: start; }
+  .ob .ob-side { display: flex; flex-direction: column; gap: 1rem; }
   .ob .ob-fields { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: .6rem; margin: .9rem 0; }
   .ob .ob-wide { grid-column: 1 / -1; }
-  .ob .ob-chk { flex-direction: row; align-items: center; gap: .45rem; font-size: .88rem; }
+  .ob .ob-chk { flex-direction: row !important; align-items: center; gap: .45rem; font-size: .88rem; }
   .ob .ob-chk input { width: auto !important; min-height: 0 !important; }
-  .ob .ob-fields [hidden] { display: none; }
+  .ob [hidden] { display: none !important; }
   .ob .ob-fields input, .ob .ob-fields select { font: inherit; font-size: .9rem; color: var(--charcoal); border: 1px solid #c9cfca; border-radius: 10px; padding: .45rem .6rem; background: #fff; min-width: 0; width: 100%; box-sizing: border-box; min-height: 38px; }
+  .ob .ob-fields input:disabled { background: #f3f4f3; color: #5d635e; }
   .ob .ob-start { width: 100%; }
-  .ob .pt-btn[aria-busy=true], .ob .ob-start[aria-busy=true] { opacity: .6; cursor: progress; }
-  .ob .ob-send { width: 100%; margin-top: .6rem; }
-  .ob .ob-send[hidden] { display: none; }
-  .ob .ob-contract { font-size: .88rem; background: #f6f4ec; color: #4a4630; border-radius: 10px; padding: .55rem .75rem; margin: .6rem 0 0; line-height: 1.5; }
-  .ob .ob-contract[hidden] { display: none; }
-  .ob .ob-contract.ok { background: #e8f1ea; color: #23432c; }
-  .ob .ob-contract.bad { background: #fbe9e4; color: #6b2a17; }
-  .ob .ob-contract a { color: inherit; font-weight: 600; }
+  .ob .pt-btn[aria-busy=true] { opacity: .6; cursor: progress; }
+  .ob .pt-btn:disabled { opacity: .5; cursor: not-allowed; }
   .ob .ob-status { font-size: .85rem; margin: .6rem 0 0; }
   .ob .ob-status:empty { display: none; }
-  .ob .ob-status.err { color: #8a2f1c; }
-  .ob .ob-folder { font-size: .88rem; background: #e8f1ea; color: #23432c; border-radius: 10px; padding: .55rem .75rem; margin: .6rem 0 0; }
-  .ob .ob-folder a { color: inherit; font-weight: 600; }
-  .ob .ob-payroll.warn { background: #fbf1dc; color: #5a4310; }
-  .ob .ob-finish { margin: .9rem 0 0; padding: .8rem .85rem; border: 1.5px solid #c9d8cc; border-radius: 12px; background: #f4f8f5; }
-  .ob .ob-finish[hidden] { display: none; }
-  .ob .ob-finish-title { font-weight: 600; margin: 0 0 .3rem; color: #23432c; }
-  .ob .ob-finish-what { font-size: .85rem; margin: 0 0 .7rem; line-height: 1.5; }
-  .ob .ob-finish.done .ob-finish-what { display: none; }
-  .ob .ob-go { width: 100%; }
-  .ob .ob-go.armed { background: #8a3b1f; border-color: #8a3b1f; color: #fff; }
-  .ob .ob-results { list-style: none; margin: .7rem 0 0; padding: 0; font-size: .85rem; line-height: 1.45; }
-  .ob .ob-results li { padding: .35rem 0 .35rem 1.4rem; position: relative; }
+  .ob .ob-status.err, .ob .ob-err { color: #8a2f1c; }
+
+  /* people list */
+  .ob .ob-list { list-style: none; margin: .5rem 0 0; padding: 0; display: flex; flex-direction: column; gap: .4rem; }
+  .ob .ob-person { width: 100%; text-align: left; font: inherit; color: var(--charcoal); background: #fff; border: 1.5px solid #e0e4e0; border-radius: 12px; padding: .6rem .7rem; cursor: pointer; display: flex; flex-direction: column; gap: .3rem; }
+  .ob .ob-person:hover { border-color: #b5bcb6; }
+  .ob .ob-person[aria-current=true] { border-color: var(--slate); box-shadow: 0 0 0 1px var(--slate); background: #f6f8f6; }
+  .ob .ob-person b { font-size: .98rem; }
+  .ob .ob-person small { font-size: .78rem; color: #5d635e; }
+  .ob .ob-empty { font-size: .88rem; margin: .4rem 0 0; }
+  .ob .ob-done-list { margin-top: .8rem; font-size: .85rem; }
+  .ob .ob-done-list summary { cursor: pointer; color: #5d635e; }
+  .ob .ob-done-list ul { margin: .4rem 0 0; padding-left: 1.1rem; color: #5d635e; }
+
+  /* status pill */
+  .ob .ob-pill { display: inline-flex; align-items: center; gap: .35rem; align-self: flex-start; font-size: .74rem; font-weight: 600; border-radius: 300px; padding: .15rem .6rem .15rem .5rem; line-height: 1.4; }
+  .ob .ob-pill::before { content: ''; width: .5rem; height: .5rem; border-radius: 50%; background: currentColor; }
+  .ob .ob-pill.red { background: #fbe4dd; color: #a3361b; }
+  .ob .ob-pill.green { background: #e1efe4; color: #2f6b3f; }
+  .ob .ob-pill.blue { background: #e3ecf3; color: #2e5873; }
+
+  /* profile */
+  .ob .ob-main { min-width: 0; }
+  .ob .ob-placeholder { text-align: center; padding: 3rem 1rem; }
+  .ob .ob-profile-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
+  .ob .ob-profile-head h2 { font-size: 1.5rem; margin: 0 0 .35rem; }
+  .ob .ob-meta { font-size: .88rem; color: #5d635e; margin: .4rem 0 0; }
+  .ob .ob-section { margin-top: 1.2rem; }
+  .ob .ob-section > h3 { font-size: 1.05rem; font-weight: 600; margin: 0 0 .5rem; }
+  .ob .ob-box { font-size: .9rem; border-radius: 12px; padding: .7rem .85rem; margin: .5rem 0 0; line-height: 1.5; background: #f6f4ec; color: #4a4630; }
+  .ob .ob-box.ok { background: #e8f1ea; color: #23432c; }
+  .ob .ob-box.bad { background: #fbe9e4; color: #6b2a17; }
+  .ob .ob-box a { color: inherit; font-weight: 600; }
+  .ob .ob-row { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .7rem; align-items: center; }
+  .ob .pt-btn.armed { background: #8a3b1f !important; border-color: #8a3b1f !important; color: #fff !important; }
+  .ob .ob-locked { margin-top: 1.2rem; border: 1.5px dashed #d6dad6; border-radius: 14px; padding: 1rem 1.1rem; color: #5d635e; font-size: .9rem; line-height: 1.55; }
+  .ob .ob-details summary, .ob .ob-how summary { cursor: pointer; font-size: .85rem; color: #4a5a4e; font-weight: 600; }
+  .ob .ob-details { margin-top: .8rem; }
+  .ob .ob-details .ob-fields { margin-bottom: 0; }
+
+  .ob .ob-bar { height: 6px; border-radius: 6px; background: #e6e9e6; overflow: hidden; margin: .3rem 0 .8rem; }
+  .ob .ob-bar i { display: block; height: 100%; background: var(--slate); transition: width .3s; }
+  .ob .ob-checks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .5rem; }
+  .ob .ob-item { border: 1px solid #e0e4e0; border-radius: 12px; padding: .65rem .8rem; background: #fff; }
+  .ob .ob-item.auto { border: 1.5px solid #c9d8cc; background: #f4f8f5; }
+  .ob .ob-item.done { background: #f7f9f7; }
+  .ob .ob-tick { display: flex; align-items: flex-start; gap: .65rem; cursor: pointer; font-weight: 600; font-size: .95rem; line-height: 1.35; }
+  .ob .ob-tick input { flex: none; width: 1.15rem; height: 1.15rem; margin: .1rem 0 0; accent-color: var(--slate); cursor: pointer; }
+  .ob .ob-item.done .ob-tick span { color: #6b716c; text-decoration: line-through; }
+  .ob .ob-item-body { padding-left: 1.8rem; font-size: .9rem; line-height: 1.55; }
+  .ob .ob-item-body > p { margin: .4rem 0 0; }
+  .ob .ob-how { margin-top: .35rem; }
+  .ob .ob-how-body { margin-top: .4rem; }
+  .ob .ob-how-body ol, .ob .ob-how-body ul { margin: .4rem 0 0; padding-left: 1.2rem; }
+  .ob .ob-how-body li { margin: .2rem 0; }
+  .ob .ob-how-body p { margin: .5rem 0 0; }
+  .ob .ob-results { list-style: none; margin: .6rem 0 0; padding: 0; font-size: .86rem; line-height: 1.45; }
+  .ob .ob-results li { padding: .25rem 0 .25rem 1.4rem; position: relative; }
   .ob .ob-results li::before { position: absolute; left: 0; font-weight: 700; }
   .ob .ob-results li.ok::before { content: '✓'; color: #2f6b3f; }
   .ob .ob-results li.bad::before { content: '!'; color: #a3361b; }
   .ob .ob-results li.bad { color: #6b2a17; }
-  .ob .ob-reset { display: block; margin: .7rem auto 0; font: inherit; font-size: .82rem; color: #5d635e; background: none; border: 0; text-decoration: underline; cursor: pointer; padding: .3rem; }
-  .ob .ob-reset[hidden], .ob #ob-account[hidden] { display: none; }
-  .ob .ob-step.done .ob-folder { display: none; }
-  .ob .ob-bar { height: 6px; border-radius: 6px; background: #e6e9e6; overflow: hidden; margin-bottom: .9rem; }
-  .ob .ob-bar i { display: block; height: 100%; width: 0; background: var(--slate); transition: width .3s; }
-  .ob .ob-nav-title { font-size: .78rem; font-weight: 600; color: #5d635e; margin: .7rem 0 .2rem; text-transform: uppercase; letter-spacing: .04em; }
-  .ob .ob-nav ul { list-style: none; margin: 0; padding: 0; }
-  .ob .ob-nav li a { display: block; padding: .25rem 0 .25rem 1.4rem; font-size: .86rem; color: var(--charcoal); text-decoration: none; position: relative; line-height: 1.35; }
-  .ob .ob-nav li a::before { content: ''; position: absolute; left: 0; top: .45rem; width: .8rem; height: .8rem; border-radius: 50%; border: 1.5px solid #b5bcb6; box-sizing: border-box; }
-  .ob .ob-nav li.done a { color: #7a807b; text-decoration: line-through; }
-  .ob .ob-nav li.done a::before { background: var(--slate); border-color: var(--slate); }
-  .ob .ob-nav li.na a { color: #9aa09b; }
-  .ob .ob-stage { margin-bottom: 2rem; }
-  .ob .ob-stage-head { margin: 0 0 .8rem; }
-  .ob .ob-stage-num { font-size: .78rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--slate); }
-  .ob .ob-stage-head h2 { font-size: 1.35rem; font-weight: 600; margin: .1rem 0 .1rem; color: var(--charcoal); }
-  .ob .ob-step { margin-bottom: .8rem; scroll-margin-top: 1rem; transition: opacity .2s; }
-  .ob .ob-check { display: flex; align-items: center; gap: .75rem; cursor: pointer; }
-  .ob .ob-check input { position: absolute; opacity: 0; width: 1px; height: 1px; }
-  .ob .ob-num { flex: none; width: 2rem; height: 2rem; border-radius: 50%; border: 2px solid #b5bcb6; display: grid; place-items: center; font-weight: 600; font-size: .9rem; color: var(--charcoal); }
-  .ob .ob-check input:focus-visible + .ob-num { outline: 2px solid var(--charcoal); outline-offset: 2px; }
-  .ob .ob-check input:checked + .ob-num { background: var(--slate); border-color: var(--slate); color: #fff; font-size: 0; }
-  .ob .ob-check input:checked + .ob-num::after { content: '✓'; font-size: 1rem; }
-  .ob .ob-title { font-size: 1.05rem; font-weight: 600; color: var(--charcoal); line-height: 1.3; }
-  .ob .ob-tag { font-style: normal; font-size: .7rem; font-weight: 600; background: var(--sage); color: var(--charcoal); border-radius: 300px; padding: .1rem .55rem; margin-left: .5rem; vertical-align: middle; }
-  .ob .ob-body { padding-left: 2.75rem; font-size: .93rem; line-height: 1.55; }
-  .ob .ob-body ol, .ob .ob-body ul { margin: .6rem 0 0; padding-left: 1.2rem; }
-  .ob .ob-body li { margin: .25rem 0; }
-  .ob .ob-body p { margin: .6rem 0 0; }
+  .ob .ob-complete { margin-top: 1.2rem; border-top: 1px solid #e6e9e6; padding-top: 1rem; }
+  .ob .ob-complete .pt-btn { width: 100%; }
+  .ob .ob-link { font: inherit; font-size: .8rem; color: #8a2f1c; background: none; border: 0; text-decoration: underline; cursor: pointer; padding: .2rem; }
+  .ob .ob-link.armed { font-weight: 700; }
+  .ob .ob-small { font-size: .8rem; margin: .4rem 0 0; }
+
   .ob .ob-chip { display: inline-block; background: #f1f3f1; border-radius: 6px; padding: 0 .4rem; font-weight: 500; word-break: break-all; }
   .ob .ob-mini { font: inherit; font-size: .75rem; border: 1px solid #c9cfca; background: #fff; border-radius: 300px; padding: .05rem .6rem; cursor: pointer; margin-left: .2rem; }
   .ob .ob-tip { font-size: .85rem; background: #f6f4ec; border-radius: 10px; padding: .5rem .75rem; }
-  .ob .ob-mail { border: 1px solid #e0e4e0; border-radius: 12px; margin-top: .7rem; overflow: hidden; }
+  .ob .ob-mail { border: 1px solid #e0e4e0; border-radius: 12px; margin-top: .7rem; overflow: hidden; background: #fff; }
   .ob .ob-mail-meta { background: #f6f7f6; margin: 0 !important; padding: .6rem .9rem; font-size: .85rem; }
-  .ob .ob-mail-body { margin: 0; padding: .8rem .9rem; font: inherit; font-size: .88rem; white-space: pre-wrap; max-height: 320px; overflow: auto; }
-  .ob .ob-actions { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .8rem; }
+  .ob .ob-mail-body { margin: 0; padding: .8rem .9rem; font: inherit; font-size: .86rem; white-space: pre-wrap; max-height: 280px; overflow: auto; }
+  .ob .ob-actions { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .7rem; }
   .ob .ob-actions a.pt-btn { text-decoration: none; display: inline-flex; align-items: center; }
   .ob .ob-shot { display: block; max-width: 100%; height: auto; border-radius: 12px; margin-top: .8rem; border: 1px solid #e0e4e0; }
-  .ob .ob-skip { display: none; margin: .4rem 0 0 2.75rem; font-size: .82rem; color: #5d635e; }
-  .ob .ob-step.na { opacity: .6; }
-  .ob .ob-step.na .ob-skip { display: block; }
-  .ob .ob-step.na .ob-body { display: none; }
-  .ob .ob-step.done .ob-body { display: none; }
-  .ob .ob-step.done .ob-title { color: #5d635e; }
-  .ob .ob-gate { display: flex; gap: .9rem; align-items: center; background: #fbe9e4; border: 1px solid #efc2b5; color: #6b2a17; border-radius: 16px; padding: .9rem 1.2rem; margin-top: 1rem; font-size: .95rem; }
-  .ob .ob-gate strong { flex: none; background: #b8432b; color: #fff; border-radius: 300px; padding: .2rem .8rem; font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; }
-  .ob .ob-gate.ok { background: #e8f1ea; border-color: #bcd6c2; color: #23432c; }
-  .ob .ob-gate.ok strong { background: var(--slate); }
-  @media (max-width: 1100px) {
-    .ob .ob-layout { grid-template-columns: minmax(0, 1fr); }
-    .ob .ob-side { position: static; max-height: none; overflow: visible; }
-    .ob .ob-nav { display: none; }
+
+  @media (max-width: 900px) {
+    .ob .ob-layout { grid-template-columns: 1fr; }
+    .ob .ob-people { order: -1; }
   }
   @media (max-width: 520px) {
-    .ob .ob-body { padding-left: 0; }
-    .ob .ob-skip { margin-left: 0; }
     .ob .ob-fields { grid-template-columns: 1fr; }
-    .ob .ob-gate { flex-direction: column; align-items: flex-start; }
+    .ob .ob-item-body { padding-left: 0; }
   }
 </style>
 
-<script is:inline define:vars={{ offices, signer: SIGNER.name, welcomeTpl: WELCOME_TEMPLATE }}>
+<script is:inline define:vars={{ offices, signer: SIGNER.name, welcomeTpl: WELCOME_TEMPLATE, steps, HOW }}>
   (function () {
-    var KEY = 'tt.onboard.v1';
-    var F = ['first', 'last', 'email', 'personal', 'office', 'role', 'start', 'supervisor', 'contract'];
     var $ = function (id) { return document.getElementById(id); };
-    var state = { f: {}, done: {} };
-    try { var s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s && s.f && s.done) state = s; } catch (e) {}
-    function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+    var hires = [], completed = [], sel = null, supervisors = [], loaded = false;
+    var msgs = {};       // per-hire notes from the last action (not saved)
+    var busy = {};       // per-hire: an action is running
+    var checkedAt = {};  // per-hire: last time the contract status was checked
+    var SEL = 'tt.onboard.sel';
+    try { sel = localStorage.getItem(SEL); } catch (e) {}
 
-    function val(id) { return ($('f-' + id).value || '').trim(); }
-    function office() { var id = $('f-office').value; for (var i = 0; i < offices.length; i++) if (offices[i].id === id) return offices[i]; return offices[0]; }
-    function suggestedEmail() { var f = val('first').toLowerCase().replace(/[^a-z]/g, ''); return f ? f + '@tangiblementalhealth.com' : ''; }
-    function email() { return val('email') || suggestedEmail(); }
-    function fmtDate(d) { if (!d) return ''; var p = d.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }); }
-    var ROLE = { therapist: 'therapist', associate: 'associate', frontdesk: 'frontdesk', billing: 'billing', other: '' };
-    // Employee Portal roles from the New hire box (main role + "also a clinical supervisor").
-    function portalRoles() { var r = ROLE[$('f-role').value] ? [ROLE[$('f-role').value]] : []; if ($('f-alsosup').checked) r.push('supervisor'); return r; }
-    function isClin() { var r = $('f-role').value; return r === 'therapist' || r === 'associate'; }
-    var supervisors = [];
-    function supName() { var e = $('f-supervisor').value; for (var i = 0; i < supervisors.length; i++) if (supervisors[i].email === e) return supervisors[i].name; return ''; }
-
-    function data() {
-      var first = val('first'), last = val('last'), o = office(), full = (first + ' ' + last).trim();
-      var welcome = welcomeTpl.replace('{{first}}', first || '[first name]').replace('{{email}}', email() || '[Tangible email]')
-        .split('{{director}}').join(o.director).replace('{{directorEmail}}', o.email);
-      var payroll = 'Hey Chelsea,\n\nPlease add our new employee to payroll:\n\n' +
-        'Name: ' + (full || '[name]') + '\n' +
-        'Pay rate: ' + (payRate() || '[pay rate]') + '\n' +
-        'Start date: ' + (fmtDate(val('start')) || '[start date]') + '\n\n' +
-        'Their W-4 and direct deposit form are attached.\n\nThank you!';
-      return {
-        full: full || 'First Last',
-        email: email() || 'first@tangiblementalhealth.com',
-        emailOrPersonal: [email(), val('personal')].filter(Boolean).join(', ') || 'their email',
-        office: o.label,
-        director: o.director + ' (' + o.email + ')',
-        directorName: o.directorFull,
-        staffline: [full || 'Name', email() || 'email', portalRoles().join('+') || 'role', o.id].join(', ') + (supName() ? ' · supervisor: ' + supName() : ''),
-        supervisorName: supName() || 'set in the New hire box',
-        welcomeBody: welcome,
-        payrollBody: payroll,
-        directorEmail: o.email,
-      };
-    }
-    function gmail(to, su, body) {
-      return 'https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(to) + '&su=' + encodeURIComponent(su) + '&body=' + encodeURIComponent(body);
-    }
-
-    function contractSigned() { return state.contract ? isDone(state.contract) : !!state.done['employment-contract']; }
-
-    function render() {
-      var d = data();
-      $('f-email').placeholder = suggestedEmail() || 'Suggested from first name';
-      document.querySelectorAll('[data-fill]').forEach(function (n) { if (d[n.dataset.fill] != null) n.textContent = d[n.dataset.fill]; });
-      var to = [email(), val('personal')].filter(Boolean).join(',');
-      document.querySelectorAll('[data-mail=welcome]').forEach(function (n) { n.href = gmail(to, 'Welcome to Tangible!', d.welcomeBody); });
-      document.querySelectorAll('[data-mail=payroll]').forEach(function (n) { n.href = gmail('nsbcpayroll@gmail.com', 'New employee: ' + (val('first') + ' ' + val('last')).trim(), d.payrollBody); });
-
-      var role = $('f-role').value;
-      $('f-supervisor-wrap').hidden = !isClin();
-      var done = 0, all = 0;
-      document.querySelectorAll('[data-step]').forEach(function (n) {
-        var id = n.dataset.step, who = n.dataset.who;
-        var na = (who === 'clinician' && !isClin()) || (who === 'associate' && role !== 'associate');
-        var ok = !!state.done[id];
-        n.classList.toggle('na', na && !ok);
-        n.classList.toggle('done', ok);
-        n.querySelector('[data-check]').checked = ok;
-        var nav = document.querySelector('[data-nav="' + id + '"]');
-        if (nav) { nav.classList.toggle('done', ok); nav.classList.toggle('na', na && !ok); }
-        if (!na || ok) { all++; if (ok) done++; }
-      });
-      $('ob-done').textContent = done; $('ob-total').textContent = all;
-      $('ob-bar').style.width = (all ? Math.round(done / all * 100) : 0) + '%';
-      var gate = document.querySelector('.ob-gate');
-      var c = state.contract, cText = contractText();
-      if (gate) {
-        var signed = c ? isDone(c) : !!state.done['employment-contract'];
-        gate.classList.toggle('ok', signed);
-        gate.querySelector('strong').textContent = signed ? 'Go' : 'Stop';
-        gate.querySelector('span').textContent = signed ? 'Contract signed. You can move on to setting up their accounts.'
-          : (c ? cText + ' Don’t do any other steps until it’s signed.' : 'Don’t do any other steps until the employment contract is signed and saved.');
-      }
-      document.querySelectorAll('[data-contract]').forEach(function (n) {
-        n.hidden = !c; if (!c) return;
-        n.textContent = ''; n.className = 'ob-contract' + (isDone(c) ? ' ok' : isDead(c) ? ' bad' : '');
-        n.append(cText + ' ');
-        if (isDone(c) && c.signedUrl) { var l = document.createElement('a'); l.href = c.signedUrl; l.target = '_blank'; l.rel = 'noopener'; l.textContent = 'Open the signed contract'; n.append(l); }
-        else if (!isDone(c) && !isDead(c)) { var b = document.createElement('button'); b.type = 'button'; b.className = 'ob-mini'; b.dataset.recheck = '1'; b.textContent = checking ? 'Checking…' : 'Check again'; b.disabled = checking; n.append(b); }
-        else if (isDead(c)) { var r = document.createElement('button'); r.type = 'button'; r.className = 'ob-mini'; r.dataset.resend = '1'; r.textContent = 'Send a new contract'; n.append(r); }
-      });
-      var started = state.folder && state.folder.url;
-      document.querySelectorAll('[data-folder]').forEach(function (n) {
-        n.hidden = !started;
-        if (started) {
-          n.textContent = '';
-          n.append((state.folder.created ? 'Folder created: ' : 'Found their existing folder: '));
-          var l = document.createElement('a'); l.href = state.folder.url; l.target = '_blank'; l.rel = 'noopener';
-          l.textContent = state.folder.name; n.append(l);
-        }
-      });
-      var pr = started && state.folder.payroll;
-      document.querySelectorAll('[data-payroll]').forEach(function (n) {
-        n.hidden = !started;
-        if (!started) return;
-        var ok = pr && pr.payRate && pr.startDate;
-        n.classList.toggle('warn', !ok);
-        n.textContent = ok ? 'Pay rate and start date are saved on their folder. Payroll is emailed automatically once their W-4 and direct deposit form are in.'
-          : 'Add their pay rate and start date above (they save to their folder by themselves). The automatic payroll email waits until both are there.';
-      });
-      var acct = state.account;
-      document.querySelectorAll('[data-account]').forEach(function (n) {
-        n.hidden = !acct;
-        if (acct) n.textContent = (acct.created ? 'Email created: ' : 'Email already set up: ') + acct.email +
-          (acct.emailedTo ? '. Sign-in details sent to ' + acct.emailedTo + '.' : '.') +
-          (acct.groups && acct.groups.length ? ' Groups: ' + acct.groups.join(', ') + '.' : '') +
-          (acct.groupsFailed && acct.groupsFailed.length ? ' Couldn’t add to: ' + acct.groupsFailed.join(', ') + ' (add these by hand).' : '') +
-          (!acct.groupsSetUp ? ' No groups are set up in the Google script yet, so add their groups by hand.' : '');
-      });
-      document.querySelectorAll('[data-portal]').forEach(function (n) {
-        var pt = acct && acct.portal;
-        n.hidden = !pt;
-        if (pt) n.textContent = pt === 'kept' ? 'Already on the Employee Portal as current staff, so nothing was changed.' : (pt === 'added' ? 'Added to the Employee Portal' : 'Employee Portal access updated') + (acct.portalRoles && acct.portalRoles.length ? ' as ' + acct.portalRoles.join(' + ') : '') + '.';
-      });
-      var fin = $('ob-finish');
-      fin.hidden = !(started && contractSigned());
-      var allDone = !!(state.account && state.welcome && state.folder && state.folder.payroll && state.folder.payroll.payRate && state.folder.payroll.startDate);
-      fin.classList.toggle('done', allDone);
-      fin.querySelector('.ob-finish-title').textContent = allDone ? 'Setup finished' : 'Contract signed. Finish setting them up';
-      $('ob-go').hidden = allDone && !$('ob-go').disabled;
-      var list = $('ob-results'), rs = state.finish || [];
-      list.hidden = !rs.length; list.textContent = '';
-      rs.forEach(function (r) { var li = document.createElement('li'); li.className = r.ok ? 'ok' : 'bad'; li.textContent = r.text; list.appendChild(li); });
-      var acctBtn = $('ob-account'); if (acctBtn) acctBtn.hidden = !!acct;
-      $('ob-start').hidden = !!started;
-      $('ob-send').hidden = !started || !!c || $('f-contract').value === 'none';
-      $('ob-reset').hidden = !started && !Object.keys(state.done).length && !F.some(function (k) { return state.f[k]; });
-    }
-
-    // ---- employment contract (SignWell, via /api/new-hire-contract) ----
-    var checking = false;
-    function isDone(c) { return /complete/i.test(c.status || ''); }
-    function isDead(c) { return /declin|expire|cancel/i.test(c.status || ''); }
-    function contractText() {
-      var c = state.contract; if (!c) return '';
-      var test = c.test ? ' (test mode, not binding)' : '';
-      if (isDone(c)) return 'Contract signed by everyone' + (c.signedUrl ? ' and saved to their folder' : '') + '.' + test;
-      if (isDead(c)) return 'The contract was ' + String(c.status).toLowerCase() + '.' + test;
-      var next = (c.recipients || []).filter(function (r) { return !r.signed; })[0];
-      return 'Contract sent' + test + '. Waiting for ' + (next ? next.name : signer) + ' to sign.';
-    }
+    var ROLE_LABEL = { therapist: 'Therapist', associate: 'Associate', frontdesk: 'Front desk', billing: 'Billing', other: 'Other' };
+    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
     function api(url, body) {
       return fetch(url, body ? { method: 'POST', headers: { 'content-type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(body) } : { credentials: 'same-origin' })
         .then(function (r) { return r.json().catch(function () { return { error: 'The website didn’t answer (status ' + r.status + ').' }; }); })
         .then(function (res) { if (!res || res.error) throw new Error((res && res.error) || 'Something went wrong.'); return res; });
     }
-    // Pay as it goes to payroll: "60" → "$60 per billable hour"; anything else as typed.
-    function payRate() {
-      var v = val('pay').replace(/[$,\s]/g, '');
-      return /^\d+(\.\d+)?$/.test(v) ? '$' + v + ' per billable hour' : val('pay');
-    }
-        function contractProblem() {
-      if ($('f-contract').value === 'none') return '';
-      if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(val('personal'))) return 'Add their personal email. Their contract is sent there.';
-      if (!val('start')) return 'Add their start date. It goes on the contract.';
-      if (!(Number(val('pay').replace(/[$,\s]/g, '')) > 0)) return 'Add their pay per billable hour (e.g. 60). It goes on the contract.';
-      return '';
-    }
-    function sendContract() {
-      say('Filling in and sending their contract…');
-      return api('/api/new-hire-contract', { first: val('first'), last: val('last'), personal: val('personal'), office: $('f-office').value, type: $('f-contract').value, pay: val('pay'), start: val('start'), folderId: state.folder.id })
-        .then(function (res) {
-          state.contract = { id: res.id, status: res.status, test: !!res.testMode, docUrl: res.docUrl, recipients: res.recipients || [{ name: signer, signed: false }, { name: (val('first') + ' ' + val('last')).trim(), signed: false }] };
-          save(); say(''); render();
-        })
-        .catch(function (e) { say('Their folder is ready, but the contract wasn’t sent: ' + e.message + ' Fix it and click “Send their contract”, or do it by hand (step 2).', true); render(); });
-    }
-    function checkContract() {
-      var c = state.contract;
-      if (!c || !c.id || checking || (isDone(c) && c.signedUrl) || isDead(c)) return;
-      checking = true; render();
-      api('/api/new-hire-contract?id=' + encodeURIComponent(c.id))
-        .then(function (res) {
-          c.status = res.status; c.recipients = res.recipients && res.recipients.length ? res.recipients : c.recipients; c.signedUrl = res.signedUrl || c.signedUrl;
-          if (isDone(c)) state.done['employment-contract'] = 1;
-          save();
-        })
-        .catch(function (e) { say('Couldn’t check the contract: ' + e.message, true); })
-        .then(function () { checking = false; render(); });
-    }
-    document.addEventListener('click', function (e) {
-      if (e.target.closest('[data-recheck]')) checkContract();
-      if (e.target.closest('[data-resend]')) { delete state.contract; save(); render(); }
-    });
-    $('ob-send').addEventListener('click', function () {
-      var p = contractProblem(); if (p) { say(p, true); return; }
-      if (!state.folder || !state.folder.id) { say('Their folder link is from before contracts were added. Click “Clear for the next hire” and start again.', true); return; }
-      var b = $('ob-send'); b.disabled = true; sendContract().then(function () { b.disabled = false; });
-    });
+    function office(h) { for (var i = 0; i < offices.length; i++) if (offices[i].id === h.office) return offices[i]; return offices[0]; }
+    function isClin(h) { return h.role === 'therapist' || h.role === 'associate'; }
+    function stepsFor(h) { return steps.filter(function (s) { return !s.who || (s.who === 'clinician' ? isClin(h) : h.role === 'associate'); }); }
+    function fmtDate(d) { if (!d) return ''; var p = d.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }); }
+    function full(h) { return (h.first + ' ' + h.last).trim(); }
+    function suggested(h) { var f = String(h.first || '').toLowerCase().replace(/[^a-z]/g, ''); return f ? f + '@tangiblementalhealth.com' : ''; }
+    function tangible(h) { return (h.account && h.account.email) || h.email || suggested(h); }
+    function payRate(h) { var v = String(h.pay || '').replace(/[$,\s]/g, ''); return /^\d+(\.\d+)?$/.test(v) ? '$' + v + ' per billable hour' : String(h.pay || ''); }
+    function portalRoles(h) { var r = h.role !== 'other' ? [h.role] : []; if (h.alsosup) r.push('supervisor'); return r; }
+    function supName(h) { for (var i = 0; i < supervisors.length; i++) if (supervisors[i].email === h.supervisor) return supervisors[i].name; return ''; }
+    function cDone(c) { return !!c && /complete/i.test(c.status || ''); }
+    function cDead(c) { return !!c && /declin|expire|cancel/i.test(c.status || ''); }
+    function cur() { for (var i = 0; i < hires.length; i++) if (hires[i].id === sel) return hires[i]; return null; }
+    function put(h) { var f = false; hires = hires.map(function (x) { if (x.id === h.id) { f = true; return h; } return x; }); if (!f) hires.push(h); }
+    function anyArmed() { return !!document.querySelector('.ob .armed'); }
 
-    // "Start a new hire": creates (or finds) their folder in the shared Employee folder on Google Drive
-    // through /api/new-hire-folder, then ticks step 1.
-    var startBtn = $('ob-start'), status = $('ob-status');
-    function say(msg, err) { status.textContent = msg; status.classList.toggle('err', !!err); }
-    startBtn.addEventListener('click', function () {
-      var first = val('first'), last = val('last');
-      if (!first || !last) { say('Type their first and last name first.', true); (first ? $('f-last') : $('f-first')).focus(); return; }
-      var p = contractProblem(); if (p) { say(p + ' (Or choose “Don’t send a contract”.)', true); return; }
-      startBtn.setAttribute('aria-busy', 'true'); startBtn.disabled = true; say('Creating their Drive folder…');
-      api('/api/new-hire-folder', { first: first, last: last, payRate: payRate(), startDate: val('start') })
-        .then(function (res) {
-          if (!res.url) throw new Error('Google didn’t return the folder link.');
-          state.folder = { id: res.id, url: res.url, name: res.name, created: !!res.created, payroll: res.payroll || null };
-          state.done.googledrive = 1; save(); say(''); render();
-          if ($('f-contract').value !== 'none') {
-            if (!res.id) { say('Their folder is ready, but the Google script needs updating before contracts can be sent (see docs/new-hire-folder).', true); return; }
-            return sendContract();
-          }
-        }, function (e) { say('Couldn’t create the folder automatically: ' + e.message + ' You can make it by hand (step 1), or try again.', true); })
-        .then(function () { startBtn.removeAttribute('aria-busy'); startBtn.disabled = false; });
-    });
-
-    // Pay rate / start date typed (or changed) after the folder exists: save them on the folder too, so the
-    // automatic payroll email (step 8, docs/payroll-email/) has them. Blank values never erase saved ones.
-    function savePayroll() {
-      if (!state.folder || !state.folder.name) return Promise.reject(new Error('Click Start a new hire first, so they have a Drive folder.'));
-      if (!val('pay') && !val('start')) return Promise.reject(new Error('Add their pay and start date in the New hire box.'));
-      var parts = state.folder.name.split(' '), last = parts.pop(), first = parts.join(' ');
-      if (!first || !last) return Promise.reject(new Error('Their folder name doesn’t look like “First Last”.'));
-      return api('/api/new-hire-folder', { first: first, last: last, payRate: payRate(), startDate: val('start') })
-        .then(function (res) { if (res.payroll) { state.folder.payroll = res.payroll; save(); render(); } return res.payroll; });
-    }
-    ['pay', 'start'].forEach(function (k) { $('f-' + k).addEventListener('change', function () {
-      if (!state.folder || (!val('pay') && !val('start'))) return;
-      savePayroll().catch(function (e) { say('Couldn’t save pay rate / start date to their folder: ' + e.message, true); });
-    }); });
-
-    // "Create their email" (step 3): creates their Google Workspace account and adds them to their groups
-    // through /api/new-hire-email. The temporary password goes from Google to their personal email only.
-    var acctBtn = $('ob-account'), acctStatus = $('ob-account-status');
-    function sayA(msg, err) { acctStatus.textContent = msg; acctStatus.classList.toggle('err', !!err); }
-    // Creates their Google account + groups + Employee Portal access. Resolves with state.account.
-    function createAccount() {
-      var first = val('first'), last = val('last'), personal = val('personal');
-      if (!first || !last || !personal) return Promise.reject(new Error('Fill in their first name, last name and personal email in the New hire box first.'));
-      if (!contractSigned()) return Promise.reject(new Error('Accounts are only made once the contract is signed.'));
-      return api('/api/new-hire-email', { first: first, last: last, personal: personal, office: $('f-office').value, role: $('f-role').value, roles: portalRoles(), supervisor: isClin() ? $('f-supervisor').value : '', email: val('email') })
-        .then(function (res) {
-          if (!res.email) throw new Error('Google didn’t return the new email address.');
-          state.account = { email: res.email, created: !!res.created, emailedTo: res.emailedTo || '', groups: res.groups || [], groupsFailed: res.groupsFailed || [], groupsSetUp: !!res.groupsSetUp, portal: res.portal || '', portalRoles: res.portalRoles || [] };
-          if (res.portal) state.done['staff-admin'] = 1;
-          state.f.email = res.email; $('f-email').value = res.email;
-          if (!(res.groupsFailed || []).length && res.groupsSetUp) state.done.gmailsetup = 1;
-          save(); render();
-          return state.account;
-        });
-    }
-    if (acctBtn) acctBtn.addEventListener('click', function () {
-      acctBtn.setAttribute('aria-busy', 'true'); acctBtn.disabled = true; sayA('Creating their Google account…');
-      createAccount().then(function () { sayA(''); }, function (e) { sayA('Couldn’t create the account automatically: ' + e.message, true); })
-        .then(function () { acctBtn.removeAttribute('aria-busy'); acctBtn.disabled = false; });
-    });
-
-    // Sends the welcome email from frontdesk@ (once; the website remembers it was sent).
-    function sendWelcome() {
-      if (!state.account || !state.account.email) return Promise.reject(new Error('Their Tangible email isn’t set up yet.'));
-      if (!val('personal')) return Promise.reject(new Error('Add their personal email in the New hire box.'));
-      return api('/api/new-hire-welcome', { first: val('first'), email: state.account.email, personal: val('personal'), office: $('f-office').value })
-        .then(function (res) {
-          state.welcome = { sentAt: res.sentAt || new Date().toISOString(), to: res.to || [], already: !!res.already };
-          state.done.onboarding = 1; save(); render();
-          return state.welcome;
-        });
+    // ---- status shown next to each name ----
+    function status(h) {
+      if (!h.contractSigned) {
+        if (cDead(h.contract)) return { cls: 'red', text: 'Contract ' + String(h.contract.status).toLowerCase() };
+        return { cls: 'red', text: 'Waiting for employment contract' };
+      }
+      var list = stepsFor(h), n = list.filter(function (s) { return h.done[s.id]; }).length;
+      if (n === list.length) return { cls: 'blue', text: 'Ready to complete' };
+      if (!n) return { cls: 'green', text: 'Ready for next steps' };
+      return { cls: 'green', text: 'In progress · ' + n + ' of ' + list.length };
     }
 
-    // "Finish setup": everything after the contract, in one go. Needs two clicks (the first one asks to confirm).
-    var goBtn = $('ob-go'), goArmed = null;
-    function finishProblems() {
-      var p = [];
-      if (!val('personal')) p.push('their personal email');
-      if (!val('pay')) p.push('their pay');
-      if (!val('start')) p.push('their start date');
-      return p;
+    // ---- left: people list ----
+    function renderList() {
+      var ul = $('ob-list'); ul.textContent = '';
+      hires.forEach(function (h) {
+        var st = status(h), li = document.createElement('li');
+        li.innerHTML = '<button type="button" class="ob-person" data-pick="' + esc(h.id) + '"' + (h.id === sel ? ' aria-current="true"' : '') + '>' +
+          '<b>' + esc(full(h)) + '</b><small>' + esc([ROLE_LABEL[h.role] || '', office(h).label.replace(/ \(.*\)/, ''), h.start ? 'starts ' + fmtDate(h.start) : ''].filter(Boolean).join(' · ')) + '</small>' +
+          '<span class="ob-pill ' + st.cls + '">' + esc(st.text) + '</span></button>';
+        ul.appendChild(li);
+      });
+      $('ob-list-empty').hidden = !!hires.length || !loaded;
+      $('ob-done-wrap').hidden = !completed.length;
+      $('ob-done-n').textContent = completed.length;
+      var dl = $('ob-done-ul'); dl.textContent = '';
+      completed.forEach(function (c) { var li = document.createElement('li'); li.textContent = c.name + (c.completedAt ? ' · ' + new Date(c.completedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''); dl.appendChild(li); });
+      $('ob-count').textContent = loaded ? hires.length + (hires.length === 1 ? ' person' : ' people') + ' being onboarded' : '';
     }
-    function resultLine(ok, text) { return { ok: ok, text: text }; }
-    goBtn.addEventListener('click', function () {
-      var miss = finishProblems();
-      if (miss.length) { state.finish = [resultLine(false, 'Add ' + (miss.length > 1 ? miss.slice(0, -1).join(', ') + ' and ' + miss[miss.length - 1] : miss[0]) + ' in the New hire box first.')]; render(); return; }
-      if (!goArmed) {
-        goBtn.textContent = 'Click again to confirm'; goBtn.classList.add('armed');
-        goArmed = setTimeout(function () { goArmed = null; goBtn.textContent = 'Finish setup'; goBtn.classList.remove('armed'); }, 5000);
+
+    // ---- per-person text used in instructions and emails ----
+    function fills(h) {
+      var o = office(h);
+      var welcome = welcomeTpl.replace('{{first}}', h.first || '[first name]').replace('{{email}}', tangible(h) || '[Tangible email]').split('{{director}}').join(o.director).replace('{{directorEmail}}', o.email);
+      var payroll = 'Hey Chelsea,\n\nPlease add our new employee to payroll:\n\nName: ' + full(h) + '\nPay rate: ' + (payRate(h) || '[pay rate]') + '\nStart date: ' + (fmtDate(h.start) || '[start date]') + '\n\nTheir W-4 and direct deposit form are attached.\n\nThank you!';
+      return {
+        full: full(h), first: h.first, email: tangible(h), personal: h.personal, office: o.label,
+        director: o.director + ' (' + o.email + ')', directorName: o.directorFull,
+        supervisorName: supName(h) || 'not chosen yet',
+        staffline: [full(h), tangible(h), portalRoles(h).join('+') || 'role', o.id].join(', ') + (supName(h) ? ' · supervisor: ' + supName(h) : ''),
+        emailOrPersonal: [tangible(h), h.personal].filter(Boolean).join(', '),
+        welcomeBody: welcome, payrollBody: payroll,
+      };
+    }
+    function gmail(to, su, body) { return 'https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(to) + '&su=' + encodeURIComponent(su) + '&body=' + encodeURIComponent(body); }
+    function how(id, label) {
+      if (!HOW[id]) return '';
+      return '<details class="ob-how" data-how="' + id + '"><summary>' + (label || 'How?') + '</summary><div class="ob-how-body">' + HOW[id] + '</div></details>';
+    }
+    function applyFills(root, h) {
+      var d = fills(h);
+      root.querySelectorAll('[data-f]').forEach(function (n) { if (d[n.dataset.f] != null) n.textContent = d[n.dataset.f]; });
+      root.querySelectorAll('[data-mail=welcome]').forEach(function (n) { n.href = gmail([tangible(h), h.personal].filter(Boolean).join(','), 'Welcome to Tangible!', d.welcomeBody); });
+      root.querySelectorAll('[data-mail=payroll]').forEach(function (n) { n.href = gmail('nsbcpayroll@gmail.com', 'New employee: ' + full(h), d.payrollBody); });
+    }
+
+    // ---- right: the selected person's profile ----
+    function field(label, input, wide) { return '<label class="pt-field' + (wide ? ' ob-wide' : '') + '">' + label + input + '</label>'; }
+    function detailsForm(h) {
+      var opt = function (v, t, cur) { return '<option value="' + esc(v) + '"' + (v === cur ? ' selected' : '') + '>' + esc(t) + '</option>'; };
+      var sup = '<option value="">Choose later</option>' + supervisors.map(function (s) { return opt(s.email, s.name, h.supervisor); }).join('');
+      return '<details class="ob-details"><summary>Their details</summary><div class="ob-fields">' +
+        field('First name', '<input data-field="first" value="' + esc(h.first) + '" autocomplete="off">') +
+        field('Last name', '<input data-field="last" value="' + esc(h.last) + '" autocomplete="off">') +
+        field('Personal email', '<input data-field="personal" type="email" value="' + esc(h.personal) + '" autocomplete="off">', true) +
+        field('Tangible email', '<input data-field="email" type="email" value="' + esc((h.account && h.account.email) || h.email) + '" placeholder="' + esc(suggested(h) || 'Suggested from first name') + '" autocomplete="off"' + (h.account ? ' disabled' : '') + '>', true) +
+        field('Office', '<select data-field="office">' + offices.map(function (o) { return opt(o.id, o.label, h.office); }).join('') + '</select>') +
+        field('Role', '<select data-field="role">' + [['therapist', 'Therapist (licensed)'], ['associate', 'Associate (pre-licensed)'], ['frontdesk', 'Admin / front desk'], ['billing', 'Billing'], ['other', 'Other']].map(function (r) { return opt(r[0], r[1], h.role); }).join('') + '</select>') +
+        '<label class="pt-field ob-wide ob-chk"><input type="checkbox" data-field="alsosup"' + (h.alsosup ? ' checked' : '') + '> Also a clinical supervisor</label>' +
+        (isClin(h) ? field('Their supervisor', '<select data-field="supervisor">' + sup + '</select>', true) : '') +
+        field('Start date', '<input data-field="start" type="date" value="' + esc(h.start) + '">') +
+        field('Pay per billable hr ($)', '<input data-field="pay" inputmode="decimal" value="' + esc(h.pay) + '" autocomplete="off">') +
+        '</div><p class="pt-muted ob-small">Changes save by themselves. Pay and start date are also re-saved on their folder for the payroll email.</p></details>';
+    }
+    function contractSection(h) {
+      var c = h.contract, out = '<section class="ob-section"><h3>Employment contract</h3>';
+      if (h.folder && h.folder.url) out += '<div class="ob-box ok">Drive folder: <a href="' + esc(h.folder.url) + '" target="_blank" rel="noopener">' + esc(h.folder.name) + '</a></div>';
+      else if (busy[h.id] !== 'start') out += '<div class="ob-box bad">No Drive folder yet. <button type="button" class="ob-mini" data-act="folder">Create it</button></div>';
+      if (h.contractSigned) {
+        out += '<div class="ob-box ok"><b>Signed.</b> ' + (h.contractSignedBy === 'manual' ? 'Marked signed by hand' : 'Signed by everyone and saved to their folder') +
+          (h.contractSignedAt ? ' on ' + new Date(h.contractSignedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '') + '.' +
+          (c && c.signedUrl ? ' <a href="' + esc(c.signedUrl) + '" target="_blank" rel="noopener">Open the signed contract</a>' : '') + (c && c.test ? ' (test mode, not binding)' : '') + '</div>';
+      } else if (c) {
+        var test = c.test ? ' (test mode, not binding)' : '';
+        if (cDead(c)) out += '<div class="ob-box bad">The contract was ' + esc(String(c.status).toLowerCase()) + '.' + test + ' <button type="button" class="ob-mini" data-act="resend">Send a new contract</button></div>';
+        else if (cDone(c)) out += '<div class="ob-box">Signed by everyone' + test + '. Saving it to their folder… <button type="button" class="ob-mini" data-act="recheck">Check again</button></div>';
+        else {
+          var next = (c.recipients || []).filter(function (r) { return !r.signed; })[0];
+          out += '<div class="ob-box">Contract sent' + test + '. Waiting for <b>' + esc(next ? next.name : signer) + '</b> to sign. <button type="button" class="ob-mini" data-act="recheck"' + (busy[h.id] === 'recheck' ? ' disabled' : '') + '>' + (busy[h.id] === 'recheck' ? 'Checking…' : 'Check again') + '</button></div>';
+        }
+      } else if (busy[h.id] === 'start') {
+        out += '<div class="ob-box">Setting up…</div>';
+      } else if (h.contractType && h.contractType !== 'none') {
+        out += '<div class="ob-box bad">The contract hasn’t been sent. <button type="button" class="ob-mini" data-act="send">Send their contract</button></div>';
+      } else {
+        out += '<div class="ob-box">You chose to send the contract by hand. When it’s signed and saved in their folder, click <b>Employee contract signed</b> below.</div>';
+      }
+      if (!h.contractSigned) out += '<div class="ob-row"><button type="button" class="pt-btn ghost" data-act="signed" data-two="Employee contract signed">Employee contract signed</button><span class="pt-muted ob-small" style="margin:0">Only if the automatic check didn’t catch it. Two clicks.</span></div>';
+      out += how('contract', 'How the contract works / doing it by hand') + (h.folder ? '' : how('folder', 'Making the folder by hand'));
+      return out + '</section>';
+    }
+    function checklist(h) {
+      var list = stepsFor(h), n = list.filter(function (s) { return h.done[s.id]; }).length;
+      var out = '<section class="ob-section"><h3>Onboarding checklist</h3>' +
+        '<p class="pt-muted ob-small" style="margin:0">' + n + ' of ' + list.length + ' done</p><div class="ob-bar"><i style="width:' + Math.round(n / list.length * 100) + '%"></i></div><ul class="ob-checks">';
+      list.forEach(function (s) {
+        var d = h.done[s.id];
+        out += '<li class="ob-item' + (s.auto ? ' auto' : '') + (d ? ' done' : '') + '"><label class="ob-tick"><input type="checkbox" data-step="' + s.id + '"' + (d ? ' checked' : '') + '><span>' + esc(s.title) + '</span></label><div class="ob-item-body">';
+        if (s.auto) {
+          var allOk = h.account && h.welcome && h.folder && h.folder.payroll && h.folder.payroll.payRate && h.folder.payroll.startDate;
+          if (!allOk) out += '<p>One button, two clicks: creates their Tangible email and adds their groups, gives them Employee Portal access, saves their pay and start date for the automatic payroll email, and emails them the welcome email from frontdesk@.</p>' +
+            '<div class="ob-row"><button type="button" class="pt-btn" data-act="finish" data-two="' + (h.finish && h.finish.length ? 'Try again' : 'Finish setup') + '"' + (busy[h.id] === 'finish' ? ' disabled aria-busy="true"' : '') + '>' + (busy[h.id] === 'finish' ? 'Working…' : (h.finish && h.finish.length ? 'Try again' : 'Finish setup')) + '</button></div>';
+          if (h.finish && h.finish.length) out += '<ul class="ob-results">' + h.finish.map(function (r) { return '<li class="' + (r.ok ? 'ok' : 'bad') + '">' + esc(r.text) + '</li>'; }).join('') + '</ul>';
+          out += how('setup', 'Doing it by hand');
+        } else {
+          out += how(s.id);
+        }
+        if (d && d.by && d.by !== 'front desk') out += '<p class="pt-muted ob-small">Ticked by ' + esc(d.by) + '</p>';
+        out += '</div></li>';
+      });
+      out += '</ul><div class="ob-complete"><button type="button" class="pt-btn" data-act="complete" data-two="Onboarding complete"' + (n === list.length ? '' : ' disabled') + '>Onboarding complete</button>' +
+        '<p class="pt-muted ob-small">' + (n === list.length ? 'Two clicks. Moves ' + esc(h.first) + ' to Completed.' : 'Tick every step to finish their onboarding.') + '</p></div></section>';
+      return out;
+    }
+    function renderProfile() {
+      var box = $('ob-profile'), h = cur();
+      if (!h) {
+        box.innerHTML = '<div class="pt-card ob-placeholder"><p class="pt-muted">' + (!loaded ? 'Loading…' : hires.length ? 'Choose someone on the left to see their onboarding.' : 'Add a new hire on the left. Their profile shows up here.') + '</p></div>';
         return;
       }
-      clearTimeout(goArmed); goArmed = null; goBtn.classList.remove('armed');
-      goBtn.textContent = 'Working…'; goBtn.disabled = true; goBtn.setAttribute('aria-busy', 'true');
+      var open = {}; box.querySelectorAll('details[open]').forEach(function (d) { open[d.dataset.how || d.className] = 1; });
+      var st = status(h), o = office(h), m = msgs[h.id];
+      box.innerHTML = '<article class="pt-card ob-profile" data-id="' + esc(h.id) + '">' +
+        '<div class="ob-profile-head"><div><h2>' + esc(full(h)) + '</h2><span class="ob-pill ' + st.cls + '">' + esc(st.text) + '</span></div>' +
+        '<button type="button" class="ob-link" data-act="remove" data-two="Remove profile">Remove profile</button></div>' +
+        '<p class="ob-meta">' + esc([ROLE_LABEL[h.role], o.label, h.start ? 'starts ' + fmtDate(h.start) : 'no start date', h.pay ? payRate(h) : 'no pay set', tangible(h)].filter(Boolean).join(' · ')) + '</p>' +
+        (m && m.text ? '<p class="ob-status' + (m.err ? ' err' : '') + '">' + esc(m.text) + '</p>' : '') +
+        detailsForm(h) + contractSection(h) +
+        (h.contractSigned ? checklist(h) : '<div class="ob-locked"><b>The rest of ' + esc(h.first) + '’s onboarding unlocks once their employment contract is signed.</b><br>It turns green by itself when the signed contract is saved in their folder. If you handled the contract another way, click <b>Employee contract signed</b> above.</div>') +
+        '</article>';
+      if (box.dataset.for === h.id) box.querySelectorAll('details').forEach(function (d) { if (open[d.dataset.how || d.className]) d.open = true; });
+      box.dataset.for = h.id;
+      applyFills(box, h);
+    }
+    function render() { if (anyArmed()) return; renderList(); renderProfile(); }
+
+    // ---- saving ----
+    function upd(h, patch) { return api('/api/new-hires', { action: 'update', id: h.id, patch: patch }).then(function (r) { put(r.hire); return r.hire; }); }
+    function note(h, text, err) { msgs[h.id] = text ? { text: text, err: !!err } : null; }
+    function load() {
+      return api('/api/new-hires').then(function (r) {
+        hires = r.hires || []; completed = r.completed || []; loaded = true;
+        if (!cur() && hires.length) sel = hires[hires.length - 1].id;
+        render(); autoCheck();
+      }, function (e) { loaded = true; $('ob-profile').innerHTML = '<div class="pt-card ob-placeholder"><p class="ob-err">Couldn’t load the new hires: ' + esc(e.message) + '</p></div>'; });
+    }
+
+    // ---- folder + contract ----
+    function makeFolder(h) {
+      return api('/api/new-hire-folder', { first: h.first, last: h.last, payRate: payRate(h), startDate: h.start })
+        .then(function (res) { if (!res.url) throw new Error('Google didn’t return the folder link.'); return upd(h, { folder: { id: res.id || null, url: res.url, name: res.name, created: !!res.created, payroll: res.payroll || null } }); });
+    }
+    function contractProblem(h) {
+      if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(h.personal || '')) return 'Add their personal email. Their contract is sent there.';
+      if (!h.start) return 'Add their start date. It goes on the contract.';
+      if (!(Number(String(h.pay || '').replace(/[$,\s]/g, '')) > 0)) return 'Add their pay per billable hour (e.g. 60). It goes on the contract.';
+      if (!h.folder || !h.folder.id) return 'Their Drive folder is missing.';
+      return '';
+    }
+    function sendContract(h) {
+      var p = contractProblem(h); if (p) return Promise.reject(new Error(p));
+      return api('/api/new-hire-contract', { first: h.first, last: h.last, personal: h.personal, office: h.office, type: h.contractType, pay: h.pay, start: h.start, folderId: h.folder.id })
+        .then(function (res) { return upd(h, { contract: { id: res.id, status: res.status, test: !!res.testMode, docUrl: res.docUrl, recipients: res.recipients || [] } }); });
+    }
+    function checkContract(h) {
+      var c = h.contract;
+      if (!c || !c.id || h.contractSigned || cDead(c) || busy[h.id]) return Promise.resolve();
+      busy[h.id] = 'recheck'; checkedAt[h.id] = Date.now(); render();
+      return api('/api/new-hire-contract?id=' + encodeURIComponent(c.id))
+        .then(function (res) { return upd(h, { contract: { id: c.id, status: res.status, test: c.test, docUrl: c.docUrl, recipients: res.recipients && res.recipients.length ? res.recipients : c.recipients, signedUrl: res.signedUrl || c.signedUrl || null } }); })
+        .catch(function (e) { note(h, 'Couldn’t check the contract: ' + e.message, true); })
+        .then(function () { delete busy[h.id]; render(); });
+    }
+    function autoCheck() { var h = cur(); if (h && h.contract && !h.contractSigned && Date.now() - (checkedAt[h.id] || 0) > 30000) checkContract(h); }
+
+    // ---- Finish setup (all the automated steps) ----
+    function finish(h) {
+      var miss = [];
+      if (!h.personal) miss.push('their personal email');
+      if (!h.pay) miss.push('their pay');
+      if (!h.start) miss.push('their start date');
+      if (miss.length) return upd(h, { finish: [{ ok: false, text: 'Add ' + (miss.length > 1 ? miss.slice(0, -1).join(', ') + ' and ' + miss[miss.length - 1] : miss[0]) + ' in their details first.' }] });
       var out = [];
-      state.finish = [resultLine(true, 'Working on it…')]; render();
-      (state.account ? Promise.resolve(state.account) : createAccount())
-        .then(function (acct) {
-          var bad = (acct.groupsFailed || []).length;
-          out.push(resultLine(!bad, 'Tangible email: ' + acct.email + (acct.created ? ' created' : ' (already set up)') + (bad ? '. Couldn’t add to ' + acct.groupsFailed.join(', ') + ', so add those groups by hand (step 3).' : (acct.groupsSetUp ? ', groups added.' : '. Add their groups by hand (step 3).'))));
-          out.push(resultLine(!!acct.portal, acct.portal ? 'Employee Portal access: ' + (acct.portal === 'kept' ? 'already current staff, not changed.' : 'done.') : 'Employee Portal access wasn’t saved. Ask the office director to add them in Staff Admin.'));
-          return true;
-        }, function (e) { out.push(resultLine(false, 'Tangible email not created: ' + e.message)); return false; })
-        .then(function (hasAccount) {
-          return savePayroll().then(function (pr) {
-            var ok = pr && pr.payRate && pr.startDate;
-            out.push(resultLine(!!ok, ok ? 'Payroll: pay and start date saved. Chelsea is emailed automatically once their W-4 and direct deposit form come in.' : 'Payroll: pay or start date didn’t save. Check the New hire box and try again.'));
-          }, function (e) { out.push(resultLine(false, 'Payroll info not saved: ' + e.message)); })
-            .then(function () { return hasAccount; });
-        })
-        .then(function (hasAccount) {
-          if (!hasAccount) { out.push(resultLine(false, 'Welcome email not sent, because their Tangible email isn’t set up yet.')); return; }
-          return sendWelcome().then(function (w) {
-            out.push(resultLine(true, w.already ? 'Welcome email: already sent before, not sent again.' : 'Welcome email sent from frontdesk@ to ' + w.to.join(' and ') + '.'));
-          }, function (e) { out.push(resultLine(false, 'Welcome email not sent: ' + e.message + (/step 7/.test(e.message) ? '' : ' Use “Open in Gmail” in step 7.'))); });
-        })
-        .then(function () {
-          state.finish = out; save();
-          goBtn.textContent = out.every(function (r) { return r.ok; }) ? 'Finish setup' : 'Try again'; goBtn.disabled = false; goBtn.removeAttribute('aria-busy');
-          render();
+      var acct = h.account ? Promise.resolve(h.account) : api('/api/new-hire-email', { first: h.first, last: h.last, personal: h.personal, office: h.office, role: h.role, roles: portalRoles(h), supervisor: isClin(h) ? h.supervisor : '', email: h.email })
+        .then(function (res) {
+          if (!res.email) throw new Error('Google didn’t return the new email address.');
+          var a = { email: res.email, created: !!res.created, emailedTo: res.emailedTo || '', groups: res.groups || [], groupsFailed: res.groupsFailed || [], groupsSetUp: !!res.groupsSetUp, portal: res.portal || '', portalRoles: res.portalRoles || [] };
+          return upd(h, { account: a, email: res.email }).then(function (nh) { h = nh; return a; });
         });
+      return acct.then(function (a) {
+        var bad = (a.groupsFailed || []).length;
+        out.push({ ok: !bad && a.groupsSetUp !== false, text: 'Tangible email: ' + a.email + (a.created ? ' created' : ' (already set up)') + (bad ? '. Couldn’t add to ' + a.groupsFailed.join(', ') + ', so add those groups by hand.' : a.groupsSetUp === false ? '. Add their groups by hand.' : ', groups added.') });
+        out.push({ ok: !!a.portal, text: a.portal ? 'Employee Portal access: ' + (a.portal === 'kept' ? 'already current staff, not changed.' : 'done.') : 'Employee Portal access wasn’t saved. Ask the office director to add them in Staff Admin.' });
+        return true;
+      }, function (e) { out.push({ ok: false, text: 'Tangible email not created: ' + e.message }); return false; })
+        .then(function (hasAcct) {
+          var save = !h.folder ? Promise.reject(new Error('their Drive folder is missing.')) : (function () {
+            var parts = h.folder.name.split(' '), last = parts.pop(), first = parts.join(' ');
+            return api('/api/new-hire-folder', { first: first, last: last, payRate: payRate(h), startDate: h.start })
+              .then(function (res) { return upd(h, { folder: Object.assign({}, h.folder, { payroll: res.payroll || null }) }).then(function (nh) { h = nh; return res.payroll; }); });
+          })();
+          return save.then(function (pr) {
+            var ok = pr && pr.payRate && pr.startDate;
+            out.push({ ok: !!ok, text: ok ? 'Payroll: pay and start date saved. Chelsea is emailed automatically once their W-4 and direct deposit form come in.' : 'Payroll: pay or start date didn’t save. Check their details and try again.' });
+          }, function (e) { out.push({ ok: false, text: 'Payroll info not saved: ' + e.message }); }).then(function () { return hasAcct; });
+        })
+        .then(function (hasAcct) {
+          if (!hasAcct) { out.push({ ok: false, text: 'Welcome email not sent, because their Tangible email isn’t set up yet.' }); return; }
+          if (h.welcome) { out.push({ ok: true, text: 'Welcome email: already sent, not sent again.' }); return; }
+          return api('/api/new-hire-welcome', { first: h.first, email: h.account.email, personal: h.personal, office: h.office })
+            .then(function (res) {
+              out.push({ ok: true, text: res.already ? 'Welcome email: already sent before, not sent again.' : 'Welcome email sent from frontdesk@ to ' + (res.to || []).join(' and ') + '.' });
+              return upd(h, { welcome: { sentAt: res.sentAt || new Date().toISOString(), to: res.to || [], already: !!res.already } }).then(function (nh) { h = nh; });
+            }, function (e) { out.push({ ok: false, text: 'Welcome email not sent: ' + e.message + (/by hand/.test(e.message) ? '' : ' Send it by hand (“Doing it by hand” below).') }); });
+        })
+        .then(function () { return upd(h, { finish: out }); });
+    }
+
+    // ---- two-click buttons ----
+    function twoClick(btn) {
+      if (btn.classList.contains('armed')) { clearTimeout(btn._t); btn.classList.remove('armed'); return true; }
+      btn.classList.add('armed'); btn.textContent = 'Click again to confirm';
+      btn._t = setTimeout(function () { btn.classList.remove('armed'); btn.textContent = btn.dataset.two; render(); }, 5000);
+      return false;
+    }
+    function run(h, kind, p) {
+      busy[h.id] = kind; note(h, ''); render();
+      return p().catch(function (e) { note(h, e.message, true); }).then(function () { delete busy[h.id]; render(); });
+    }
+
+    // ---- events ----
+    document.addEventListener('click', function (e) {
+      var pick = e.target.closest('[data-pick]');
+      if (pick) {
+        sel = pick.dataset.pick; try { localStorage.setItem(SEL, sel); } catch (x) {}
+        document.querySelectorAll('.ob .armed').forEach(function (b) { clearTimeout(b._t); b.classList.remove('armed'); });
+        render(); autoCheck();
+        if (window.innerWidth < 900) $('ob-profile').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+      }
+      var cp = e.target.closest('[data-copy]');
+      if (cp && cur()) { var t = fills(cur())[cp.dataset.copy] || ''; if (navigator.clipboard) navigator.clipboard.writeText(t).then(function () { var l = cp.textContent; cp.textContent = 'Copied'; setTimeout(function () { cp.textContent = l; }, 1500); }); return; }
+      var btn = e.target.closest('[data-act]'); if (!btn) return;
+      var h = cur(); if (!h || busy[h.id]) return;
+      var act = btn.dataset.act;
+      if (btn.dataset.two && !twoClick(btn)) return;
+      if (act === 'recheck') checkContract(h);
+      else if (act === 'folder') run(h, 'folder', function () { return makeFolder(h); });
+      else if (act === 'send') run(h, 'send', function () { return sendContract(h); });
+      else if (act === 'resend') run(h, 'send', function () { return upd(h, { contract: null }).then(sendContract); });
+      else if (act === 'signed') run(h, 'signed', function () { return api('/api/new-hires', { action: 'signed', id: h.id }).then(function (r) { put(r.hire); }); });
+      else if (act === 'finish') run(h, 'finish', function () { return finish(h); });
+      else if (act === 'complete') run(h, 'complete', function () {
+        return api('/api/new-hires', { action: 'complete', id: h.id }).then(function () { hires = hires.filter(function (x) { return x.id !== h.id; }); sel = hires.length ? hires[0].id : null; return load(); });
+      });
+      else if (act === 'remove') run(h, 'remove', function () {
+        return api('/api/new-hires', { action: 'remove', id: h.id }).then(function () { hires = hires.filter(function (x) { return x.id !== h.id; }); sel = hires.length ? hires[0].id : null; });
+      });
+    });
+    document.addEventListener('change', function (e) {
+      var h = cur(); if (!h || !e.target.closest('#ob-profile')) return;
+      var st = e.target.closest('[data-step]');
+      if (st) {
+        var on = st.checked;
+        api('/api/new-hires', { action: 'check', id: h.id, step: st.dataset.step, checked: on }).then(function (r) { put(r.hire); render(); }, function (err) { st.checked = !on; note(h, err.message, true); render(); });
+        return;
+      }
+      var f = e.target.closest('[data-field]');
+      if (f) {
+        var k = f.dataset.field, v = f.type === 'checkbox' ? f.checked : f.value.trim(), patch = {}; patch[k] = v;
+        upd(h, patch).then(function (nh) {
+          render();
+          if ((k === 'pay' || k === 'start') && nh.folder) {
+            var parts = nh.folder.name.split(' '), last = parts.pop(), first = parts.join(' ');
+            api('/api/new-hire-folder', { first: first, last: last, payRate: payRate(nh), startDate: nh.start })
+              .then(function (res) { return upd(nh, { folder: Object.assign({}, nh.folder, { payroll: res.payroll || null }) }); })
+              .catch(function (err) { note(nh, 'Saved, but couldn’t update their folder for payroll: ' + err.message, true); render(); });
+          }
+        }, function (err) { note(h, err.message, true); render(); });
+      }
     });
 
-    // Supervisors to choose from (everyone with the Clinical supervisor role on the Employee Portal).
+    // ---- New hire box ----
+    function val(id) { return ($('f-' + id).value || '').trim(); }
+    function isClinBox() { var r = $('f-role').value; return r === 'therapist' || r === 'associate'; }
+    function sayBox(t, err) { $('ob-status').textContent = t; $('ob-status').classList.toggle('err', !!err); }
+    $('f-role').addEventListener('change', function () { $('f-supervisor-wrap').hidden = !isClinBox(); });
+    $('ob-start').addEventListener('click', function () {
+      var d = { first: val('first'), last: val('last'), personal: val('personal'), office: $('f-office').value, role: $('f-role').value, alsosup: $('f-alsosup').checked,
+        supervisor: isClinBox() ? $('f-supervisor').value : '', start: val('start'), pay: val('pay'), contractType: $('f-contract').value };
+      if (!d.first || !d.last) { sayBox('Type their first and last name first.', true); (d.first ? $('f-last') : $('f-first')).focus(); return; }
+      if (d.contractType !== 'none') {
+        var p = contractProblem({ personal: d.personal, start: d.start, pay: d.pay, folder: { id: 'x' } });
+        if (p) { sayBox(p + ' (Or choose “Don’t send a contract”.)', true); return; }
+      }
+      var b = $('ob-start'); b.disabled = true; b.setAttribute('aria-busy', 'true'); sayBox('Creating their profile…');
+      api('/api/new-hires', Object.assign({ action: 'create' }, d)).then(function (r) {
+        var h = r.hire; put(h); sel = h.id; try { localStorage.setItem(SEL, sel); } catch (x) {}
+        ['first', 'last', 'personal', 'start', 'pay'].forEach(function (k) { $('f-' + k).value = ''; }); $('f-alsosup').checked = false; $('f-supervisor').value = '';
+        sayBox(''); busy[h.id] = 'start'; note(h, 'Creating their Drive folder…'); render();
+        if (window.innerWidth < 900) $('ob-profile').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return makeFolder(h).then(function (h2) {
+          if (h2.contractType === 'none') return;
+          if (!h2.folder.id) throw new Error('Their folder is ready, but the Google script needs updating before contracts can be sent (see docs/new-hire-folder).');
+          note(h2, 'Filling in and sending their contract…'); render();
+          return sendContract(h2);
+        }).then(function () { note(h, ''); }, function (e) { note(h, e.message, true); })
+          .then(function () { delete busy[h.id]; render(); });
+      }, function (e) { sayBox('Couldn’t create their profile: ' + e.message, true); })
+        .then(function () { b.disabled = false; b.removeAttribute('aria-busy'); });
+    });
+
+    // Supervisors (everyone with the Clinical supervisor role on the Employee Portal).
     fetch('/api/new-hire-email', { credentials: 'same-origin' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (b) {
       if (!b || !b.supervisors) return;
       supervisors = b.supervisors;
-      var sel = $('f-supervisor');
-      supervisors.forEach(function (x) { var op = document.createElement('option'); op.value = x.email; op.textContent = x.name; sel.appendChild(op); });
-      if (state.f.supervisor) sel.value = state.f.supervisor;
+      supervisors.forEach(function (x) { var op = document.createElement('option'); op.value = x.email; op.textContent = x.name; $('f-supervisor').appendChild(op); });
       render();
     }).catch(function () {});
-    $('f-alsosup').checked = !!state.f.alsosup;
-    $('f-alsosup').addEventListener('change', function () { state.f.alsosup = $('f-alsosup').checked; save(); render(); });
-    F.forEach(function (k) { if (state.f[k] != null) $('f-' + k).value = state.f[k]; });
-    F.concat(['pay']).forEach(function (k) {
-      $('f-' + k).addEventListener(k === 'supervisor' || k === 'office' || k === 'role' ? 'change' : 'input', function () { if (k !== 'pay') { state.f[k] = $('f-' + k).value; save(); } render(); });
-    });
-    document.querySelectorAll('[data-check]').forEach(function (c) {
-      c.addEventListener('change', function () { if (c.checked) state.done[c.dataset.check] = 1; else delete state.done[c.dataset.check]; save(); render(); });
-    });
-    document.addEventListener('click', function (e) {
-      var b = e.target.closest('[data-copy]'); if (!b) return;
-      var text = data()[b.dataset.copy] || '';
-      var label = b.textContent;
-      function okMsg() { b.textContent = 'Copied'; setTimeout(function () { b.textContent = label; }, 1500); }
-      if (navigator.clipboard) navigator.clipboard.writeText(text).then(okMsg, function () {});
-    });
-    var armed = null, reset = $('ob-reset');
-    reset.addEventListener('click', function () {
-      if (!armed) {
-        reset.textContent = 'Click again to clear everything';
-        armed = setTimeout(function () { armed = null; reset.textContent = 'Clear for the next hire'; }, 3000);
-        return;
-      }
-      clearTimeout(armed); armed = null; reset.textContent = 'Clear for the next hire';
-      state = { f: {}, done: {} }; save(); say(''); $('f-alsosup').checked = false; if (typeof sayA === 'function') sayA('');
-      F.concat(['pay']).forEach(function (k) { var n = $('f-' + k); n.value = n.tagName === 'SELECT' ? n.options[0].value : ''; });
-      render(); window.scrollTo(0, 0);
-    });
-    render();
-    checkContract(); // on every visit: picks up signatures and saves the signed PDF once it's complete
+
+    // A hire that was only saved in this browser by the old checklist becomes a shared profile.
+    function importOld() {
+      var s = null; try { s = JSON.parse(localStorage.getItem('tt.onboard.v1') || 'null'); } catch (e) {}
+      if (!s || !s.f || !s.f.first || !s.f.last || !(s.folder || Object.keys(s.done || {}).length)) return Promise.resolve();
+      var f = s.f, done = s.done || {};
+      var imp = { folder: s.folder || null, contract: s.contract || null, account: s.account || null, welcome: s.welcome || null, finish: s.finish || [],
+        contractSigned: !!done['employment-contract'] || cDone(s.contract),
+        done: { setup: done.gmailsetup && done['staff-admin'] && done.onboarding ? 1 : 0, slack: done.slack, simple: done.simple, paperwork: done.driveandpayroll, malpractice: done.malpractice, supervision: done.supervision, hours: done.hours, photos: done.photos, availibility: done.availibility, 'booking-id': done['booking-id'], website: done.website, 'psychology-today': done['psychology-today'] } };
+      return api('/api/new-hires', { action: 'create', first: f.first, last: f.last, personal: f.personal || '', email: f.email || '', office: f.office || 'orem', role: f.role || 'therapist', alsosup: !!f.alsosup, supervisor: f.supervisor || '', start: f.start || '', pay: '', contractType: f.contract || 'none', import: imp })
+        .then(function () { try { localStorage.removeItem('tt.onboard.v1'); } catch (e) {} }, function () {});
+    }
+
+    importOld().then(load);
+    setInterval(function () {
+      if (document.hidden || anyArmed() || Object.keys(busy).length) return;
+      var a = document.activeElement; if (a && a.closest && a.closest('#ob-profile') && /INPUT|SELECT/.test(a.tagName)) return;
+      load();
+    }, 60000);
   })();
 </script>
 </Base>

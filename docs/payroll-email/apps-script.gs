@@ -108,10 +108,10 @@ function waiting_(thread, name, missing, dryRun, folder) {
   var fixPay = missing.some(function (x) { return /pay rate|start date/.test(x); });
   var fixFile = missing.some(function (x) { return /file/.test(x); });
   var body = 'The payroll email for ' + name + ' hasn\'t been sent yet because this is missing:\n- ' + missing.join('\n- ') + '\n\n' +
-    (fixPay ? 'Pay rate / start date: on the Reception Onboarding page, type their name, pay rate and start date in the New hire box and click "Start a new hire". It finds their existing folder and saves them.\n\n' : '') +
+    (fixPay ? 'Pay rate / start date: on the Reception Onboarding page, open their profile and fix their pay or start date under "Their details". It saves to their folder by itself.\n\n' : '') +
     (fixFile ? 'Missing file: save it in their folder named "' + name + ' - W-4" or "' + name + ' - Direct Deposit form".\n\n' : '') +
     'The payroll email then goes out by itself within 10 minutes (for the next ' + KEEP_TRYING_DAYS + ' days). ' +
-    'Or send it by hand with the button in step 8, and it won\'t be sent again.' +
+    'Or send it by hand ("Send payroll email by hand" under "Paperwork filed and payroll emailed" in their profile), and it won\'t be sent again.' +
     (folder ? '\n\nTheir folder: ' + folder.getUrl() : '');
   GmailApp.sendEmail(FRONT_DESK, 'Payroll email waiting: ' + name, body);
   props.setProperty(key, '1');
