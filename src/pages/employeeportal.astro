@@ -33,75 +33,60 @@ const defaultTargets = JSON.stringify(LICENSES[0].targets);
 
     <article class="pt-card ob-card" id="ob-card" hidden data-slugs={JSON.stringify(lessonSlugs)}>
       <div class="ob-card-head">
-        <div>
-          <p class="pt-eyebrow">New here?</p>
-          <h2 id="ob-heading">Let’s get you set up</h2>
-          <p class="ob-preview" id="ob-preview" hidden>Preview: you see this because you’re the owner. Ticks are real; approving your finished checklist just resets it.</p>
-          <p class="pt-muted" id="ob-sub">Work through these steps. When they’re all ticked, your practice director sees it on their dashboard and will finish your onboarding with you.</p>
-        </div>
-        <p class="ob-count"><strong id="ob-n">0</strong> of <span id="ob-total">3</span> done</p>
+        <h2 id="ob-heading">Get set up</h2>
+        <p class="ob-count"><strong id="ob-n">0</strong> of <span id="ob-total">3</span></p>
       </div>
       <div class="ob-bar"><i id="ob-bar"></i></div>
+      <p class="ob-note" id="ob-note" hidden></p>
+      <p class="ob-note" id="ob-preview" hidden>Owner preview: approving your finished list resets it.</p>
       <ol class="ob-steps">
         <li class="ob-step" data-step="slack">
-          <span class="ob-dot" aria-hidden="true"></span>
-          <div class="ob-body">
-            <h3>Join Slack</h3>
-            <p>Slack is where the team talks day to day. Go to <a href="https://tangibletherapy.slack.com" target="_blank" rel="noopener">tangibletherapy.slack.com</a> and sign up with your Tangible email<span data-me-email></span>. It’s worth installing the Slack app on your phone and computer too.</p>
-            <div class="ob-acts">
-              <a class="pt-btn" href="https://tangibletherapy.slack.com" target="_blank" rel="noopener">Open Slack</a>
-              <button type="button" class="pt-btn ghost" data-tick="slack">I’ve joined Slack</button>
+          <details>
+            <summary><span class="ob-dot" aria-hidden="true"></span><span class="ob-title">Join Slack</span><span class="ob-state" data-state></span></summary>
+            <div class="ob-body">
+              <p>Sign up at <a href="https://tangibletherapy.slack.com" target="_blank" rel="noopener">tangibletherapy.slack.com</a> with your Tangible email.</p>
+              <div class="ob-acts"><a class="pt-btn" href="https://tangibletherapy.slack.com" target="_blank" rel="noopener">Open Slack</a><button type="button" class="pt-btn ghost" data-tick="slack">Mark done</button></div>
             </div>
-          </div>
+          </details>
         </li>
         <li class="ob-step" data-step="orientation">
-          <span class="ob-dot" aria-hidden="true"></span>
-          <div class="ob-body">
-            <h3>Complete Orientation</h3>
-            <p>Orientation covers how we work at Tangible, our policies and SimplePractice. It takes about an hour. Go through every lesson; the last one is a short SimplePractice skills review. This step ticks itself when you’ve finished, and your progress is saved to your account, so you can switch devices.</p>
-            <p class="ob-prog" id="ob-orient-prog"></p>
-            <div class="ob-acts">
-              <a class="pt-btn" href="/orientation">Go to Orientation</a>
-              <button type="button" class="ob-link" data-tick="orientation" id="ob-orient-other">I finished it on another device</button>
+          <details>
+            <summary><span class="ob-dot" aria-hidden="true"></span><span class="ob-title">Complete Orientation</span><span class="ob-state" data-state></span></summary>
+            <div class="ob-body">
+              <p>About an hour, ending with a short SimplePractice skills review. Ticks itself when you finish.</p>
+              <p class="ob-prog" id="ob-orient-prog"></p>
+              <div class="ob-acts"><a class="pt-btn" href="/orientation">Go to Orientation</a><button type="button" class="ob-link" data-tick="orientation">Finished on another device?</button></div>
             </div>
-          </div>
+          </details>
         </li>
         <li class="ob-step" data-step="paperwork">
-          <span class="ob-dot" aria-hidden="true"></span>
-          <div class="ob-body">
-            <h3>Complete Onboarding</h3>
-            <p>On the Onboarding page, download and fill in the W-4 and direct deposit form, then open the onboarding form and upload them with your license. Use your Tangible Google account so the uploads work.</p>
-            <div class="ob-acts">
-              <a class="pt-btn" href="/onboarding">Go to Onboarding</a>
-              <button type="button" class="pt-btn ghost" data-tick="paperwork">I’ve submitted the form</button>
+          <details>
+            <summary><span class="ob-dot" aria-hidden="true"></span><span class="ob-title">Complete Onboarding</span><span class="ob-state" data-state></span></summary>
+            <div class="ob-body">
+              <p>Fill in the W-4 and direct deposit form, then submit the onboarding form with your license.</p>
+              <div class="ob-acts"><a class="pt-btn" href="/onboarding">Go to Onboarding</a><button type="button" class="pt-btn ghost" data-tick="paperwork">Mark done</button></div>
             </div>
-          </div>
+          </details>
         </li>
         <li class="ob-step" data-step="headshots" hidden>
-          <span class="ob-dot" aria-hidden="true"></span>
-          <div class="ob-body">
-            <h3>Schedule your headshots</h3>
-            <p><b data-fill-ob="headshots">Julie Clegg</b> takes our headshots for the website. Send her a message on Slack to find a time. Wear semi-professional clothes in neutral colors (not gray or black).</p>
-            <p class="ob-how">In Slack: click the search bar at the top, type <b data-fill-ob="headshots">Julie Clegg</b>, click her name, then click <b>Message</b>.</p>
-            <div class="ob-draft"><span class="ob-draft-label">You could send:</span><span class="ob-draft-text" data-draft="headshots"></span><button type="button" class="ob-link" data-copy-draft="headshots">Copy</button></div>
-            <div class="ob-acts">
-              <a class="pt-btn" href="https://tangibletherapy.slack.com" target="_blank" rel="noopener">Open Slack</a>
-              <button type="button" class="pt-btn ghost" data-tick="headshots">I’ve messaged Julie</button>
+          <details>
+            <summary><span class="ob-dot" aria-hidden="true"></span><span class="ob-title">Schedule headshots</span><span class="ob-state" data-state></span></summary>
+            <div class="ob-body">
+              <p>Message <b data-fill-ob="headshots">Julie Clegg</b> on Slack to book a time. Wear neutral colors (not gray or black).</p>
+              <div class="ob-draft"><span class="ob-draft-text" data-draft="headshots"></span><button type="button" class="ob-link" data-copy-draft="headshots">Copy</button></div>
+              <div class="ob-acts"><a class="pt-btn" href="https://tangibletherapy.slack.com" target="_blank" rel="noopener">Open Slack</a><button type="button" class="pt-btn ghost" data-tick="headshots">Mark done</button></div>
             </div>
-          </div>
+          </details>
         </li>
         <li class="ob-step" data-step="supervision" hidden>
-          <span class="ob-dot" aria-hidden="true"></span>
-          <div class="ob-body">
-            <h3>Schedule supervision</h3>
-            <p class="ob-sup" id="ob-sup"></p>
-            <p class="ob-how" id="ob-sup-how"></p>
-            <div class="ob-draft" id="ob-sup-draft"><span class="ob-draft-label">You could send:</span><span class="ob-draft-text" data-draft="supervision"></span><button type="button" class="ob-link" data-copy-draft="supervision">Copy</button></div>
-            <div class="ob-acts">
-              <a class="pt-btn" href="https://tangibletherapy.slack.com" target="_blank" rel="noopener">Open Slack</a>
-              <button type="button" class="pt-btn ghost" data-tick="supervision" id="ob-sup-tick">I’ve messaged my supervisor</button>
+          <details>
+            <summary><span class="ob-dot" aria-hidden="true"></span><span class="ob-title">Schedule supervision</span><span class="ob-state" data-state></span></summary>
+            <div class="ob-body">
+              <p id="ob-sup"></p>
+              <div class="ob-draft"><span class="ob-draft-text" data-draft="supervision"></span><button type="button" class="ob-link" data-copy-draft="supervision">Copy</button></div>
+              <div class="ob-acts"><a class="pt-btn" href="https://tangibletherapy.slack.com" target="_blank" rel="noopener">Open Slack</a><button type="button" class="pt-btn ghost" data-tick="supervision">Mark done</button></div>
             </div>
-          </div>
+          </details>
         </li>
       </ol>
       <p class="ob-msg" id="ob-msg" role="status"></p>
@@ -112,7 +97,7 @@ const defaultTargets = JSON.stringify(LICENSES[0].targets);
         <h2>New hires ready for approval</h2>
         <a class="pd-link" href="/staff-admin#onboarding">Staff Admin ›</a>
       </div>
-      <p class="pt-muted">They’ve joined Slack and finished Orientation and Onboarding. Approve them once you’ve met to finish onboarding; their checklist then goes away.</p>
+      <p class="pt-muted ob-rev-sub">Checklist finished. Approve once you’ve met with them.</p>
       <ul class="ob-rev-list" id="ob-rev-list"></ul>
       <p class="ob-msg" id="ob-rev-msg" role="status"></p>
     </article>
@@ -369,7 +354,7 @@ const defaultTargets = JSON.stringify(LICENSES[0].targets);
         if (!ob || !ob.show) { card.hidden = true; return; }
         card.hidden = false;
         $('ob-preview').hidden = !ob.preview;
-        var done = ob.done || {}, locked = !!ob.submittedAt, n = 0;
+        var done = ob.done || {}, locked = !!ob.submittedAt, n = 0, next = null;
         var o = orientationHere();
         // Save progress this browser has that the account doesn't yet; the server ticks Orientation when it's complete.
         if ((o.localOnly.length || o.reviewLocalOnly) && !renderOb.synced) {
@@ -381,42 +366,45 @@ const defaultTargets = JSON.stringify(LICENSES[0].targets);
         card.querySelectorAll('[data-step]').forEach(function (li) { li.hidden = !mine[li.dataset.step]; });
         fillDrafts();
         ob.steps.forEach(function (st) {
-          var li = card.querySelector('[data-step="' + st.id + '"]'); if (!li) return; var ok = !!done[st.id]; if (ok) n++;
+          var li = card.querySelector('[data-step="' + st.id + '"]'); if (!li) return;
+          var ok = !!done[st.id]; if (ok) n++; else if (!next) next = st.id;
           li.classList.toggle('done', ok);
-          card.querySelectorAll('[data-tick="' + st.id + '"]').forEach(function (b) {
+          li.querySelector('[data-state]').textContent = ok ? 'Done' : st.id === 'orientation' && o.viewed ? o.viewed + '/' + o.total : '';
+          li.querySelectorAll('[data-tick]').forEach(function (b) {
             b.hidden = locked || (st.id === 'orientation' && ok);
-            if (st.id !== 'orientation') b.textContent = ok ? 'Undo' : b.dataset.label;
+            if (st.id !== 'orientation') b.textContent = ok ? 'Undo' : 'Mark done';
             b.classList.toggle('undo', ok);
           });
         });
-        $('ob-orient-prog').hidden = !!done.orientation; $('ob-orient-prog').textContent = 'Progress: ' + o.viewed + ' of ' + o.total + ' lessons opened · Skills review ' + (o.review ? 'passed' : 'not finished yet') + '.';
+        card.querySelectorAll('[data-step]').forEach(function (li) { li.classList.toggle('next', !locked && li.dataset.step === next); });
+        $('ob-orient-prog').hidden = !!done.orientation;
+        $('ob-orient-prog').textContent = o.viewed + ' of ' + o.total + ' lessons · skills review ' + (o.review ? 'passed' : 'not done');
         $('ob-n').textContent = n; $('ob-total').textContent = ob.steps.length; $('ob-bar').style.width = Math.round(n / ob.steps.length * 100) + '%';
         var d = ob.director || {};
-        if (locked) {
-          card.classList.add('sent');
-          $('ob-heading').textContent = 'All done. Nice work!';
-          $('ob-sub').textContent = 'Your checklist is with ' + (d.name || 'your practice director') + ' for approval. They’ll set up a time with you to finish onboarding, and this list will disappear once they approve it.';
-        }
+        card.classList.toggle('sent', locked);
+        card.querySelector('.ob-steps').hidden = locked;
+        $('ob-heading').textContent = locked ? 'All done' : 'Get set up';
+        $('ob-note').hidden = !locked;
+        if (locked) $('ob-note').textContent = 'Waiting for ' + (d.name || 'your director') + ' to approve. They’ll set up a time with you.';
       }
       // Headshots + supervision: who to message on Slack, and a message they can copy.
       var drafts = {};
       function firstOf(n) { return String(n || '').split(/[\s@]/)[0]; }
       function fillDrafts() {
         var mineFirst = me && me.firstName ? me.firstName.charAt(0).toUpperCase() + me.firstName.slice(1) : '';
-        var office = me ? (me.officeLabel || me.office || '').replace(/ \(.*\)/, '') : '';
         var hs = ob.headshots || 'Julie Clegg';
         document.querySelectorAll('[data-fill-ob="headshots"]').forEach(function (n) { n.textContent = hs; });
-        drafts.headshots = 'Hi ' + firstOf(hs) + '! I’m ' + (mineFirst || '[your name]') + ', new at Tangible' + (office ? ' (' + office + ')' : '') + '. I’d like to schedule my headshots. What times work for you?';
-        var sup = ob.supervisor, d = ob.director || {};
+        drafts.headshots = 'Hi ' + firstOf(hs) + '! I’m ' + (mineFirst || '[your name]') + ', new at Tangible. Can we schedule my headshots? What times work for you?';
+        var sup = ob.supervisor, d = ob.director || {}, box = $('ob-sup');
+        box.innerHTML = '';
         if (sup) {
-          $('ob-sup').innerHTML = ''; $('ob-sup').append('Your supervisor is '); var b = document.createElement('b'); b.textContent = sup.name; $('ob-sup').append(b, '. Send them a message on Slack to set up a regular supervision time.');
-          $('ob-sup-how').innerHTML = ''; $('ob-sup-how').append('In Slack: click the search bar at the top, type '); var b2 = document.createElement('b'); b2.textContent = sup.name; $('ob-sup-how').append(b2, ', click their name, then click '); var b3 = document.createElement('b'); b3.textContent = 'Message'; $('ob-sup-how').append(b3, '.');
-          drafts.supervision = 'Hi ' + firstOf(sup.name) + '! I’m ' + (mineFirst || '[your name]') + ', just starting at Tangible. I’d like to set up a regular supervision time with you. What works for you?';
-          $('ob-sup-tick').textContent = $('ob-sup-tick').dataset.label = 'I’ve messaged ' + firstOf(sup.name);
+          var b = document.createElement('b'); b.textContent = sup.name;
+          box.append('Your supervisor is ', b, '. Message them on Slack to set a regular time.');
+          drafts.supervision = 'Hi ' + firstOf(sup.name) + '! I’m ' + (mineFirst || '[your name]') + ', just starting at Tangible. Can we set up a regular supervision time?';
         } else {
-          $('ob-sup').textContent = 'Your supervisor hasn’t been added to your account yet. Message ' + (d.name || 'your practice director') + ' on Slack to ask who your supervisor will be, then set up a regular supervision time with them.';
-          $('ob-sup-how').textContent = 'In Slack: click the search bar at the top, type ' + (d.name || 'their name') + ', click their name, then click Message.';
-          drafts.supervision = 'Hi ' + (d.name || '') + '! I’m ' + (mineFirst || '[your name]') + ', just starting at Tangible. Who will my supervisor be, so I can set up a regular supervision time?';
+          var b2 = document.createElement('b'); b2.textContent = d.name || 'your director';
+          box.append('No supervisor set yet. Ask ', b2, ' on Slack who it will be.');
+          drafts.supervision = 'Hi ' + (d.name || '') + '! I’m ' + (mineFirst || '[your name]') + ', just starting at Tangible. Who will my supervisor be?';
         }
         document.querySelectorAll('[data-draft]').forEach(function (n) { n.textContent = drafts[n.dataset.draft] || ''; });
       }
@@ -427,7 +415,6 @@ const defaultTargets = JSON.stringify(LICENSES[0].targets);
         });
       });
       document.querySelectorAll('[data-tick]').forEach(function (b) {
-        b.dataset.label = b.textContent;
         b.addEventListener('click', function () { var on = !(ob.done || {})[b.dataset.tick]; b.disabled = true; obPost(b.dataset.tick, on).then(function () { b.disabled = false; }); });
       });
       function renderReview(list) {
@@ -457,7 +444,6 @@ const defaultTargets = JSON.stringify(LICENSES[0].targets);
 
       function start(m) {
         me = m;
-        document.querySelectorAll('[data-me-email]').forEach(function (n) { if (me.email) n.textContent = ' (' + me.email + ')'; });
         loadOnboarding();
         var first = me.firstName ? me.firstName.charAt(0).toUpperCase() + me.firstName.slice(1) : '';
         var h = nowParts().mins;
@@ -479,50 +465,52 @@ const defaultTargets = JSON.stringify(LICENSES[0].targets);
 </Base>
 
 <style is:global>
-  .ob-card { margin-bottom: 1.2rem; border: 2px solid var(--sage); }
-  .ob-card.sent { border-color: #bcd6c2; }
-  .ob-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
-  .ob-card h2, .ob-review h2 { font-size: 1.3rem; font-weight: 600; margin: .1rem 0 .3rem; color: var(--charcoal); }
-  .ob-card .pt-eyebrow { margin: 0; }
-  .ob-preview { font-size: .8rem; background: #f6f4ec; border-radius: 8px; padding: .35rem .6rem; margin: .3rem 0; display: inline-block; }
-  .ob-count { margin: 0; font-size: .95rem; color: #5d635e; white-space: nowrap; }
-  .ob-count strong { color: var(--charcoal); font-size: 1.2rem; }
-  .ob-bar { height: 6px; border-radius: 6px; background: #e6e9e6; overflow: hidden; margin: .9rem 0 .4rem; }
+  .ob-card { margin-bottom: 1.2rem; padding-bottom: .6rem; }
+  .ob-card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+  .ob-card h2, .ob-review h2 { font-size: 1.1rem; font-weight: 600; margin: 0; color: var(--charcoal); }
+  .ob-count { margin: 0; font-size: .85rem; color: #5d635e; white-space: nowrap; }
+  .ob-count strong { color: var(--charcoal); }
+  .ob-bar { height: 4px; border-radius: 4px; background: #e6e9e6; overflow: hidden; margin: .6rem 0 .3rem; }
   .ob-bar i { display: block; height: 100%; width: 0; background: var(--slate); transition: width .3s; }
+  .ob-note { font-size: .82rem; color: #5d635e; background: #f4f6f4; border-radius: 8px; padding: .35rem .6rem; margin: .4rem 0 .2rem; }
   .ob-steps { list-style: none; margin: 0; padding: 0; }
-  .ob-step { display: flex; gap: .9rem; padding: 1rem 0; border-top: 1px solid #e6e9e6; }
+  .ob-step { border-top: 1px solid #eceeec; }
   .ob-step:first-child { border-top: 0; }
-  .ob-dot { flex: none; width: 1.6rem; height: 1.6rem; border-radius: 50%; border: 2px solid #b5bcb6; margin-top: .1rem; display: grid; place-items: center; box-sizing: border-box; }
+  .ob-step summary { display: flex; align-items: center; gap: .65rem; padding: .6rem 0; cursor: pointer; list-style: none; }
+  .ob-step summary::-webkit-details-marker { display: none; }
+  .ob-step summary::after { content: ''; width: .45rem; height: .45rem; border-right: 1.5px solid #8a8f8b; border-bottom: 1.5px solid #8a8f8b; transform: rotate(45deg); margin: 0 .2rem 0 .3rem; transition: transform .2s; }
+  .ob-step details[open] summary::after { transform: rotate(-135deg); }
+  .ob-dot { flex: none; width: 1.15rem; height: 1.15rem; border-radius: 50%; border: 1.5px solid #b5bcb6; display: grid; place-items: center; box-sizing: border-box; }
   .ob-step.done .ob-dot { background: var(--slate); border-color: var(--slate); }
-  .ob-step.done .ob-dot::after { content: '✓'; color: #fff; font-size: .85rem; font-weight: 700; }
-  .ob-body { min-width: 0; flex: 1; }
-  .ob-body h3 { font-size: 1.05rem; font-weight: 600; margin: 0 0 .25rem; color: var(--charcoal); }
-  .ob-step.done .ob-body h3 { color: #5d635e; }
-  .ob-body p { margin: 0 0 .5rem; font-size: .93rem; line-height: 1.55; }
-  .ob-step.done .ob-body p:not(.ob-prog) { display: none; }
-  .ob-prog { font-size: .85rem !important; color: #5d635e; }
-  .ob-acts { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+  .ob-step.done .ob-dot::after { content: '✓'; color: #fff; font-size: .65rem; font-weight: 700; }
+  .ob-step.next .ob-dot { border-color: var(--charcoal); border-width: 2px; }
+  .ob-title { flex: 1; min-width: 0; font-size: .93rem; font-weight: 500; color: var(--charcoal); }
+  .ob-step.done .ob-title { color: #8a8f8b; text-decoration: line-through; text-decoration-color: #c9cfca; }
+  .ob-state { font-size: .78rem; color: #8a8f8b; }
+  .ob-body { padding: 0 0 .8rem 1.8rem; font-size: .88rem; line-height: 1.5; }
+  .ob-body p { margin: 0 0 .5rem; }
+  .ob-prog { font-size: .8rem; color: #5d635e; }
+  .ob-acts { display: flex; gap: .45rem; flex-wrap: wrap; align-items: center; }
+  .ob-acts .pt-btn { font-size: .8rem; padding: .35rem .9rem; min-height: 32px; }
   .ob-acts a.pt-btn { text-decoration: none; display: inline-flex; align-items: center; }
   .ob-step.done .ob-acts a.pt-btn { display: none; }
-  .ob-acts .pt-btn.undo { font-size: .8rem; padding: .3rem .8rem; min-height: 0; }
-  .ob-link { font: inherit; font-size: .82rem; color: #5d635e; background: none; border: 0; text-decoration: underline; cursor: pointer; padding: .3rem; }
-  .ob-acts [hidden] { display: none !important; }
-  .ob-msg { font-size: .85rem; color: #8a2f1c; margin: .4rem 0 0; }
-  .ob-how { font-size: .85rem !important; color: #5d635e; }
-  .ob-draft { display: flex; flex-wrap: wrap; align-items: baseline; gap: .2rem .5rem; background: #f4f6f4; border-radius: 10px; padding: .55rem .75rem; margin: 0 0 .7rem; font-size: .88rem; }
-  .ob-draft-label { font-size: .78rem; color: #5d635e; flex-basis: 100%; }
-  .ob-draft-text { flex: 1; min-width: 0; }
-  .ob-step.done .ob-draft, .ob-step.done .ob-how { display: none; }
-  .ob-steps [hidden] { display: none !important; }
+  .ob-link { font: inherit; font-size: .8rem; color: #5d635e; background: none; border: 0; text-decoration: underline; cursor: pointer; padding: .2rem; }
+  .ob-acts [hidden], .ob-steps [hidden], .ob-steps[hidden] { display: none !important; }
+  .ob-draft { display: flex; align-items: baseline; gap: .5rem; background: #f4f6f4; border-radius: 8px; padding: .45rem .65rem; margin: 0 0 .6rem; font-size: .82rem; color: #3f4540; }
+  .ob-draft-text { flex: 1; min-width: 0; font-style: italic; }
+  .ob-step.done .ob-draft { display: none; }
+  .ob-msg { font-size: .82rem; color: #8a2f1c; margin: .3rem 0 0; }
   .ob-msg:empty { display: none; }
-  .ob-review { margin-bottom: 1.2rem; border: 2px solid #e3b341; }
+  .ob-review { margin-bottom: 1.2rem; border-left: 4px solid #e3b341; }
+  .ob-rev-sub { font-size: .85rem; margin: .2rem 0 0; }
+  .ob-rev .pt-btn { font-size: .8rem; padding: .35rem .9rem; min-height: 32px; }
   .ob-review .ob-msg { color: #23432c; }
   .ob-rev-list { list-style: none; margin: .6rem 0 0; padding: 0; }
   .ob-rev { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: .7rem 0; border-top: 1px solid #e6e9e6; }
   .ob-rev-who { display: flex; flex-direction: column; min-width: 0; }
   .ob-rev-who strong { font-weight: 600; }
   .ob-rev-who span { font-size: .85rem; color: #5d635e; }
-  @media (max-width: 520px) { .ob-step { gap: .7rem; } .ob-count { white-space: normal; } }
+  @media (max-width: 520px) { .ob-body { padding-left: 0; } }
   .pd-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .9rem; margin-bottom: 1.2rem; }
   .pd-tile { display: flex; flex-direction: column; gap: .1rem; background: #fff; border-radius: 16px; padding: .9rem 1.15rem; color: var(--charcoal) !important; text-decoration: none !important; box-shadow: 0 1px 2px rgba(0,0,0,.04); min-width: 0; }
   a.pd-tile:hover { box-shadow: 0 2px 10px rgba(0,0,0,.08); }
