@@ -90,7 +90,8 @@ function contract_(body) {
 
   replaceFirst_(b, 'Employee Name Here', name, 'the employee name ("Employee Name Here")');
   replaceFirst_(b, '[0-9]{1,2}(st|nd|rd|th) day of [A-Z][a-z]+, [0-9]{4}', body.date, 'the effective date (like "8th day of July, 2025")');
-  replaceFirst_(b, '[a-z][a-z -]* dollars \\(\\$[0-9][0-9.,]*\\)', body.pay, 'the pay rate (like "sixty dollars ($60)")');
+  // Anchored on "rate of" so only the amount is replaced ("...paid at a rate of sixty dollars ($60) per billable hour").
+  replaceFirst_(b, 'rate of [a-z][a-z -]* dollars \\(\\$[0-9][0-9.,]*\\)', 'rate of ' + body.pay, 'the pay rate (like "rate of sixty dollars ($60)")');
   replaceFirst_(b, 'Brady Clegg', body.signerName, 'the employer printed name ("Brady Clegg")');
 
   // Signers, in SignWell's signing order: location director (if any) → COO → new hire.
@@ -110,6 +111,7 @@ function contract_(body) {
     el.setForegroundColor(s, s + tags[i].length - 1, '#ffffff');
     el.setUnderline(s, s + tags[i].length - 1, false);
   }
+  removeSignatureImages_(b);
   if (dir) addDirectorBlock_(b, dir);
   doc.saveAndClose();
 
@@ -126,15 +128,36 @@ function addDirectorBlock_(body, name) {
   var top = hit.getElement();
   while (top.getParent() && top.getParent().getType() !== DocumentApp.ElementType.BODY_SECTION) top = top.getParent();
   var at = body.getChildIndex(top) + 1;
+  // Match the font of the existing signature block.
+  var ref = hit.getElement().asText(), font = ref.getFontFamily(hit.getStartOffset()) || 'Arial', size = ref.getFontSize(hit.getStartOffset()) || 11;
   var tag = '{{s:1:y::::200:32}}';
-  var lines = [['', false], ['LOCATION DIRECTOR:', true], [tag, false], ['Signature', false], [name, false], ['Printed Name', false]];
+  // Same spacing as the employer/employee block, so SignWell's signature box doesn't cover the labels.
+  var lines = [['', false], ['LOCATION DIRECTOR:', true], ['', false], [tag, false], ['Signature', false], ['', false], [name, false], ['Printed Name', false]];
   for (var i = 0; i < lines.length; i++) {
-    var p = body.insertParagraph(at + i, lines[i][0]);
-    p.setAlignment(DocumentApp.HorizontalAlignment.LEFT).setIndentFirstLine(0).setIndentStart(0);
+    var p = body.insertParagraph(at + i, lines[i][0] || ' ');
+    p.setAlignment(DocumentApp.HorizontalAlignment.LEFT).setIndentFirstLine(0).setIndentStart(0).setSpacingBefore(0).setSpacingAfter(0);
     var tx = p.editAsText();
-    if (lines[i][0]) {
-      tx.setBold(lines[i][1]).setUnderline(false).setBackgroundColor(null);
-      if (lines[i][0] === tag) tx.setForegroundColor('#ffffff'); else tx.setForegroundColor('#000000');
+    tx.setFontFamily(font).setFontSize(size).setBold(lines[i][1]).setItalic(false).setUnderline(false).setBackgroundColor(null)
+      .setForegroundColor(lines[i][0] === tag ? '#ffffff' : '#000000');
+  }
+}
+
+// The masters have a pasted image of Brady Clegg's signature in the signature block. Remove any images from
+// "IN WITNESS WHEREOF" to the end, so only the real SignWell signatures appear.
+function removeSignatureImages_(body) {
+  var start = body.findText('IN WITNESS WHEREOF');
+  if (!start) return;
+  var top = start.getElement();
+  while (top.getParent() && top.getParent().getType() !== DocumentApp.ElementType.BODY_SECTION) top = top.getParent();
+  for (var i = body.getChildIndex(top); i < body.getNumChildren(); i++) {
+    var child = body.getChild(i);
+    if (child.getType() === DocumentApp.ElementType.PARAGRAPH || child.getType() === DocumentApp.ElementType.LIST_ITEM) {
+      var p = child.getType() === DocumentApp.ElementType.PARAGRAPH ? child.asParagraph() : child.asListItem();
+      p.getPositionedImages().forEach(function (img) { p.removePositionedImage(img.getId()); });
+    }
+    if (child.findElement) {
+      var found;
+      while ((found = child.findElement(DocumentApp.ElementType.INLINE_IMAGE))) found.getElement().removeFromParent();
     }
   }
 }
