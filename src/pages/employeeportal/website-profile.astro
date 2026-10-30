@@ -85,7 +85,7 @@ const box = (group: string, items: string[]) => items.map((x) => ({ group, x }))
     <section class="pt-card">
       <h2>Booking</h2>
       <div class="wp-grid">
-        <label class="pt-field">SimplePractice clinician ID<input id="wp-spid" maxlength="40" placeholder="Settings → Widgets → clinicianId"></label>
+        <label class="pt-field">SimplePractice booking code<input id="wp-spid" autocomplete="off" placeholder="Paste the code from Settings → Scheduling and Inquiries → Widgets"></label>
         <label class="pt-field">Online booking<select id="wp-booking"><option value="">Keep as is</option><option>Yes</option><option>No</option></select></label>
         <label class="pt-field">Show on website<select id="wp-show"><option value="">Keep as is</option><option>Yes</option><option>No</option></select></label>
       </div>
@@ -138,6 +138,14 @@ const box = (group: string, items: string[]) => items.map((x) => ({ group, x }))
     // Fields and checkbox groups the person changed. For someone already on the sheet only these are sent,
     // so untouched answers (even oddly worded ones like "teens 11+") stay exactly as they are.
     var dirty = {};
+    // Booking code: front desk pastes the widget code SimplePractice gives for that clinician; keep just the
+    // clinician's number (e.g. data-spwidget-clinician-id="2113884" → 2113884).
+    function bookingId(v) {
+      v = String(v || '').trim();
+      var m = /clinician[-_]?id["'=:\s]+["']?(\d{4,})/i.exec(v) || /^(\d{4,})$/.exec(v);
+      return m ? m[1] : v;
+    }
+    document.getElementById('wp-spid').addEventListener('input', function () { var x = bookingId(this.value); if (x !== this.value) this.value = x; });
     var FIELDS = { credential: 'wp-credential', office: 'wp-office', gender: 'wp-gender', bio: 'wp-bio', seo: 'wp-seo', spId: 'wp-spid', booking: 'wp-booking', show: 'wp-show', bmonth: 'wp-bmonth', bday: 'wp-bday' };
 
     function api(url, body) {

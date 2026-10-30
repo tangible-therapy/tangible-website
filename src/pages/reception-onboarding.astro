@@ -79,11 +79,11 @@ const HOW: Record<string, string> = {
     <li>Match the services to the screenshot → <b>Save</b>. One window per time block.</li></ol>
     <img class="ob-shot" src="/images/screenshot-2025-11-24-at-3-57-40-pm-b0f670.png" alt="SimplePractice availability window showing the services to offer" width="858" height="570" loading="lazy" decoding="async">`,
   'booking-id': `<ol>
-    <li>SimplePractice → <b>Settings</b> → <b>Widgets</b> → <b>Appointment request</b>.</li>
-    <li>Preview their row and copy the <b>clinicianId</b> (you'll enter it in the next step).</li></ol>`,
+    <li>${a(SIMPLEPRACTICE, 'SimplePractice')} → <b>Settings</b> → <b>Scheduling and Inquiries</b> → <b>Widgets</b>.</li>
+    <li>Find the clinician and copy their code (you'll paste it in the next step).</li></ol>`,
   website: `<ol>
     <li>Open ${a('/employeeportal/website-profile', 'Website Profiles')} and type <span data-f="full">their name</span>. Their onboarding answers may already be there.</li>
-    <li>Fill in what's missing: credential, office, photo, bio, SimplePractice clinician ID → <b>Save</b>.</li>
+    <li>Fill in what's missing: credential, office, photo, bio, SimplePractice booking code → <b>Save</b>.</li>
     <li>In the ${a(THERAPIST_SHEET, 'tangible sheet')}: add their openings (<b>openings</b> tab) and insurance (<b>Insurances</b> tab).</li></ol>
     <p class="pt-muted">Live in about 15 minutes once they have a photo and bio.</p>
     <div class="ob-actions"><a class="pt-btn ghost" href="/employeeportal/website-profile" ${ext}>Open Website Profiles</a> <a class="pt-btn ghost" href="${THERAPIST_SHEET}" ${ext}>Open the tangible sheet</a></div>`,
