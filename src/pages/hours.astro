@@ -5,7 +5,7 @@
 // outside a pay period. Their supervisor approves everything.
 // Supervisors link their own supervisees and see everyone's progress. No client information is stored.
 import Base from '../layouts/Base.astro';
-import { LICENSES, licenseFromCredential } from '../data/hours';
+import { LICENSES, licenseFromCredential, DOPL_NOTES, DOPL_BY_LICENSE } from '../data/hours';
 import { getFinderData } from '../lib/therapist-sheet';
 // Credentials from the therapists' website profiles (public info), keyed by normalized name, so adding a
 // supervisee can fill in their license automatically. Rebuilt whenever the therapist sheet rebuilds the site.
@@ -25,7 +25,6 @@ for (const t of (await getFinderData()).therapists) {
       <header class="hr-head">
         <p class="hr-eyebrow">Licensure</p>
         <h1>Supervision Hours</h1>
-        <p class="hr-lede" >Your supervised hours toward licensure. Each pay period they come in through <a href="/employeeportal/submit-hours">Submit Hours</a>. Your supervisor approves them, and only approved hours count toward your totals.</p>
         <div class="hr-tabs" role="tablist" id="hr-tabs" hidden>
           <button type="button" role="tab" data-tab="mine" aria-selected="true">My hours</button>
           <button type="button" role="tab" data-tab="team" aria-selected="false">My supervisees</button>
@@ -35,37 +34,45 @@ for (const t of (await getFinderData()).therapists) {
 
       <!-- ===== My hours ===== -->
       <div data-pane="mine">
-        <div class="hr-card hr-status" id="hr-status"><p class="hr-muted">Loading…</p></div>
+        <div class="hr-hero" id="hr-status"><p class="hr-hero-loading">Loading…</p></div>
 
-        <div class="hr-cols">
-          <article class="hr-card">
-            <h2 id="hr-form-title">Add past hours</h2>
-            <p class="hr-muted small hr-form-help" id="hr-form-help">For hours from before you started using <a href="/employeeportal/submit-hours">Submit Hours</a> (to bring your Supervision Hours up to date), or hours outside a pay period. Enter the totals for the whole date range.</p>
-            <form id="hr-form" novalidate>
-              <div class="hr-nums">
-                <label class="hr-field"><span>From</span><input type="date" name="date" required /></label>
-                <label class="hr-field"><span>To</span><input type="date" name="end" required /></label>
-              </div>
-              <div class="hr-nums">
-                <label class="hr-field"><span>Direct client care</span><input inputmode="decimal" autocomplete="off" data-num="dec" type="text" name="direct" placeholder="0" /></label>
-                <label class="hr-field"><span>Individual supervision</span><input inputmode="decimal" autocomplete="off" data-num="dec" type="text" name="individual" placeholder="0" /></label>
-                <label class="hr-field"><span>Group supervision</span><input inputmode="decimal" autocomplete="off" data-num="dec" type="text" name="group" placeholder="0" /></label>
-                <label class="hr-field"><span>…of which direct observation</span><input inputmode="decimal" autocomplete="off" data-num="dec" type="text" name="observation" placeholder="0" /></label>
-                <label class="hr-field hr-wide"><span>Other work time <small>(notes, admin, trainings, consults…)</small></span><input inputmode="decimal" autocomplete="off" data-num="dec" type="text" name="other" placeholder="0" /></label>
-              </div>
-              <p class="hr-muted small" id="hr-week-total" aria-live="polite"></p>
-              <p class="hr-err" id="hr-form-err" hidden></p>
-              <div class="hr-actions">
-                <button class="hr-btn primary" type="submit" id="hr-save">Add past hours</button>
-                <button class="hr-btn" type="button" id="hr-cancel" hidden>Cancel edit</button>
-              </div>
-            </form>
-          </article>
+        <div class="hr-sheet" id="hr-sheet" hidden>
+          <section class="hr-sheet-main" id="hr-dopl" aria-labelledby="hr-req-title"></section>
 
-          <article class="hr-card">
-            <div class="hr-row-head"><h2>My entries</h2><button class="hr-btn small" type="button" id="hr-csv-mine">Download CSV</button></div>
+          <section class="hr-sheet-side" aria-labelledby="hr-mine-title">
+            <div class="hr-side-head">
+              <h2 id="hr-mine-title">Your hours <span class="hr-count" id="hr-entry-count"></span></h2>
+              <button class="hr-link" type="button" id="hr-csv-mine">Download CSV</button>
+            </div>
+            <div class="hr-adder" id="hr-add-card">
+              <button class="hr-adder-btn" type="button" id="hr-open" aria-expanded="false" aria-controls="hr-form">
+                <span class="hr-plus" aria-hidden="true">+</span>
+                <span><strong id="hr-form-title">Add past hours</strong><small id="hr-form-help">From before Submit Hours, or outside a pay period</small></span>
+              </button>
+              <form id="hr-form" novalidate hidden>
+                <p class="hr-form-head"><strong id="hr-form-title2">Add past hours</strong> <span class="hr-muted small">Totals for the whole date range. Pay periods go through <a href="/employeeportal/submit-hours">Submit Hours</a>.</span></p>
+                <div class="hr-nums">
+                  <label class="hr-field"><span>From</span><input type="date" name="date" required /></label>
+                  <label class="hr-field"><span>To</span><input type="date" name="end" required /></label>
+                </div>
+                <div class="hr-nums">
+                  <label class="hr-field"><span>Direct client care</span><input inputmode="decimal" autocomplete="off" data-num="dec" type="text" name="direct" placeholder="0" /></label>
+                  <label class="hr-field" id="hr-f-relational" hidden><span>…of which relational</span><input inputmode="decimal" autocomplete="off" data-num="dec" type="text" name="relational" placeholder="0" /></label>
+                  <label class="hr-field"><span>Individual supervision</span><input inputmode="decimal" autocomplete="off" data-num="dec" type="text" name="individual" placeholder="0" /></label>
+                  <label class="hr-field"><span>Group supervision</span><input inputmode="decimal" autocomplete="off" data-num="dec" type="text" name="group" placeholder="0" /></label>
+                  <label class="hr-field"><span>…of which direct observation</span><input inputmode="decimal" autocomplete="off" data-num="dec" type="text" name="observation" placeholder="0" /></label>
+                  <label class="hr-field"><span>Other work time</span><input inputmode="decimal" autocomplete="off" data-num="dec" type="text" name="other" placeholder="0" /></label>
+                </div>
+                <p class="hr-muted small" id="hr-week-total" aria-live="polite"></p>
+                <p class="hr-err" id="hr-form-err" hidden></p>
+                <div class="hr-actions">
+                  <button class="hr-btn primary" type="submit" id="hr-save">Add past hours</button>
+                  <button class="hr-btn" type="button" id="hr-cancel">Cancel</button>
+                </div>
+              </form>
+            </div>
             <div id="hr-entries"></div>
-          </article>
+          </section>
         </div>
       </div>
 
@@ -106,8 +113,9 @@ for (const t of (await getFinderData()).therapists) {
                 <label class="hr-field"><span>Supervision target</span><input inputmode="numeric" autocomplete="off" data-num="int" type="text" name="supervision" /></label>
                 <label class="hr-field"><span>Direct observation target</span><input inputmode="numeric" autocomplete="off" data-num="int" type="text" name="observation" /></label>
                 <label class="hr-field"><span>Group supervision that can count (max)</span><input inputmode="numeric" autocomplete="off" data-num="int" type="text" name="groupMax" /></label>
+                <label class="hr-field"><span>Relational hours target <small>(MFT; 0 = not tracked)</small></span><input inputmode="numeric" autocomplete="off" data-num="int" type="text" name="relational" /></label>
               </div>
-              <p class="hr-muted small">Defaults follow Utah Code 58-60-405 (July 2026). Requirements vary by license and issue date, so check with DOPL.</p>
+              <p class="hr-muted small">Defaults follow Utah DOPL (Utah Code 58-60; MFT relational hours: Admin. Code R156-60b-302b). Check with DOPL if anything changes.</p>
               <div class="hr-actions">
                 <button class="hr-btn primary small" type="submit">Save</button>
                 <button class="hr-btn small danger" type="button" id="hr-d-unlink">Stop supervising</button>
@@ -119,7 +127,7 @@ for (const t of (await getFinderData()).therapists) {
     </div></div>
   </section>
 
-  <script is:inline define:vars={{ LICENSES, CREDS }}>
+  <script is:inline define:vars={{ LICENSES, CREDS, DOPL_NOTES, DOPL_BY_LICENSE }}>
     (function () {
       var API = '/api/hours', $ = function (id) { return document.getElementById(id); };
       var mine = null, team = null, detail = null, editing = null;
@@ -153,16 +161,25 @@ for (const t of (await getFinderData()).therapists) {
       var STATUS = { pending: 'Waiting for approval', approved: 'Approved', returned: 'Sent back' };
 
       // ---------- progress ----------
+      // A supervisee's targets: their license's defaults, then anything their supervisor changed. Older links have no
+      // relational target, so the license default (500 for AMFT, 0 = not tracked otherwise) fills it in.
+      function targetsFor(link) {
+        var base = (link && LIC[link.license] || LICENSES[0]).targets;
+        var t = Object.assign({}, base, link ? link.targets : {});
+        if (t.relational == null) t.relational = base.relational;
+        return t;
+      }
       function progress(link, approved, pending) {
         var wrap = el('div', 'hr-progress');
-        var t = Object.assign({}, LICENSES[0].targets, link ? link.targets : {});
+        var t = targetsFor(link);
         var groupCounted = Math.min(approved.group, t.groupMax);
         var rows = [
           ['Total hours', approved.total || 0, pending.total || 0, t.total],
           ['Direct client care', approved.direct, pending.direct, t.direct],
+        ].concat(t.relational ? [['Relational (of direct client care)', approved.relational || 0, pending.relational || 0, t.relational]] : []).concat([
           ['Supervision', approved.individual + groupCounted, pending.individual + pending.group, t.supervision, approved.group > t.groupMax ? 'Only ' + t.groupMax + ' group supervision hours can count (' + h(approved.group) + ' logged).' : ''],
           ['Direct observation', approved.observation, pending.observation, t.observation],
-        ];
+        ]);
         rows.forEach(function (r) {
           var pct = r[3] ? Math.min(100, (r[1] / r[3]) * 100) : 0, ppct = r[3] ? Math.min(100 - pct, (r[2] / r[3]) * 100) : 0;
           var row = el('div', 'hr-bar');
@@ -185,7 +202,9 @@ for (const t of (await getFinderData()).therapists) {
         var box = el('div', 'hr-list');
         var list = entries.slice().sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : 0; });
         if (!list.length) { box.appendChild(el('p', 'hr-muted', opts.empty || 'No entries yet.')); return box; }
-        list.forEach(function (e) {
+        var limit = opts.limit && list.length > opts.limit + 2 ? opts.limit : 0;
+        list.forEach(function (e, i) {
+          if (opts.compact) { box.appendChild(compactEntry(e, opts, limit && i >= limit)); return; }
           var row = el('div', 'hr-entry ' + e.status);
           var head = el('div', 'hr-entry-head');
           head.appendChild(el('strong', null, entryTitle(e)));
@@ -193,6 +212,7 @@ for (const t of (await getFinderData()).therapists) {
           row.appendChild(head);
           var parts = [];
           if (e.direct) parts.push('Direct ' + h(e.direct));
+          if (e.relational) parts.push('Relational ' + h(e.relational));
           if (e.individual) parts.push('Individual sup. ' + h(e.individual));
           if (e.group) parts.push('Group sup. ' + h(e.group));
           if (e.observation) parts.push('Observation ' + h(e.observation));
@@ -207,14 +227,45 @@ for (const t of (await getFinderData()).therapists) {
           if (btns.children.length) row.appendChild(btns);
           box.appendChild(row);
         });
+        if (limit) {
+          var more = el('button', 'hr-link hr-more', 'Show all ' + list.length + ' entries'); more.type = 'button';
+          more.onclick = function () { box.querySelectorAll('.hr-row[hidden]').forEach(function (r) { r.hidden = false; }); more.remove(); };
+          box.appendChild(more);
+        }
         return box;
+      }
+      // One line per entry (title, total, status); click to see the breakdown and Edit/Delete.
+      function compactEntry(e, opts, hide) {
+        var row = el('details', 'hr-row ' + e.status); if (hide) row.hidden = true;
+        if (e.status === 'returned') row.open = true;
+        var sum = el('summary');
+        sum.appendChild(el('span', 'hr-row-title', entryTitle(e)));
+        sum.appendChild(el('span', 'hr-row-total', h(e.direct + e.individual + e.group + (e.other || 0))));
+        sum.appendChild(el('span', 'hr-chip ' + e.status, STATUS[e.status]));
+        row.appendChild(sum);
+        var body = el('div', 'hr-row-body');
+        var parts = [];
+        if (e.direct) parts.push('Direct ' + h(e.direct));
+        if (e.relational) parts.push('Relational ' + h(e.relational));
+        if (e.individual) parts.push('Individual sup. ' + h(e.individual));
+        if (e.group) parts.push('Group sup. ' + h(e.group));
+        if (e.observation) parts.push('Observation ' + h(e.observation));
+        if (e.other) parts.push('Other ' + h(e.other));
+        body.appendChild(el('p', 'hr-entry-hours', parts.join(' · ') || 'No hours'));
+        if (e.supervisorNote && e.status === 'returned') body.appendChild(el('p', 'hr-entry-sup', 'Supervisor: ' + e.supervisorNote));
+        if (e.kind === 'period') body.appendChild(el('p', 'hr-muted small', 'From Submit Hours. To change it, submit your hours again for that pay period.'));
+        var btns = el('div', 'hr-actions');
+        (opts.buttons(e) || []).forEach(function (b) { var x = el('button', 'hr-btn small' + (b.cls ? ' ' + b.cls : ''), b.label); x.type = 'button'; x.onclick = b.go; btns.appendChild(x); });
+        if (btns.children.length) body.appendChild(btns);
+        row.appendChild(body);
+        return row;
       }
 
       // ---------- CSV ----------
       function csv(log, who) {
-        var rows = [['Supervisee', 'Type', 'From', 'To', 'Direct client care', 'Individual supervision', 'Group supervision', 'Direct observation', 'Other work time', 'Total', 'Status', 'Reviewed by', 'Reviewed at']];
+        var rows = [['Supervisee', 'Type', 'From', 'To', 'Direct client care', 'Relational (of direct)', 'Individual supervision', 'Group supervision', 'Direct observation', 'Other work time', 'Total', 'Status', 'Reviewed by', 'Reviewed at']];
         log.entries.slice().sort(function (a, b) { return a.date < b.date ? -1 : 1; }).forEach(function (e) {
-          rows.push([who, KIND[e.kind] || e.kind, e.date, e.end || (e.kind === 'week' ? addDays(e.date, 6) : e.date), e.direct, e.individual, e.group, e.observation, e.other || 0, e.direct + e.individual + e.group + (e.other || 0), STATUS[e.status], e.reviewedBy || '', e.reviewedAt ? e.reviewedAt.slice(0, 10) : '']);
+          rows.push([who, KIND[e.kind] || e.kind, e.date, e.end || (e.kind === 'week' ? addDays(e.date, 6) : e.date), e.direct, e.relational || 0, e.individual, e.group, e.observation, e.other || 0, e.direct + e.individual + e.group + (e.other || 0), STATUS[e.status], e.reviewedBy || '', e.reviewedAt ? e.reviewedAt.slice(0, 10) : '']);
         });
         var text = rows.map(function (r) { return r.map(function (c) { c = String(c); if (/^[=+\-@]/.test(c)) c = "'" + c; return /[",\n]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c; }).join(','); }).join('\n');
         var a = document.createElement('a');
@@ -225,24 +276,12 @@ for (const t of (await getFinderData()).therapists) {
 
       // ---------- My hours ----------
       function renderMine() {
-        var s = $('hr-status'); s.innerHTML = '';
-        var top = el('div', 'hr-row-head');
-        var who = el('div');
-        if (mine.link) {
-          var l = LIC[mine.link.license] || LICENSES[0];
-          who.appendChild(el('p', 'hr-eyebrow dark', l.label + ' → ' + l.goal));
-          who.appendChild(el('h2', null, 'Supervisor: ' + mine.supervisorName));
-        } else {
-          who.appendChild(el('h2', null, 'No supervisor linked yet'));
-          who.appendChild(el('p', 'hr-muted', 'Your hours are saved now. Ask your supervisor to add you in Supervision Hours; your entries will then go to them for approval.'));
-        }
-        top.appendChild(who); s.appendChild(top);
-        s.appendChild(progress(mine.link, mine.approved, mine.pending));
-
+        renderPath();
+        $('hr-entry-count').textContent = mine.log.entries.length ? '(' + mine.log.entries.length + ')' : '';
         var box = $('hr-entries'); box.innerHTML = '';
         box.appendChild(entryList(mine.log.entries, {
-          mine: true,
-          empty: 'Nothing yet. Submit your hours each pay period on Submit Hours, and add any past hours on the left.',
+          mine: true, compact: true, limit: 8,
+          empty: 'Nothing yet. Submit your hours each pay period on Submit Hours, and add any past hours above.',
           buttons: function (e) {
             if (e.status === 'approved' || e.kind === 'period') return [];
             return [
@@ -252,21 +291,110 @@ for (const t of (await getFinderData()).therapists) {
           },
         }));
       }
+      var fmt = function (n) { return (Math.round(n * 4) / 4).toLocaleString('en-US'); };
+      // Hero: the path from their associate license to the full one, on the dark header (no box).
+      function renderPath() {
+        var s = $('hr-status'); s.innerHTML = ''; $('hr-sheet').hidden = false;
+        var l = mine.link ? LIC[mine.link.license] || LICENSES[0] : null, t = targetsFor(mine.link);
+        var done = mine.approved.total || 0, wait = mine.pending.total || 0, goal = t.total || 3000;
+        var p = Math.min(100, done / goal * 100), w = Math.min(100 - p, wait / goal * 100);
+        var top = el('div', 'hr-hero-top');
+        var big = el('p', 'hr-hero-big');
+        big.appendChild(el('strong', null, fmt(done)));
+        big.appendChild(el('span', null, 'of ' + goal.toLocaleString('en-US') + ' hours toward ' + (l ? l.goal : 'licensure')));
+        top.appendChild(big);
+        var meta = el('div', 'hr-hero-meta');
+        if (wait) meta.appendChild(el('span', 'hr-pill wait', fmt(wait) + ' waiting for approval'));
+        meta.appendChild(el('span', 'hr-pill', done >= goal ? 'Total hours complete' : fmt(goal - done) + ' to go'));
+        top.appendChild(meta);
+        s.appendChild(top);
+        var trail = el('div', 'hr-trail'); trail.setAttribute('role', 'progressbar'); trail.setAttribute('aria-label', 'Approved hours toward ' + (l ? l.goal : 'licensure'));
+        trail.setAttribute('aria-valuenow', String(Math.round(done))); trail.setAttribute('aria-valuemin', '0'); trail.setAttribute('aria-valuemax', String(goal));
+        trail.appendChild(el('span', 'hr-trail-from', l ? l.label : 'Associate'));
+        var track = el('div', 'hr-trail-track');
+        var fill = el('span', 'hr-trail-fill'); fill.style.width = p + '%'; track.appendChild(fill);
+        var pend = el('span', 'hr-trail-wait'); pend.style.left = p + '%'; pend.style.width = w + '%'; track.appendChild(pend);
+        for (var k = 500; k < goal; k += 500) { var tick = el('span', 'hr-trail-tick'); tick.style.left = (k / goal * 100) + '%'; track.appendChild(tick); }
+        var you = el('span', 'hr-trail-you'); you.style.left = p + '%'; track.appendChild(you);
+        trail.appendChild(track);
+        trail.appendChild(el('span', 'hr-trail-to', l ? l.goal : 'Licensed'));
+        s.appendChild(trail);
+        s.appendChild(el('p', 'hr-hero-sup', mine.link ? 'Supervised by ' + mine.supervisorName : 'No supervisor linked yet. Ask your supervisor to add you; your hours then go to them for approval.'));
+        renderReqs(l, t);
+      }
+      // DOPL's requirements: hour tiles with progress rings (post-May-2024 rules), then the to-dos not tracked here.
+      function renderReqs(l, t) {
+        var c = $('hr-dopl'); c.innerHTML = '';
+        var d = mine.link ? DOPL_BY_LICENSE[mine.link.license] : null, a = mine.approved, pe = mine.pending;
+        var head = el('div', 'hr-side-head');
+        var h2 = el('h2', null, l ? 'What DOPL requires for ' + l.goal : 'What DOPL requires'); h2.id = 'hr-req-title';
+        head.appendChild(h2);
+        var link = el('a', 'hr-link', d ? 'DOPL’s ' + l.goal + ' page' : 'Utah DOPL'); link.href = d ? d.url : 'https://commerce.utah.gov/dopl/'; link.target = '_blank'; link.rel = 'noopener';
+        head.appendChild(link);
+        c.appendChild(head);
+        var grid = el('ul', 'hr-tiles');
+        function tile(o) {
+          var pct = o.of ? Math.min(100, o.have / o.of * 100) : 0, met = !o.limit && o.of && o.have >= o.of;
+          var li = el('li', 'hr-tile' + (met ? ' met' : '') + (o.limit ? ' limit' : ''));
+          var ring = el('span', 'hr-ring'); ring.style.setProperty('--p', pct + '%'); ring.setAttribute('aria-hidden', 'true');
+          li.appendChild(ring);
+          var num = el('p', 'hr-tile-num');
+          num.appendChild(el('strong', null, fmt(o.have)));
+          num.appendChild(el('span', null, (o.limit ? ' of up to ' : ' / ') + o.of.toLocaleString('en-US')));
+          li.appendChild(num);
+          li.appendChild(el('p', 'hr-tile-label', o.label));
+          if (o.note) li.appendChild(el('p', 'hr-tile-note', o.note));
+          if (met) li.appendChild(el('p', 'hr-tile-flag done', 'Done'));
+          else if (o.wait) li.appendChild(el('p', 'hr-tile-flag', fmt(o.wait) + ' waiting'));
+          grid.appendChild(li);
+        }
+        var groupCounted = Math.min(a.group, t.groupMax);
+        tile({ label: 'Total supervised hours', have: a.total || 0, of: t.total, wait: pe.total });
+        tile({ label: 'Direct client care', have: a.direct, of: t.direct, wait: pe.direct });
+        if (t.relational) tile({ label: 'Relational hours', note: DOPL_NOTES.relational + '. Part of direct client care.', have: a.relational || 0, of: t.relational, wait: pe.relational });
+        tile({ label: 'Direct clinical supervision', note: DOPL_NOTES.supervision, have: a.individual + groupCounted, of: t.supervision, wait: pe.individual + pe.group });
+        tile({ label: 'Direct observation', note: DOPL_NOTES.observation, have: a.observation, of: t.observation, wait: pe.observation });
+        tile({ label: 'Group supervision that counts', note: DOPL_NOTES.group + (a.group > t.groupMax ? '. You have ' + fmt(a.group) + ' logged; only ' + t.groupMax + ' count.' : ''), have: a.group, of: t.groupMax, limit: true });
+        c.appendChild(grid);
+        var todo = el('div', 'hr-todo');
+        todo.appendChild(el('h3', null, 'Also needed'));
+        var ul = el('ul');
+        function item(title, note) { var li = el('li'); li.appendChild(el('strong', null, title)); if (note) li.appendChild(el('span', null, note)); ul.appendChild(li); }
+        if (d) {
+          item(d.exam, d.examNote);
+          if (d.associateNote) item('About the NCE', d.associateNote);
+          if (d.extra) item(d.extra);
+        } else item('Pass your licensing exam', 'Your exam shows here once your supervisor adds you.');
+        todo.appendChild(ul);
+        c.appendChild(todo);
+        c.appendChild(el('p', 'hr-muted small hr-reqs-src', 'Utah DOPL’s rules for associates licensed after May 1, 2024. Your supervisor can adjust your hour targets.'));
+      }
+      function openForm() {
+        $('hr-form').hidden = false; $('hr-open').hidden = true; $('hr-open').setAttribute('aria-expanded', 'true');
+        $('hr-add-card').classList.add('open');
+        $('hr-f-relational').hidden = !(mine && mine.link && targetsFor(mine.link).relational);
+      }
+      function closeForm() {
+        $('hr-form').hidden = true; $('hr-open').hidden = false; $('hr-open').setAttribute('aria-expanded', 'false');
+        $('hr-add-card').classList.remove('open');
+      }
+      $('hr-open').onclick = function () { openForm(); $('hr-form').elements.date.focus(); };
       function startEdit(e) {
+        openForm();
         editing = e; var f = $('hr-form');
-        ['direct', 'individual', 'group', 'observation', 'other'].forEach(function (k) { f.elements[k].value = e[k] || ''; });
+        ['direct', 'relational', 'individual', 'group', 'observation', 'other'].forEach(function (k) { f.elements[k].value = e[k] || ''; });
         f.elements.date.value = e.date;
         f.elements.end.value = e.end || (e.kind === 'week' ? addDays(e.date, 6) : e.date);
         weekTotal();
-        $('hr-form-title').textContent = 'Edit entry'; $('hr-save').textContent = 'Save changes'; $('hr-cancel').hidden = false;
-        f.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        $('hr-form-title2').textContent = 'Edit entry'; $('hr-save').textContent = 'Save changes';
+        $('hr-add-card').scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
       function resetForm() {
         editing = null; var f = $('hr-form'); f.reset();
         var today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
         f.elements.date.max = today; f.elements.end.max = today;
-        $('hr-form-title').textContent = 'Add past hours'; $('hr-save').textContent = 'Add past hours'; $('hr-cancel').hidden = true; $('hr-form-err').hidden = true;
-        weekTotal();
+        $('hr-form-title2').textContent = 'Add past hours'; $('hr-save').textContent = 'Add past hours'; $('hr-form-err').hidden = true;
+        weekTotal(); closeForm();
       }
       function weekTotal() {
         var f = $('hr-form'), sum = 0;
@@ -281,7 +409,7 @@ for (const t of (await getFinderData()).therapists) {
       $('hr-form').addEventListener('submit', function (ev) {
         ev.preventDefault();
         var f = this, entry = { kind: 'bulk', date: f.elements.date.value, end: f.elements.end.value || f.elements.date.value };
-        ['direct', 'individual', 'group', 'observation', 'other'].forEach(function (k) { entry[k] = f.elements[k].value === '' ? 0 : Number(f.elements[k].value); });
+        ['direct', 'relational', 'individual', 'group', 'observation', 'other'].forEach(function (k) { entry[k] = f.elements[k].value === '' ? 0 : Number(f.elements[k].value); });
         $('hr-save').disabled = true;
         save(editing ? { action: 'edit', id: editing.id, entry: entry } : { action: 'add', entry: entry }, editing ? 'Entry updated and sent for approval.' : 'Past hours added and sent for approval.')
           .then(resetForm)
@@ -382,20 +510,20 @@ for (const t of (await getFinderData()).therapists) {
         };
         $('hr-d-pending').innerHTML = ''; $('hr-d-pending').appendChild(entryList(pend, { empty: 'Nothing waiting. You’re all caught up.', buttons: buttons }));
         $('hr-d-entries').innerHTML = ''; $('hr-d-entries').appendChild(entryList(detail.log.entries.filter(function (e) { return e.status !== 'pending'; }), { empty: 'No reviewed entries yet.', buttons: buttons }));
-        var f = $('hr-d-settings'), t = Object.assign({}, l.targets, detail.link ? detail.link.targets : {});
+        var f = $('hr-d-settings'), t = targetsFor(detail.link || { license: 'acmhc' });
         f.elements.license.value = detail.link ? detail.link.license : 'acmhc';
         f.elements.startDate.value = (detail.link && detail.link.startDate) || '';
-        ['total', 'direct', 'supervision', 'observation', 'groupMax'].forEach(function (k) { f.elements[k].value = t[k]; });
+        ['total', 'direct', 'supervision', 'observation', 'groupMax', 'relational'].forEach(function (k) { f.elements[k].value = t[k]; });
       }
       $('hr-d-approve-all').onclick = function () { review(detail.log.entries.filter(function (e) { return e.status === 'pending'; }).map(function (e) { return e.id; }), 'approve'); };
       $('hr-d-close').onclick = function () { $('hr-detail').hidden = true; detail = null; };
       $('hr-d-csv').onclick = function () { csv(detail.log, detail.superviseeName); };
       $('hr-d-settings').addEventListener('submit', function (ev) {
         ev.preventDefault(); var f = this;
-        call('POST', '', { action: 'settings', email: detail.supervisee, license: f.elements.license.value, startDate: f.elements.startDate.value, targets: { total: f.elements.total.value, direct: f.elements.direct.value, supervision: f.elements.supervision.value, observation: f.elements.observation.value, groupMax: f.elements.groupMax.value } })
+        call('POST', '', { action: 'settings', email: detail.supervisee, license: f.elements.license.value, startDate: f.elements.startDate.value, targets: { total: f.elements.total.value, direct: f.elements.direct.value, supervision: f.elements.supervision.value, observation: f.elements.observation.value, groupMax: f.elements.groupMax.value, relational: f.elements.relational.value } })
           .then(function (b) { detail = Object.assign(detail, b); renderDetail(); loadTeam(); notify('Saved.'); }).catch(function (e) { notify(e.message, true); });
       });
-      $('hr-d-settings').elements.license.onchange = function () { var t = (LIC[this.value] || LICENSES[0]).targets, f = $('hr-d-settings'); ['total', 'direct', 'supervision', 'observation', 'groupMax'].forEach(function (k) { f.elements[k].value = t[k]; }); };
+      $('hr-d-settings').elements.license.onchange = function () { var t = (LIC[this.value] || LICENSES[0]).targets, f = $('hr-d-settings'); ['total', 'direct', 'supervision', 'observation', 'groupMax', 'relational'].forEach(function (k) { f.elements[k].value = t[k]; }); };
       $('hr-d-unlink').onclick = function () {
         if (!confirm('Stop supervising ' + detail.superviseeName + '? Their logged hours are kept.')) return;
         call('POST', '', { action: 'unlink', email: detail.supervisee }).then(function () { $('hr-detail').hidden = true; notify('Removed from your supervisees.'); loadTeam(); }).catch(function (e) { notify(e.message, true); });
@@ -419,7 +547,6 @@ for (const t of (await getFinderData()).therapists) {
           var saved = null; try { saved = sessionStorage.getItem('hr-tab'); } catch (e) {}
           tab(saved === 'team' ? 'team' : 'mine');
         } else if (b.canSupervise) {
-          document.querySelector('.hr-lede').textContent = 'See your supervisees\u2019 progress toward licensure and approve the hours they log.';
           tab('team');
         } else if (!b.canLog) {
           $('hr-status').innerHTML = ''; $('hr-status').appendChild(el('p', 'hr-muted', 'Supervision Hours is for associates and supervisors. Ask a director to update your role if you need it.'));
@@ -435,15 +562,13 @@ for (const t of (await getFinderData()).therapists) {
   .hr-head { margin-bottom: 1.5rem; }
   .hr-eyebrow { text-transform: uppercase; letter-spacing: .12em; font-size: .75rem; font-weight: 500; margin: 0 0 .35rem; color: #dfe5df; }
   .hr-eyebrow.dark { color: var(--slate); }
-  .hr-head h1 { color: #fff; margin: 0 0 .5rem; font-size: clamp(2rem, 4vw, 2.8rem); }
-  .hr-lede { color: #e8ece8; max-width: 62ch; margin: 0 0 1.25rem; }
+  .hr-head h1 { color: #fff; margin: 0 0 1rem; font-size: clamp(2rem, 4vw, 2.8rem); }
   .hr-tabs { display: inline-flex; background: rgba(255,255,255,.12); border-radius: 300px; padding: 4px; gap: 2px; }
   .hr-tabs button { font: inherit; font-size: .92rem; border: 0; background: none; color: #fff; padding: .55rem 1.2rem; border-radius: 300px; cursor: pointer; }
   .hr-tabs button[aria-selected=true] { background: #fff; color: var(--charcoal); font-weight: 500; }
   .hr-card { background: #fff; color: var(--charcoal); border-radius: 28px; padding: 1.75rem 2rem; margin-bottom: 1.25rem; }
   .hr-card h2 { font-size: 1.35rem; margin: 0 0 1rem; color: var(--charcoal); }
   .hr-form-help { margin: -.4rem 0 1rem; line-height: 1.5; }
-  .hr-lede a { color: #fff; }
   .hr-card h3 { font-size: 1.05rem; margin: 1.5rem 0 .75rem; color: var(--charcoal); }
   .hr-cols { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 1.25rem; align-items: start; }
   .hr-row-head { display: flex; justify-content: space-between; align-items: flex-start; gap: .75rem 1rem; flex-wrap: wrap; }
@@ -486,6 +611,113 @@ for (const t of (await getFinderData()).therapists) {
   .hr-chip.approved { background: #e3f0e5; color: #2f6b3a; }
   .hr-chip.returned { background: #fbeceb; color: #8a1c14; }
   .hr-add { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+  /* ===== My hours (associates) ===== */
+  /* Hero: the path to licensure, straight on the dark header */
+  .hr-hero { color: #fff; margin: .5rem 0 2.2rem; }
+  .hr-hero > .hr-muted, .hr-hero-loading { color: #dfe5df; }
+  .hr-hero-top { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem 2rem; flex-wrap: wrap; }
+  .hr-hero-big { margin: 0; display: flex; align-items: baseline; gap: .2rem .8rem; flex-wrap: wrap; }
+  .hr-hero-big strong { font-size: clamp(3.2rem, 8vw, 5.5rem); font-weight: 600; line-height: .95; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+  .hr-hero-big span { font-size: clamp(1rem, 1.6vw, 1.2rem); color: #dfe5df; max-width: 18ch; line-height: 1.35; }
+  .hr-hero-meta { display: flex; gap: .5rem; flex-wrap: wrap; }
+  .hr-pill { font-size: .85rem; border-radius: 300px; padding: .35rem .85rem; background: rgba(255,255,255,.12); color: #fff; white-space: nowrap; }
+  .hr-pill.wait { background: #f6e7bd; color: #5b4300; }
+  .hr-trail { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 1rem; margin-top: 1.8rem; }
+  .hr-trail-from, .hr-trail-to { font-size: .85rem; font-weight: 500; letter-spacing: .02em; }
+  .hr-trail-from { color: #c7d2c8; }
+  .hr-trail-to { background: #fff; color: var(--charcoal); border-radius: 300px; padding: .3rem .8rem; }
+  .hr-trail-track { position: relative; height: 14px; border-radius: 300px; background: rgba(255,255,255,.14); }
+  .hr-trail-fill { position: absolute; inset: 0 auto 0 0; border-radius: 300px; background: linear-gradient(90deg, #a9c9ad, #e3f1e4); box-shadow: 0 0 18px rgba(201,232,204,.45); transform-origin: left; }
+  .hr-trail-wait { position: absolute; top: 0; bottom: 0; border-radius: 0 300px 300px 0; background: repeating-linear-gradient(45deg, rgba(246,231,189,.75) 0 5px, rgba(246,231,189,.3) 5px 10px); }
+  .hr-trail-tick { position: absolute; top: 50%; width: 4px; height: 4px; margin: -2px 0 0 -2px; border-radius: 50%; background: rgba(255,255,255,.45); }
+  .hr-trail-you { position: absolute; top: 50%; width: 24px; height: 24px; margin: -12px 0 0 -12px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 6px rgba(255,255,255,.18); }
+  .hr-hero-sup { margin: 1rem 0 0; color: #c7d2c8; font-size: .9rem; }
+  @media (prefers-reduced-motion: no-preference) {
+    .hr-trail-fill { animation: hr-grow 1.2s cubic-bezier(.2,.7,.2,1) both; }
+    .hr-trail-you { animation: hr-arrive 1.2s cubic-bezier(.2,.7,.2,1) both; }
+    @keyframes hr-grow { from { transform: scaleX(0); } }
+    @keyframes hr-arrive { from { left: 0; } }
+  }
+  /* One white sheet: requirements left, your hours right */
+  .hr-sheet { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); background: #fff; color: var(--charcoal); border-radius: 28px; overflow: hidden; }
+  .hr-sheet-main { padding: 1.8rem 2rem 1.6rem; }
+  .hr-sheet-side { padding: 1.8rem 1.8rem 1.6rem; background: #f6f8f6; }
+  .hr-sheet h2 { font-size: 1.2rem; margin: 0; color: var(--charcoal); }
+  .hr-sheet h3 { color: var(--charcoal); }
+  .hr-sheet p, .hr-sheet li { line-height: 1.4; }
+  .hr-side-head { display: flex; justify-content: space-between; align-items: baseline; gap: .5rem 1rem; flex-wrap: wrap; margin-bottom: 1.1rem; }
+  .hr-count { font-weight: 400; color: #8a8f8b; font-size: .95rem; }
+  .hr-link { font: inherit; font-size: .85rem; background: none; border: 0; padding: 0; color: var(--charcoal); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+  .hr-tiles { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: .7rem; }
+  .hr-tile { position: relative; background: #f4f6f4; border-radius: 20px; padding: 1rem 1.1rem 1.05rem; display: flex; flex-direction: column; }
+  .hr-tile .hr-ring { position: absolute; top: 1rem; right: 1rem; }
+  .hr-tile-num { margin: 0 0 .35rem; font-variant-numeric: tabular-nums; padding-right: 2.6rem; line-height: 1.15; }
+  .hr-tile-num strong { font-size: 1.75rem; font-weight: 600; letter-spacing: -.02em; }
+  .hr-tile-num span { color: #7a807b; font-size: .9rem; }
+  .hr-tile-label { margin: 0; font-weight: 500; font-size: .92rem; line-height: 1.3; }
+  .hr-tile-note { margin: .2rem 0 0; font-size: .78rem; color: #6b716c; line-height: 1.4; }
+  .hr-tile-flag { margin: .6rem 0 0; align-self: flex-start; font-size: .75rem; font-weight: 500; border-radius: 300px; padding: .15rem .6rem; background: #fdf0cf; color: #6b4e00; }
+  .hr-tile-flag.done { background: #dcebde; color: #2f6b3a; }
+  .hr-tile.met { background: #e7f1e8; }
+  .hr-ring { width: 32px; height: 32px; border-radius: 50%; background: conic-gradient(#4f7a58 var(--p), #dfe5df 0); }
+  .hr-ring::after { content: ''; position: absolute; inset: 5px; border-radius: 50%; background: #f4f6f4; }
+  .hr-tile .hr-ring { isolation: isolate; }
+  .hr-tile.met .hr-ring { background: #4f7a58; }
+  .hr-tile.met .hr-ring::after { inset: 0; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 12.5l4 4 8-9' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/17px no-repeat; }
+  .hr-tile.limit .hr-ring { background: conic-gradient(#a7b8aa var(--p), #e3e8e3 0); }
+  .hr-todo { margin-top: 1.4rem; }
+  .hr-todo h3 { font-size: .95rem; margin: 0 0 .5rem; }
+  .hr-todo ul { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+  .hr-todo li { display: grid; grid-template-columns: 18px minmax(0, 1fr); column-gap: .7rem; font-size: .9rem; line-height: 1.45; }
+  .hr-todo li::before { content: ''; width: 14px; height: 14px; margin-top: .2rem; border-radius: 4px; border: 1.5px solid #9aa39c; grid-row: span 2; }
+  .hr-todo li strong { font-weight: 500; }
+  .hr-todo li span { color: #6b716c; font-size: .82rem; }
+  .hr-reqs-src { margin: 1.2rem 0 0; }
+  /* Your hours column */
+  .hr-adder { background: #fff; border-radius: 18px; margin-bottom: 1rem; box-shadow: 0 1px 0 rgba(59,63,60,.06); }
+  .hr-adder-btn { width: 100%; display: flex; align-items: center; gap: .85rem; font: inherit; text-align: left; background: none; border: 0; padding: .9rem 1rem; border-radius: 18px; cursor: pointer; color: var(--charcoal); }
+  .hr-adder-btn:hover { background: #fbfcfb; }
+  .hr-adder-btn:focus-visible { outline: 2px solid var(--charcoal); outline-offset: 2px; }
+  .hr-adder-btn strong { display: block; font-weight: 500; font-size: .95rem; }
+  .hr-adder-btn small { display: block; color: #6b716c; font-size: .8rem; line-height: 1.35; margin-top: .1rem; }
+  .hr-plus { flex: none; width: 34px; height: 34px; border-radius: 50%; background: var(--charcoal); color: #fff; display: grid; place-items: center; font-size: 1.2rem; line-height: 1; }
+  .hr-adder form { padding: 1.1rem 1.1rem 1.2rem; }
+  .hr-form-head { margin: 0 0 1rem; line-height: 1.5; }
+  .hr-form-head strong { display: block; font-weight: 500; }
+  .hr-adder .hr-nums { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: end; }
+  #hr-entries .hr-list { gap: 0; }
+  .hr-row { border-top: 1px solid #e4e8e4; }
+  .hr-row:first-child { border-top: 0; }
+  .hr-row summary { display: flex; flex-wrap: wrap; align-items: center; gap: .25rem .6rem; padding: .65rem .2rem; cursor: pointer; list-style: none; font-size: .9rem; border-radius: 10px; }
+  .hr-row summary::-webkit-details-marker { display: none; }
+  .hr-row summary::before { content: ''; width: 6px; height: 6px; border-right: 1.5px solid #8a8f8b; border-bottom: 1.5px solid #8a8f8b; transform: rotate(-45deg); transition: transform .15s; flex: none; }
+  .hr-row[open] summary::before { transform: rotate(45deg); }
+  .hr-row summary:hover { background: #eef1ee; }
+  .hr-row-title { flex: 1 1 calc(100% - 1.5rem); min-width: 0; }
+  .hr-row-total { color: #5d635e; font-size: .82rem; white-space: nowrap; margin-left: 1.1rem; }
+  .hr-row-body { padding: 0 .2rem .8rem 1.3rem; font-size: .88rem; }
+  .hr-row-body .hr-entry-hours { margin: 0; }
+  .hr-row-body .hr-actions { margin-top: .6rem; }
+  .hr-row.returned summary .hr-row-title { color: #8a1c14; font-weight: 500; }
+  .hr-more { margin-top: .7rem; }
+  @media (max-width: 960px) {
+    .hr-sheet { grid-template-columns: minmax(0, 1fr); }
+    .hr-sheet-main, .hr-sheet-side { padding: 1.4rem 1.25rem; }
+    .hr-trail { grid-template-columns: minmax(0, 1fr); gap: .5rem; }
+    .hr-trail-from { display: none; }
+    .hr-trail-to { justify-self: end; order: 3; }
+  }
+  @media (max-width: 480px) {
+    .hr-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
+    .hr-tile { padding: .85rem .85rem .9rem; border-radius: 16px; }
+    .hr-tile .hr-ring { width: 24px; height: 24px; top: .8rem; right: .8rem; }
+    .hr-tile .hr-ring::after { inset: 4px; }
+    .hr-tile-num { padding-right: 1.8rem; }
+    .hr-tile-num strong { font-size: 1.35rem; }
+    .hr-tile-num span { display: block; font-size: .78rem; margin-top: .15rem; }
+    .hr-sheet-main .hr-side-head { flex-direction: column; align-items: flex-start; gap: .3rem; }
+  }
+
   .hr-approve-all { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .6rem 1rem; background: #fff7e8; border: 1px solid #f0dcb4; border-radius: 14px; padding: .75rem 1rem; margin-bottom: 1rem; font-weight: 500; }
   .hr-team { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: .75rem; }
   .hr-person { text-align: left; font: inherit; color: var(--charcoal); background: #f6f7f6; border: 1px solid transparent; border-radius: 18px; padding: 1rem 1.1rem; cursor: pointer; display: flex; flex-direction: column; gap: .15rem; }

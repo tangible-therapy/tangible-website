@@ -5,10 +5,12 @@
 // Requirements differ by license and by when the associate license was issued, so supervisors can change
 // each supervisee's targets. Confirm current numbers with Utah DOPL before relying on them.
 export type LicenseId = 'acmhc' | 'csw' | 'amft';
-export const LICENSES: { id: LicenseId; label: string; goal: string; targets: { total: number; direct: number; supervision: number; observation: number; groupMax: number } }[] = [
-  { id: 'acmhc', label: 'ACMHC', goal: 'CMHC', targets: { total: 3000, direct: 1200, supervision: 100, observation: 25, groupMax: 25 } },
-  { id: 'csw', label: 'CSW', goal: 'LCSW', targets: { total: 3000, direct: 1200, supervision: 100, observation: 25, groupMax: 25 } },
-  { id: 'amft', label: 'AMFT', goal: 'LMFT', targets: { total: 3000, direct: 1200, supervision: 100, observation: 25, groupMax: 25 } },
+// relational = of the direct client care, hours with two or more clients participating (couples/families). Only MFT
+// requires it: Utah Admin. Code R156-60b-302b, at least 500 hours. 0 = not tracked for that license.
+export const LICENSES: { id: LicenseId; label: string; goal: string; targets: { total: number; direct: number; supervision: number; observation: number; groupMax: number; relational: number } }[] = [
+  { id: 'acmhc', label: 'ACMHC', goal: 'CMHC', targets: { total: 3000, direct: 1200, supervision: 100, observation: 25, groupMax: 25, relational: 0 } },
+  { id: 'csw', label: 'CSW', goal: 'LCSW', targets: { total: 3000, direct: 1200, supervision: 100, observation: 25, groupMax: 25, relational: 0 } },
+  { id: 'amft', label: 'AMFT', goal: 'LMFT', targets: { total: 3000, direct: 1200, supervision: 100, observation: 25, groupMax: 25, relational: 500 } },
 ];
 
 // The associate license a website-profile credential points to (credential = the Credential column of the
@@ -24,3 +26,19 @@ export function licenseFromCredential(credential: string): LicenseId | 'licensed
   if (/MFT/.test(c)) return 'amft'; // AMFT, LAMFT, MFT-I
   return null;
 }
+
+// Utah DOPL licensure requirements shown on "My hours" (/hours) as one checklist with the associate's progress.
+// Post-May-2024 rules only (SB 26, 2024): every Tangible associate was licensed after that change. The hour items
+// use each supervisee's targets (defaults above match DOPL). Checked against DOPL's application and exam pages
+// and Utah Code 58-60 on 30 Oct 2026. When DOPL changes them, update this and the default targets together.
+export const DOPL_NOTES = {
+  supervision: 'In real time with your clinical supervisor',
+  observation: 'Your supervisor watches a live or recorded session, then you talk it through',
+  group: 'Group means 3 or more supervisees',
+  relational: 'Sessions with two or more clients, such as couples or families',
+};
+export const DOPL_BY_LICENSE: Record<LicenseId, { exam: string; examNote: string; associateNote?: string; extra?: string; url: string }> = {
+  acmhc: { exam: 'Pass the NCMHCE', examNote: 'National Clinical Mental Health Counseling Exam, through NBCC. It\u2019s the only exam for CMHC.', associateNote: 'No exam for the ACMHC license itself. If your degree program wasn\u2019t CACREP-accredited, DOPL may ask for a passing NCE score when you apply.', extra: '2 hours of suicide prevention continuing education', url: 'https://commerce.utah.gov/dopl/clinical-mental-health-counseling/exam-information/' },
+  csw: { exam: 'Pass the ASWB Clinical exam', examNote: 'Association of Social Work Boards, Clinical level.', extra: '2 hours of suicide prevention continuing education', url: 'https://commerce.utah.gov/dopl/social-work/apply-for-a-license/licensed-clinical-social-worker/utah-applicants/' },
+  amft: { exam: 'Pass the National MFT Exam', examNote: 'Given by AMFTRB.', url: 'https://commerce.utah.gov/dopl/marriage-and-family-therapy/exam-information/' },
+};

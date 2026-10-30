@@ -60,6 +60,11 @@ import { SUBMIT_HOURS_FORM } from '../../data/staff';
             <span>Direct client care</span>
             <input inputmode="decimal" autocomplete="off" data-num="dec" type="text" name="direct" placeholder="0" />
           </label>
+          <label class="sh-field" id="sh-relational" hidden>
+            <span>…of which relational</span>
+            <small>Two or more clients in the session, such as couples or families</small>
+            <input inputmode="decimal" autocomplete="off" data-num="dec" type="text" name="relational" placeholder="0" />
+          </label>
           <label class="sh-field">
             <span>Individual supervision</span>
             <input inputmode="decimal" autocomplete="off" data-num="dec" type="text" name="individual" placeholder="0" />
@@ -141,8 +146,9 @@ import { SUBMIT_HOURS_FORM } from '../../data/staff';
         $('sh-intro').textContent = intro;
         if (s.previous) ['hours', 'pto', 'meetings', 'noShows'].forEach(function (k) { var v = s.previous[k]; f.elements[k].value = v === '' || v == null ? '' : v; });
         $('sh-sup').hidden = !s.associate;
+        $('sh-relational').hidden = s.license !== 'amft'; // MFTs track relational hours (R156-60b-302b)
         if (s.associate && s.supervised) {
-          ['direct', 'individual', 'group', 'observation', 'other'].forEach(function (k) { f.elements[k].value = s.supervised[k] || ''; });
+          ['direct', 'relational', 'individual', 'group', 'observation', 'other'].forEach(function (k) { f.elements[k].value = s.supervised[k] || ''; });
           $('sh-sup-status').textContent = s.supervised.status === 'approved' ? 'Your supervisor already approved these. If you change them, they’ll go back for approval.' : s.supervised.status === 'returned' ? 'Your supervisor sent these back. Fix them and submit again.' : 'Sent to your supervisor, waiting for approval.';
         }
         f.hidden = false;
@@ -167,7 +173,7 @@ import { SUBMIT_HOURS_FORM } from '../../data/staff';
         var err = $('sh-err'); err.hidden = true;
         if (f.elements.hours.value === '') { err.textContent = 'Enter the hours you worked.'; err.hidden = false; f.elements.hours.focus(); return; }
         var body = { periodTab: state.period.tab, hours: val('hours'), pto: val('pto'), meetings: val('meetings'), noShows: val('noShows') };
-        if (state.associate) { body.supervised = {}; ['direct', 'individual', 'group', 'observation', 'other'].forEach(function (k) { body.supervised[k] = val(k) || 0; }); }
+        if (state.associate) { body.supervised = {}; ['direct', 'relational', 'individual', 'group', 'observation', 'other'].forEach(function (k) { body.supervised[k] = val(k) || 0; }); }
         $('sh-go').disabled = true; $('sh-go').textContent = 'Submitting…';
         fetch('/api/submit-hours', { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
           .then(function (r) { return r.json().then(function (b) { if (!r.ok) throw new Error(b.error || 'Something went wrong.'); return b; }); })

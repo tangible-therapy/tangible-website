@@ -16,6 +16,7 @@ export type Entry = {
   end?: string;              // bulk/period: last day (YYYY-MM-DD)
   period?: string;           // period: the payroll sheet's tab name, e.g. "10.24.26 to 11.6.26"
   direct: number;            // direct client care hours
+  relational?: number;       // of the direct client care, hours with two or more clients (MFT requirement)
   individual: number;        // individual supervision hours
   group: number;             // group supervision hours
   observation: number;       // of the supervision above, direct observation hours
@@ -28,7 +29,7 @@ export type Entry = {
   reviewedAt?: string;
   reviewedBy?: string;
 };
-export type Targets = { total: number; direct: number; supervision: number; observation: number; groupMax: number };
+export type Targets = { total: number; direct: number; supervision: number; observation: number; groupMax: number; relational?: number };
 export type Link = { supervisor: string; license: LicenseId; targets: Targets; startDate?: string; linkedAt: string; linkedBy: string };
 export type Log = { supervisee: string; link: Link | null; entries: Entry[] };
 
@@ -69,7 +70,7 @@ const num = (v: unknown, max = 168) => {
 
 /** Validates hours fields from the browser. Returns the clean fields or an error message.
  *  New entries from /hours are "bulk" (a date range); week/session only appear when editing older entries. */
-export function cleanEntry(raw: any): { value?: Pick<Entry, 'kind' | 'date' | 'end' | 'direct' | 'individual' | 'group' | 'observation' | 'other'>; error?: string } {
+export function cleanEntry(raw: any): { value?: Pick<Entry, 'kind' | 'date' | 'end' | 'direct' | 'individual' | 'group' | 'observation' | 'other' | 'relational'>; error?: string } {
   const kind: Kind = raw?.kind === 'session' ? 'session' : raw?.kind === 'week' ? 'week' : 'bulk';
   const okDate = (d: string) => /^\d{4}-\d{2}-\d{2}$/.test(d) && !isNaN(Date.parse(d + 'T12:00:00Z'));
   const date = String(raw?.date || '');
@@ -85,22 +86,24 @@ export function cleanEntry(raw: any): { value?: Pick<Entry, 'kind' | 'date' | 'e
     days = Math.round((Date.parse(end) - Date.parse(date)) / 864e5) + 1;
   }
   const max = 24 * days, n = (v: unknown) => num(v, Math.max(168, max));
-  const v = { kind, date: kind === 'week' ? mondayOf(date) : date, ...(end ? { end } : {}), direct: n(raw.direct ?? 0), individual: n(raw.individual ?? 0), group: n(raw.group ?? 0), observation: n(raw.observation ?? 0), other: n(raw.other ?? 0) };
-  if ([v.direct, v.individual, v.group, v.observation, v.other].some(Number.isNaN)) return { error: 'Hours must be numbers of 0 or more (quarter hours are fine).' };
+  const v = { kind, date: kind === 'week' ? mondayOf(date) : date, ...(end ? { end } : {}), direct: n(raw.direct ?? 0), individual: n(raw.individual ?? 0), group: n(raw.group ?? 0), observation: n(raw.observation ?? 0), other: n(raw.other ?? 0), relational: n(raw.relational ?? 0) };
+  if ([v.direct, v.individual, v.group, v.observation, v.other, v.relational].some(Number.isNaN)) return { error: 'Hours must be numbers of 0 or more (quarter hours are fine).' };
   if (v.direct + v.individual + v.group + v.other === 0) return { error: 'Please enter some hours.' };
   if (v.direct + v.individual + v.group + v.other > max) return { error: `That adds up to more than ${max.toLocaleString('en-US')} hours (24 hours a day for those dates).` };
   if (v.observation > v.individual + v.group) return { error: "Direct observation hours are part of supervision, so they can't be more than the supervision hours." };
+  if (v.relational > v.direct) return { error: "Relational hours are part of direct client care, so they can't be more than the direct client care hours." };
   return { value: v };
 }
 
 /** Supervised hours for one pay period, from Submit Hours. Same rules as above, at most 24 h × days. */
-export function cleanPeriodHours(raw: any, start: string, end: string): { value?: Pick<Entry, 'direct' | 'individual' | 'group' | 'observation' | 'other'>; error?: string } {
+export function cleanPeriodHours(raw: any, start: string, end: string): { value?: Pick<Entry, 'direct' | 'individual' | 'group' | 'observation' | 'other' | 'relational'>; error?: string } {
   const days = Math.max(1, Math.round((Date.parse(end) - Date.parse(start)) / 864e5) + 1), max = 24 * days;
   const n = (v: unknown) => num(v, max);
-  const v = { direct: n(raw?.direct ?? 0), individual: n(raw?.individual ?? 0), group: n(raw?.group ?? 0), observation: n(raw?.observation ?? 0), other: n(raw?.other ?? 0) };
-  if ([v.direct, v.individual, v.group, v.observation, v.other].some(Number.isNaN)) return { error: 'Supervised hours must be numbers of 0 or more (quarter hours are fine).' };
+  const v = { direct: n(raw?.direct ?? 0), individual: n(raw?.individual ?? 0), group: n(raw?.group ?? 0), observation: n(raw?.observation ?? 0), other: n(raw?.other ?? 0), relational: n(raw?.relational ?? 0) };
+  if ([v.direct, v.individual, v.group, v.observation, v.other, v.relational].some(Number.isNaN)) return { error: 'Supervised hours must be numbers of 0 or more (quarter hours are fine).' };
   if (v.direct + v.individual + v.group + v.other > max) return { error: 'Your supervised hours add up to more than the pay period allows.' };
   if (v.observation > v.individual + v.group) return { error: "Direct observation hours are part of supervision, so they can't be more than the supervision hours." };
+  if (v.relational > v.direct) return { error: "Relational hours are part of direct client care, so they can't be more than the direct client care hours." };
   return { value: v };
 }
 
@@ -112,10 +115,10 @@ export function mondayOf(iso: string) {
 }
 
 export function totals(entries: Entry[], status: Status | 'all' = 'approved') {
-  const t = { direct: 0, individual: 0, group: 0, observation: 0, other: 0, supervision: 0, total: 0 };
+  const t = { direct: 0, relational: 0, individual: 0, group: 0, observation: 0, other: 0, supervision: 0, total: 0 };
   for (const e of entries) {
     if (status !== 'all' && e.status !== status) continue;
-    t.direct += e.direct; t.individual += e.individual; t.group += e.group; t.observation += e.observation; t.other += e.other || 0;
+    t.direct += e.direct; t.individual += e.individual; t.group += e.group; t.observation += e.observation; t.other += e.other || 0; t.relational += e.relational || 0;
   }
   t.supervision = t.individual + t.group;
   t.total = t.direct + t.supervision + t.other; // observation is part of supervision, so not added again
@@ -129,5 +132,5 @@ export function defaultTargets(license: LicenseId): Targets {
 export function cleanTargets(raw: any, license: LicenseId): Targets {
   const d = defaultTargets(license);
   const n = (v: unknown, fb: number) => { const x = Math.round(Number(v)); return Number.isFinite(x) && x >= 0 && x <= 20000 ? x : fb; };
-  return { total: n(raw?.total, d.total), direct: n(raw?.direct, d.direct), supervision: n(raw?.supervision, d.supervision), observation: n(raw?.observation, d.observation), groupMax: n(raw?.groupMax, d.groupMax) };
+  return { total: n(raw?.total, d.total), direct: n(raw?.direct, d.direct), supervision: n(raw?.supervision, d.supervision), observation: n(raw?.observation, d.observation), groupMax: n(raw?.groupMax, d.groupMax), relational: n(raw?.relational, d.relational) };
 }
