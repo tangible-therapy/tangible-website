@@ -3,6 +3,7 @@
 // Redesigned Oct 2026: plain HTML in the Employee Portal style (.pt-*), grouped into 4 stages with a
 // "new hire" panel that fills the email templates, a per-browser checklist (localStorage tt.onboard.v1)
 // and role-aware steps (clinician-only / associate-only). Old #anchors are kept as step ids.
+// Step 3 "Create their email" → /api/new-hire-email (docs/new-hire-email/).
 // No logins or passwords on this page — point to the team password manager.
 import Base from '../layouts/Base.astro';
 import { OFFICES } from '../data/staff-access';
@@ -47,7 +48,12 @@ const stages: Stage[] = [
     title: 'Set up their accounts',
     when: 'After the contract is signed',
     steps: [
-      { id: 'gmailsetup', title: 'Create their Tangible email and add to groups', body: `<ol>
+      { id: 'gmailsetup', title: 'Create their Tangible email and add to groups', body: `
+        <p>Fill in their name, personal email, office and role in the New hire box, then click the button. It creates <span class="ob-chip" data-fill="email">first@tangiblementalhealth.com</span> (or first name + last initial if that’s taken), adds them to their Google Groups (therapists + their office group, or reception), and Google emails their personal address a temporary password they change the first time they sign in.</p>
+        <div class="ob-actions"><button type="button" class="pt-btn" id="ob-account">Create their email</button></div>
+        <p class="ob-status" id="ob-account-status" role="status" aria-live="polite"></p>
+        <p class="ob-folder" data-account hidden></p>
+        <p class="pt-muted">If the button isn’t working, do it by hand in the Google Admin console:</p><ol>
         <li>Open the ${a('https://admin.google.com/ac/users', 'Google Admin console')} → <b>Users</b> → <b>Add new user</b>.</li>
         <li>Enter their name. Use their first name for the email address: <span class="ob-chip" data-fill="email">first@tangiblementalhealth.com</span>. If it’s taken, use first name + last initial.</li>
         <li>Put their personal email as the secondary email (Google sends their setup link there).</li>
@@ -173,6 +179,7 @@ let num = 0;
         <button type="button" class="pt-btn ob-start" id="ob-start">Start a new hire</button>
         <p class="ob-status" id="ob-status" role="status" aria-live="polite"></p>
         <p class="ob-folder" data-folder hidden></p>
+        <p class="ob-folder" data-account hidden></p>
         <button type="button" class="ob-reset" id="ob-reset" hidden>Clear for the next hire</button>
       </section>
       <nav class="pt-card ob-nav" aria-label="Onboarding steps">
@@ -223,14 +230,14 @@ let num = 0;
   .ob .ob-wide { grid-column: 1 / -1; }
   .ob .ob-fields input, .ob .ob-fields select { font: inherit; font-size: .9rem; color: var(--charcoal); border: 1px solid #c9cfca; border-radius: 10px; padding: .45rem .6rem; background: #fff; min-width: 0; width: 100%; box-sizing: border-box; min-height: 38px; }
   .ob .ob-start { width: 100%; }
-  .ob .ob-start[aria-busy=true] { opacity: .6; cursor: progress; }
+  .ob .pt-btn[aria-busy=true], .ob .ob-start[aria-busy=true] { opacity: .6; cursor: progress; }
   .ob .ob-status { font-size: .85rem; margin: .6rem 0 0; }
   .ob .ob-status:empty { display: none; }
   .ob .ob-status.err { color: #8a2f1c; }
   .ob .ob-folder { font-size: .88rem; background: #e8f1ea; color: #23432c; border-radius: 10px; padding: .55rem .75rem; margin: .6rem 0 0; }
   .ob .ob-folder a { color: inherit; font-weight: 600; }
   .ob .ob-reset { display: block; margin: .7rem auto 0; font: inherit; font-size: .82rem; color: #5d635e; background: none; border: 0; text-decoration: underline; cursor: pointer; padding: .3rem; }
-  .ob .ob-reset[hidden] { display: none; }
+  .ob .ob-reset[hidden], .ob #ob-account[hidden] { display: none; }
   .ob .ob-step.done .ob-folder { display: none; }
   .ob .ob-bar { height: 6px; border-radius: 6px; background: #e6e9e6; overflow: hidden; margin-bottom: .9rem; }
   .ob .ob-bar i { display: block; height: 100%; width: 0; background: var(--slate); transition: width .3s; }
@@ -379,6 +386,16 @@ let num = 0;
           l.textContent = state.folder.name; n.append(l);
         }
       });
+      var acct = state.account;
+      document.querySelectorAll('[data-account]').forEach(function (n) {
+        n.hidden = !acct;
+        if (acct) n.textContent = (acct.created ? 'Email created: ' : 'Email already set up: ') + acct.email +
+          (acct.emailedTo ? '. Sign-in details sent to ' + acct.emailedTo + '.' : '.') +
+          (acct.groups && acct.groups.length ? ' Groups: ' + acct.groups.join(', ') + '.' : '') +
+          (acct.groupsFailed && acct.groupsFailed.length ? ' Couldn’t add to: ' + acct.groupsFailed.join(', ') + ' (add these by hand).' : '') +
+          (!acct.groupsSetUp ? ' No groups are set up in the Google script yet, so add their groups by hand.' : '');
+      });
+      var acctBtn = $('ob-account'); if (acctBtn) acctBtn.hidden = !!acct;
       $('ob-start').hidden = !!started;
       $('ob-reset').hidden = !started && !Object.keys(state.done).length && !F.some(function (k) { return state.f[k]; });
     }
@@ -400,6 +417,29 @@ let num = 0;
         })
         .catch(function (e) { say('Couldn’t create the folder automatically: ' + e.message + ' You can make it by hand (step 1), or try again.', true); })
         .then(function () { startBtn.removeAttribute('aria-busy'); startBtn.disabled = false; });
+    });
+
+    // "Create their email" (step 3): creates their Google Workspace account and adds them to their groups
+    // through /api/new-hire-email. The temporary password goes from Google to their personal email only.
+    var acctBtn = $('ob-account'), acctStatus = $('ob-account-status');
+    function sayA(msg, err) { acctStatus.textContent = msg; acctStatus.classList.toggle('err', !!err); }
+    if (acctBtn) acctBtn.addEventListener('click', function () {
+      var first = val('first'), last = val('last'), personal = val('personal');
+      if (!first || !last || !personal) { sayA('Fill in their first name, last name and personal email in the New hire box first.', true); (!first ? $('f-first') : !last ? $('f-last') : $('f-personal')).focus(); return; }
+      if (!state.done['employment-contract']) { sayA('Tick “Send the employment contract” first. Accounts are only made once the contract is signed.', true); return; }
+      acctBtn.setAttribute('aria-busy', 'true'); acctBtn.disabled = true; sayA('Creating their Google account…');
+      fetch('/api/new-hire-email', { method: 'POST', headers: { 'content-type': 'application/json' }, credentials: 'same-origin',
+        body: JSON.stringify({ first: first, last: last, personal: personal, office: $('f-office').value, role: $('f-role').value, email: val('email') }) })
+        .then(function (r) { return r.json().catch(function () { return { error: 'The account service didn’t answer (status ' + r.status + ').' }; }); })
+        .then(function (res) {
+          if (!res || res.error || !res.email) throw new Error((res && res.error) || 'Something went wrong.');
+          state.account = { email: res.email, created: !!res.created, emailedTo: res.emailedTo || '', groups: res.groups || [], groupsFailed: res.groupsFailed || [], groupsSetUp: !!res.groupsSetUp };
+          state.f.email = res.email; $('f-email').value = res.email;
+          if (!(res.groupsFailed || []).length && res.groupsSetUp) state.done.gmailsetup = 1;
+          save(); sayA(''); render();
+        })
+        .catch(function (e) { sayA('Couldn’t create the account automatically: ' + e.message, true); })
+        .then(function () { acctBtn.removeAttribute('aria-busy'); acctBtn.disabled = false; });
     });
 
     F.forEach(function (k) { if (state.f[k] != null) $('f-' + k).value = state.f[k]; });
