@@ -7,7 +7,7 @@ On /reception-onboarding, front desk fills in the New hire box and clicks **Star
 2. if a contract type is chosen (Full time / Part time / Part-time evenings): fills in that contract and sends
    it through **SignWell** in this order: the **location director** for their office (Orem: Skyler Anderson,
    Sandy: Arianne Buck), then **Hannah Brown (COO)**, then the new hire at their personal email. Provo's
-   director is Hannah, so Provo contracts go Hannah → new hire. Front desk (frontdesk@) is emailed the signed copy. The page shows who still needs to sign ("Check again"), and
+   director is Hannah, so Provo contracts go Hannah → new hire. Front desk (frontdesk@) is copied on the signed version only when SignWell's plan allows (the trial/free plan allows 3 people per document including copies, so only Provo contracts; set Netlify env SIGNWELL_MAX_RECIPIENTS=4 after upgrading). The signed PDF is always saved to their folder. The page shows who still needs to sign ("Check again"), and
    once everyone has signed it saves "Employment Contract - First Last (signed).pdf" into their folder, ticks
    step 2 and turns the Stop banner into Go.
 

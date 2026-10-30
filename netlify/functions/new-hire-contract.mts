@@ -89,8 +89,11 @@ export default async (req: Request, context: any) => {
         return json({ error: `The new hire's personal email is the same as ${signers.find((x) => x.email.toLowerCase() === personal.toLowerCase()).name}'s. Each signer needs a different email.` }, 400);
       }
       signers.push({ name, email: personal });
-      // SignWell rejects a copied contact who is also a signer (e.g. testing with the front desk email).
-      const copyTo = signers.some((x) => x.email.toLowerCase() === CONTRACT_COPY_TO.email.toLowerCase()) ? [] : [CONTRACT_COPY_TO];
+      // Front desk copy: only when it fits. SignWell's trial/free plan allows 3 people per document including
+      // copied contacts (director + COO + new hire = 3), and it rejects a copied contact who is also a signer.
+      // The signed PDF is saved into their Drive folder either way, and SignWell emails the account owner.
+      const maxPeople = Number(Netlify.env.get('SIGNWELL_MAX_RECIPIENTS') || 3);
+      const copyTo = signers.length < maxPeople && !signers.some((x) => x.email.toLowerCase() === CONTRACT_COPY_TO.email.toLowerCase()) ? [CONTRACT_COPY_TO] : [];
       // Text tags in the PDF refer to signers by their position in this list (1, 2, 3).
       const recipients = signers.map((s, i) => ({ id: String(i + 1), ...s }));
       const test = testMode(context);

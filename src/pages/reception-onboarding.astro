@@ -37,7 +37,7 @@ const stages: Stage[] = [
         <li>Name it with their first and last name: <span class="ob-chip" data-fill="full">First Last</span></li></ol>` },
       { id: 'employment-contract', title: 'Send the employment contract', body: `
         <div class="ob-contract" data-contract hidden></div>
-        <p>This happens automatically when you click <b>Start a new hire</b> with a contract chosen: the right contract is filled in with their name, start date and pay, and sent through SignWell for signing in this order: <b>their location director</b> (<span data-fill="directorName">the office director</span>), then <b>${CONTRACT_SIGNER}</b> (COO), then the new hire at their personal email. For Provo, ${CONTRACT_SIGNER} signs once. The signed copy is saved in their folder and emailed to front desk.</p>
+        <p>This happens automatically when you click <b>Start a new hire</b> with a contract chosen: the right contract is filled in with their name, start date and pay, and sent through SignWell for signing in this order: <b>their location director</b> (<span data-fill="directorName">the office director</span>), then <b>${CONTRACT_SIGNER}</b> (COO), then the new hire at their personal email. For Provo, ${CONTRACT_SIGNER} signs once. The signed copy is saved in their folder automatically (and shows here when it’s done).</p>
         <p class="pt-muted">If you need to do it by hand:</p><ol>
         <li>Open the ${a(DRIVE_MANAGEMENT, 'Management folder')}.</li>
         <li>Right-click the right employment contract → <b>Make a copy</b>.</li>
