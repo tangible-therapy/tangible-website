@@ -2,7 +2,8 @@
 // member signed in with Google.
 //   GET  → { setup, name, associate, period, previous, supervised, waiting }  (the pay period comes from the newest
 //          tab on the payroll company's sheet; previous = what they already sent for it, to pre-fill the form)
-//   POST { hours, pto, meetings, noShows, periodTab, supervised?: { direct, individual, group, observation, other } }
+//   POST { hours, pto, meetings, noShows, periodTab, supervised?: { direct, relational, individual, group, observation, other } }
+//   (relational = of the direct client care, hours with two or more clients; asked of AMFTs only — license in GET)
 // Saving goes through the "Payroll hours" Apps Script (netlify/lib/payroll-hours.ts, docs/payroll-hours/):
 // every answer → Tangible Data "Payroll Form" (+ the "Payroll" roster); Hours + PTO only → the payroll company's
 // sheet. Submitting again in the same pay period replaces the earlier answers everywhere.
@@ -14,7 +15,7 @@ import { callPayroll, payrollConfigured, parsePeriodTab, recentHire, queue, queu
 
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', 'cache-control': 'private, no-store' } });
 const entryId = (p: Period) => `pp-${p.start}`;
-const supervised = (e?: Entry) => (e ? { direct: e.direct, individual: e.individual, group: e.group, observation: e.observation, other: e.other || 0, status: e.status, updatedAt: e.updatedAt } : null);
+const supervised = (e?: Entry) => (e ? { direct: e.direct, individual: e.individual, group: e.group, observation: e.observation, other: e.other || 0, relational: e.relational || 0, status: e.status, updatedAt: e.updatedAt } : null);
 
 export default async (req: Request) => {
   const me = await currentPerson(req);
@@ -28,8 +29,9 @@ export default async (req: Request) => {
     try {
       const info = await callPayroll({ action: 'period', email: me.email });
       const period = info.period as Period;
-      const sup = associate ? (await readLog(me.email)).log.entries.find((e) => e.id === entryId(period)) : undefined;
-      return json({ setup: true, name: me.name, associate, period, previous: info.previous || null, supervised: supervised(sup), waiting: waiting ? { period: waiting.body.periodTab, savedAt: waiting.savedAt } : null });
+      const log = associate ? (await readLog(me.email)).log : null;
+      const sup = log?.entries.find((e) => e.id === entryId(period));
+      return json({ setup: true, name: me.name, associate, license: log?.link?.license || null, period, previous: info.previous || null, supervised: supervised(sup), waiting: waiting ? { period: waiting.body.periodTab, savedAt: waiting.savedAt } : null });
     } catch (e) {
       return json({ setup: true, name: me.name, associate, period: null, error: (e as Error).message, waiting: waiting ? { period: waiting.body.periodTab, savedAt: waiting.savedAt } : null });
     }
