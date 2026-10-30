@@ -3,7 +3,19 @@
 // Supervisees log weekly totals or single sessions; their supervisor approves them.
 // Supervisors link their own supervisees and see everyone's progress. No client information is stored.
 import Base from '../layouts/Base.astro';
-import { LICENSES } from '../data/hours';
+import { LICENSES, licenseFromCredential } from '../data/hours';
+import { getFinderData } from '../lib/therapist-sheet';
+// Credentials from the therapists' website profiles (public info), keyed by normalized name, so adding a
+// supervisee can fill in their license automatically. Rebuilt whenever the therapist sheet rebuilds the site.
+const normName = (n: string) => n.toLowerCase().normalize('NFD').replace(/[^a-z ]/g, '').replace(/\s+/g, ' ').trim();
+const CREDS: Record<string, { credential: string; license: string | null }> = {};
+for (const t of (await getFinderData()).therapists) {
+  if (!t.credential) continue;
+  const v = { credential: t.credential, license: licenseFromCredential(t.credential) };
+  const n = normName(t.name).split(' ');
+  CREDS[n.join(' ')] = v;
+  if (n.length > 2) CREDS[n[0] + ' ' + n[n.length - 1]] ??= v; // "Mary Ann Smith" → also "mary smith"
+}
 ---
 <Base title="Supervision Hours | Tangible Therapy" description="Log and approve supervised hours toward licensure." noindex>
   <section class="sec t-light hr">
@@ -64,6 +76,7 @@ import { LICENSES } from '../data/hours';
               <select name="email" aria-label="Choose a supervisee" required><option value="">Add an associate…</option></select>
               <select name="license" aria-label="License">{LICENSES.map((l) => <option value={l.id}>{l.label} → {l.goal}</option>)}</select>
               <button class="hr-btn primary small" type="submit">Add</button>
+              <p class="hr-muted small hr-add-hint" id="hr-add-hint" hidden></p>
             </form>
           </div>
           <div id="hr-team"><p class="hr-muted">Loading…</p></div>
@@ -106,7 +119,7 @@ import { LICENSES } from '../data/hours';
     </div></div>
   </section>
 
-  <script is:inline define:vars={{ LICENSES }}>
+  <script is:inline define:vars={{ LICENSES, CREDS }}>
     (function () {
       var API = '/api/hours', $ = function (id) { return document.getElementById(id); };
       var mine = null, team = null, detail = null, editing = null;
@@ -290,13 +303,34 @@ import { LICENSES } from '../data/hours';
         });
         box.appendChild(grid);
       }
+      // Fill in the license from the associate's website profile (Credential in the therapist sheet).
+      function credFor(name) {
+        var n = String(name || '').toLowerCase().normalize('NFD').replace(/[^a-z ]/g, '').replace(/\s+/g, ' ').trim().split(' ');
+        return CREDS[n.join(' ')] || (n.length > 1 ? CREDS[n[0] + ' ' + n[n.length - 1]] : null) || null;
+      }
+      $('hr-add').elements.email.addEventListener('change', function () {
+        var f = $('hr-add'), hint = $('hr-add-hint');
+        var pick = team && team.available.filter(function (p) { return p.email === f.elements.email.value; })[0];
+        if (!pick) { hint.hidden = true; return; }
+        var first = String(pick.name || '').split(' ')[0], c = credFor(pick.name);
+        if (c && LIC[c.license]) {
+          f.elements.license.value = c.license;
+          hint.textContent = 'License filled in from ' + first + '\u2019s website profile (' + c.credential + '). Change it if that\u2019s not right.';
+        } else {
+          f.elements.license.value = LICENSES[0].id; // don't leave the previous person's license selected
+          hint.textContent = c && c.license === 'licensed'
+            ? first + '\u2019s website profile says ' + c.credential + ' (already fully licensed). Choose the license their hours count toward.'
+            : 'No license on ' + first + '\u2019s website profile yet. Please choose it.';
+        }
+        hint.hidden = false;
+      });
       $('hr-add').addEventListener('submit', function (ev) {
         ev.preventDefault();
         var email = this.elements.email.value, license = this.elements.license.value;
         if (!email) return;
         var pick = team.available.filter(function (p) { return p.email === email; })[0];
         if (pick && pick.supervisor && !confirm(pick.name + ' is supervised by ' + pick.supervisorName + '. Move them to you?')) return;
-        call('POST', '', { action: 'link', email: email, license: license }).then(function () { notify('Added ' + (pick ? pick.name : email) + '.'); return loadTeam(); }).catch(function (e) { notify(e.message, true); });
+        call('POST', '', { action: 'link', email: email, license: license }).then(function () { notify('Added ' + (pick ? pick.name : email) + '.'); $('hr-add-hint').hidden = true; return loadTeam(); }).catch(function (e) { notify(e.message, true); });
       });
 
       function openDetail(email) {
@@ -427,6 +461,7 @@ import { LICENSES } from '../data/hours';
   .hr-chip.approved { background: #e3f0e5; color: #2f6b3a; }
   .hr-chip.returned { background: #fbeceb; color: #8a1c14; }
   .hr-add { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+  .hr-add-hint { flex-basis: 100%; margin: 0; }
   .hr-team { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: .75rem; }
   .hr-person { text-align: left; font: inherit; color: var(--charcoal); background: #f6f7f6; border: 1px solid transparent; border-radius: 18px; padding: 1rem 1.1rem; cursor: pointer; display: flex; flex-direction: column; gap: .15rem; }
   .hr-person:hover, .hr-person:focus-visible { border-color: var(--charcoal); background: #fff; }
