@@ -93,9 +93,9 @@ const stages: Stage[] = [
           <pre class="ob-mail-body" data-fill="welcomeBody"></pre>
         </div>
         <div class="ob-actions"><a class="pt-btn" data-mail="welcome" href="#" ${ext}>Open in Gmail</a><button type="button" class="pt-btn ghost" data-copy="welcomeBody">Copy text</button></div>` },
-      { id: 'driveandpayroll', title: 'File their paperwork and add them to payroll', body: `<ol>
+      { id: 'driveandpayroll', title: 'File their paperwork and add them to payroll', tag: 'Automatic', body: `<ol>
         <li>Wait for their answers in the ${a(ONBOARDING_SHEET, 'Onboarding responses')} sheet (you’ll also get an email alert).</li>
-        <li>Download their uploaded files and put them in their ${a(DRIVE_EMPLOYEES, 'Google Drive folder')}.</li>
+        <li>Their uploaded files are moved into their ${a(DRIVE_EMPLOYEES, 'Google Drive folder')} automatically, named “First Last - W-4” and so on. You’ll get a second email, “Onboarding files filed”, with the folder link. If that email says something couldn’t be filed, move those files by hand.</li>
         <li>Email payroll (nsbcpayroll@gmail.com) with their name, pay rate and start date, and <b>attach the W-4 and direct deposit form</b>.</li></ol>
         <div class="ob-actions"><a class="pt-btn" data-mail="payroll" href="#" ${ext}>Open payroll email in Gmail</a></div>
         <p class="ob-tip">Gmail can’t attach the files for you. Add the W-4 and direct deposit form before sending.</p>` },
