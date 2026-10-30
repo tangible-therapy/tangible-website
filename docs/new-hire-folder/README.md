@@ -6,6 +6,10 @@ then creates a folder named "First Last" inside the shared **Employee** folder o
 the Employee folder's sharing, so everyone who can see that folder can see them. If a folder with the same
 name already exists, the page links to it instead of making a duplicate.
 
+It also saves the **pay rate** and **start date** from the New hire box in the folder's description
+("Payroll info: pay rate <x> | start date <yyyy-mm-dd>"), for the automatic payroll email (docs/payroll-email/).
+Typing them after the folder exists saves them again; blank values never erase saved ones.
+
 How it fits together:
 - Page: src/pages/reception-onboarding.astro (button → POST /api/new-hire-folder with first + last name).
 - Website function: netlify/functions/new-hire-folder.mts. It's behind the staff gate like the reception

@@ -94,22 +94,24 @@ const stages: Stage[] = [
         </div>
         <div class="ob-actions"><a class="pt-btn" data-mail="welcome" href="#" ${ext}>Open in Gmail</a><button type="button" class="pt-btn ghost" data-copy="welcomeBody">Copy text</button></div>` },
       { id: 'driveandpayroll', title: 'File their paperwork and add them to payroll', tag: 'Automatic', body: `<ol>
+        <li>Make sure their <b>pay rate</b> and <b>start date</b> are filled in the New hire box at the top. They’re saved on their Drive folder, and the payroll email needs both.</li>
         <li>Wait for their answers in the ${a(ONBOARDING_SHEET, 'Onboarding responses')} sheet (you’ll also get the usual “New response” email).</li>
-        <li>Their uploaded files are moved into their ${a(DRIVE_EMPLOYEES, 'Google Drive folder')} automatically, named with their <b>legal</b> name, like “Robert Smith - W-4”. Within a few minutes you’ll get a second email, <b>“Onboarding files filed: <i>their name</i>”</b>, with the folder link.</li>
-        <li>Email payroll (nsbcpayroll@gmail.com) with their name, pay rate and start date, and <b>attach the W-4 and direct deposit form</b>.</li></ol>
-        <div class="ob-actions"><a class="pt-btn" data-mail="payroll" href="#" ${ext}>Open payroll email in Gmail</a></div>
-        <p class="ob-tip">Gmail can’t attach the files for you. Add the W-4 and direct deposit form before sending.</p>
+        <li>Their uploaded files are moved into their ${a(DRIVE_EMPLOYEES, 'Google Drive folder')} automatically, named with their <b>legal</b> name, like “Robert Smith - W-4”. Within a few minutes you’ll get an email, <b>“Onboarding files filed: <i>their name</i>”</b>, with the folder link.</li>
+        <li>Within about 10 minutes after that, payroll (nsbcpayroll@gmail.com) is emailed automatically from frontdesk@ with their legal name, pay rate and start date, and the <b>W-4 and direct deposit form attached</b>. The “Onboarding files filed” email gets the Gmail label <b>Payroll sent</b>.</li></ol>
         <h4>Check it worked</h4><ol>
-        <li>Open the folder link in the “Onboarding files filed” email.</li>
-        <li>Make sure all four files are there: <b>W-4</b>, <b>Direct Deposit form</b>, <b>Professional license</b> and <b>Professional photo</b>, each starting with their name.</li>
-        <li>Open the W-4 and direct deposit form once to make sure they’re the right, readable documents.</li></ol>
+        <li>Open the folder link in the “Onboarding files filed” email and make sure all four files are there: <b>W-4</b>, <b>Direct Deposit form</b>, <b>Professional license</b> and <b>Professional photo</b>, each starting with their name.</li>
+        <li>Open the W-4 and direct deposit form once to make sure they’re the right, readable documents.</li>
+        <li>In frontdesk@’s <b>Sent</b> folder, open <b>“New employee: <i>their name</i>”</b> and check the pay rate, start date and the two attachments.</li></ol>
         <h4>If it didn’t work</h4><ul>
-        <li><b>The email says “NOT filed” or “Some onboarding files NOT filed”:</b> it lists the files it couldn’t move, with links. Open each link, download the file, and upload it into their folder by hand.</li>
-        <li><b>No “Onboarding files filed” email after 15 minutes:</b> check your spam folder, then look in the ${a(DRIVE_EMPLOYEES, 'Employee folder')} for their name. If the files aren’t there, open their row in the ${a(ONBOARDING_SHEET, 'Onboarding responses')} sheet, click each file link in the upload columns, download the file and upload it into their folder. Then tell Brady so he can check the automation.</li>
-        <li><b>It made a second folder</b> (the email says “Created a new folder” but you’d already made one, for example under a different spelling): move the files into the right folder and delete the empty extra one.</li>
-        <li><b>The email says some files were “Copied”:</b> nothing to fix. The copies in their folder are the ones to use.</li>
-        <li><b>A file is missing because they didn’t upload it</b> (or uploaded the wrong thing): ask them to email it to you, then save it in their folder.</li></ul>
-        <p class="ob-tip">For Brady: the automation is the “Onboarding file mover” project in his Google Apps Script. Its <b>Executions</b> page shows each run and any error. Setup notes are in the website repo under docs/onboarding-uploads.</p>` },
+        <li><b>You got “Payroll email waiting: <i>their name</i>”:</b> it says what’s missing. If it’s the pay rate or start date, type their name, pay rate and start date in the New hire box and click Start a new hire (it finds their existing folder and saves them). It sends at the next check, within 10 minutes. If a file is missing, see below.</li>
+        <li><b>The filing email says “NOT filed” or “Some onboarding files NOT filed”:</b> it lists the files it couldn’t move, with links. Download each one and upload it into their folder by hand, then send the payroll email by hand (button below). Payroll isn’t emailed automatically in this case.</li>
+        <li><b>No “Onboarding files filed” email after 15 minutes:</b> check your spam folder, then look in the ${a(DRIVE_EMPLOYEES, 'Employee folder')} for their name. If the files aren’t there, open their row in the ${a(ONBOARDING_SHEET, 'Onboarding responses')} sheet, click each file link in the upload columns, download the file and upload it into their folder. Send the payroll email by hand and tell Brady.</li>
+        <li><b>Nothing in Sent 30 minutes after the filing email:</b> send the payroll email by hand (button below) and tell Brady.</li>
+        <li><b>It made a second folder</b> (the email says “Created a new folder” but you’d already made one): move the files into the right folder and delete the empty extra one. Then send payroll by hand, since the new folder has no pay rate.</li>
+        <li><b>A file is missing because they didn’t upload it</b> (or uploaded the wrong thing): ask them to email it to you and save it in their folder named like the others (“<i>Their Name</i> - W-4” or “<i>Their Name</i> - Direct Deposit form”). The payroll email then goes out by itself within 10 minutes.</li></ul>
+        <div class="ob-actions"><a class="pt-btn ghost" data-mail="payroll" href="#" ${ext}>Send payroll email by hand</a></div>
+        <p class="ob-tip">Sending by hand: Gmail can’t attach the files for you. Add the W-4 and direct deposit form before sending. Don’t do this if the automatic email already went out (check Sent first).</p>
+        <p class="ob-tip">For Brady: filing is the “Onboarding file mover” project in brady@’s Google Apps Script; the payroll email is the “Payroll email” project in frontdesk@’s. Each project’s <b>Executions</b> page shows every run and any error. Setup notes: docs/onboarding-uploads and docs/payroll-email in the website repo.</p>` },
       { id: 'malpractice', who: 'clinician', title: 'Add them to malpractice insurance', body: `<ol>
         <li>Open the ${a('https://www.insure-portal.com/User/', 'malpractice insurance portal')} and sign in (the login is in the team password manager).</li>
         <li>Click <b>Make changes to my policy</b> → <b>Add something</b> → <b>Add an employee</b>.</li>
@@ -185,11 +187,12 @@ let num = 0;
             <option value="other">Other</option>
           </select></label>
           <label class="pt-field">Start date<input id="f-start" type="date"></label>
-          <label class="pt-field">Pay rate<input id="f-pay" autocomplete="off" placeholder="Not saved"></label>
+          <label class="pt-field">Pay rate<input id="f-pay" autocomplete="off" placeholder="e.g. $32/hr"></label>
         </div>
         <button type="button" class="pt-btn ob-start" id="ob-start">Start a new hire</button>
         <p class="ob-status" id="ob-status" role="status" aria-live="polite"></p>
         <p class="ob-folder" data-folder hidden></p>
+        <p class="ob-folder ob-payroll" data-payroll hidden></p>
         <p class="ob-folder" data-account hidden></p>
         <button type="button" class="ob-reset" id="ob-reset" hidden>Clear for the next hire</button>
       </section>
@@ -226,7 +229,7 @@ let num = 0;
           {s.gate && <div class="ob-gate" role="note"><strong>Stop</strong><span>{s.gate}</span></div>}
         </section>
       ))}
-      <p class="pt-note">Your ticks and the new hire’s details are saved in this browser only. Pay rate is never saved. Use “Clear for the next hire” to clear everything (it doesn’t delete their Drive folder).</p>
+      <p class="pt-note">Your ticks and the new hire’s details are saved in this browser only. Pay rate isn’t kept in this browser; it’s saved only on their Drive folder for the payroll email. Use “Clear for the next hire” to clear everything (it doesn’t delete their Drive folder).</p>
     </div>
   </div>
 </div>
@@ -247,6 +250,7 @@ let num = 0;
   .ob .ob-status.err { color: #8a2f1c; }
   .ob .ob-folder { font-size: .88rem; background: #e8f1ea; color: #23432c; border-radius: 10px; padding: .55rem .75rem; margin: .6rem 0 0; }
   .ob .ob-folder a { color: inherit; font-weight: 600; }
+  .ob .ob-payroll.warn { background: #fbf1dc; color: #5a4310; }
   .ob .ob-reset { display: block; margin: .7rem auto 0; font: inherit; font-size: .82rem; color: #5d635e; background: none; border: 0; text-decoration: underline; cursor: pointer; padding: .3rem; }
   .ob .ob-reset[hidden], .ob #ob-account[hidden] { display: none; }
   .ob .ob-step.done .ob-folder { display: none; }
@@ -397,6 +401,15 @@ let num = 0;
           l.textContent = state.folder.name; n.append(l);
         }
       });
+      var pr = started && state.folder.payroll;
+      document.querySelectorAll('[data-payroll]').forEach(function (n) {
+        n.hidden = !started;
+        if (!started) return;
+        var ok = pr && pr.payRate && pr.startDate;
+        n.classList.toggle('warn', !ok);
+        n.textContent = ok ? 'Pay rate and start date are saved on their folder. Payroll is emailed automatically once their W-4 and direct deposit form are in.'
+          : 'Add their pay rate and start date above (they save to their folder by themselves). The automatic payroll email waits until both are there.';
+      });
       var acct = state.account;
       document.querySelectorAll('[data-account]').forEach(function (n) {
         n.hidden = !acct;
@@ -419,16 +432,30 @@ let num = 0;
       var first = val('first'), last = val('last');
       if (!first || !last) { say('Type their first and last name first.', true); (first ? $('f-last') : $('f-first')).focus(); return; }
       startBtn.setAttribute('aria-busy', 'true'); startBtn.disabled = true; say('Creating their Drive folder…');
-      fetch('/api/new-hire-folder', { method: 'POST', headers: { 'content-type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ first: first, last: last }) })
+      fetch('/api/new-hire-folder', { method: 'POST', headers: { 'content-type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ first: first, last: last, payRate: val('pay'), startDate: val('start') }) })
         .then(function (r) { return r.json().catch(function () { return { error: 'The folder service didn’t answer (status ' + r.status + ').' }; }); })
         .then(function (res) {
           if (!res || res.error || !res.url) throw new Error((res && res.error) || 'Something went wrong.');
-          state.folder = { url: res.url, name: res.name, created: !!res.created };
+          state.folder = { url: res.url, name: res.name, created: !!res.created, payroll: res.payroll || null };
           state.done.googledrive = 1; save(); say(''); render();
         })
         .catch(function (e) { say('Couldn’t create the folder automatically: ' + e.message + ' You can make it by hand (step 1), or try again.', true); })
         .then(function () { startBtn.removeAttribute('aria-busy'); startBtn.disabled = false; });
     });
+
+    // Pay rate / start date typed (or changed) after the folder exists: save them on the folder too, so the
+    // automatic payroll email (step 8, docs/payroll-email/) has them. Blank values never erase saved ones.
+    function savePayroll() {
+      if (!state.folder || !state.folder.name || (!val('pay') && !val('start'))) return;
+      var parts = state.folder.name.split(' '), last = parts.pop(), first = parts.join(' ');
+      if (!first || !last) return;
+      fetch('/api/new-hire-folder', { method: 'POST', headers: { 'content-type': 'application/json' }, credentials: 'same-origin',
+        body: JSON.stringify({ first: first, last: last, payRate: val('pay'), startDate: val('start') }) })
+        .then(function (r) { return r.json(); })
+        .then(function (res) { if (res && res.payroll) { state.folder.payroll = res.payroll; save(); render(); } else if (res && res.error) say('Couldn’t save pay rate / start date to their folder: ' + res.error, true); })
+        .catch(function () { say('Couldn’t save pay rate / start date to their folder. Try again.', true); });
+    }
+    ['pay', 'start'].forEach(function (k) { $('f-' + k).addEventListener('change', savePayroll); });
 
     // "Create their email" (step 3): creates their Google Workspace account and adds them to their groups
     // through /api/new-hire-email. The temporary password goes from Google to their personal email only.
