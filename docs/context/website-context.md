@@ -1,6 +1,6 @@
 # Tangible Therapy website — read this first
 
-This is the context for editing the live website for Tangible Therapy (tangiblementalhealth.com), a therapy practice in Utah with offices in Orem, Provo and Sandy. The site is a static Astro 5 site in the private GitHub repo tangible-therapy/tangible-website, hosted on Netlify. It was rebuilt from Squarespace in October 2026. The same docs live in the repo as CLAUDE.md (short pointer) and docs/context/website-context.md (this file). The owner keeps a copy as the project file "Website context - read first"; when this file changes, tell the owner to refresh it.
+This is the context for editing the live website for Tangible Therapy (tangiblementalhealth.com), a therapy practice in Utah with offices in Orem, Provo and Sandy. The site is a static Astro 5 site in the private GitHub repo tangible-therapy/tangible-website, hosted on Netlify. It was rebuilt from Squarespace in October 2026. The same docs live in the repo as CLAUDE.md (short pointer) and docs/context/website-context.md (this file). The owner keeps a copy as the project file "Website context - read first"; Claude keeps that copy in sync itself (rule 8).
 
 ## Non-negotiable rules
 
@@ -11,6 +11,7 @@ This is the context for editing the live website for Tangible Therapy (tangiblem
 5. Check desktop and mobile before handing over a preview (1440px and 390px wide at minimum, also ~1280 and ~1024). Blocks are placed on a grid and can overlap.
 6. Run `npm run build` before pushing; it must finish with no errors.
 7. Claude must not type passwords/credentials, create accounts, or approve Google/OAuth permissions for the user — ask the user to do those steps.
+8. Keep the context docs current automatically — don't wait to be asked. Before opening (and again before merging) any pull request, check whether the change makes anything in CLAUDE.md, docs/context/website-context.md or docs/context/chatbot.md wrong or incomplete (how a feature works, where something lives, new/removed pages, forms, quizzes, roles, env vars, scripts, alert recipients, dates in "Status and open items"). If so, update those docs in the SAME pull request and say so in the PR summary. Then, right after the pull request is merged to main, copy the merged docs/context/website-context.md into the claude.ai project file "Website context - read first" (Projects tool, project_write to that file's existing path, replacing it in place). If the chat has no project access, tell the owner to refresh that file. Example: the orientation quizzes moving from Google Forms to on-page quizzes (PR #36) changed sections 4 and 5 and should have shipped with the doc update.
 
 # 1. How the site works
 
@@ -58,10 +59,10 @@ Most pages were converted from Squarespace's Fluid Engine layout and keep its gr
 
 # 2. Editing workflow (preview first)
 1. git checkout main && git pull; create a branch (e.g. update-sarah-bio).
-2. Make the change; npm install (first time) and npm run build must succeed.
+2. Make the change; npm install (first time) and npm run build must succeed. Update the context docs in the same branch if the change affects them (rule 8).
 3. Check desktop (1440px) and mobile (390px).
 4. Commit, push the branch, open a pull request into main. Netlify builds a Deploy Preview and posts the link on the PR. Give the user that link plus a plain-English summary.
-5. Only after the user approves: merge to main. Netlify publishes main automatically (~30 seconds).
+5. Only after the user approves: merge to main. Netlify publishes main automatically (~30 seconds). If the docs changed in that PR, update the project file "Website context - read first" straight away (rule 8).
 6. If something goes wrong after publishing: revert the PR on GitHub, or use Netlify > Deploys > publish an earlier deploy.
 Do not: run netlify deploy, upload to Netlify by hand, commit directly to main (unless the user explicitly says to skip the preview), edit dist/, or reintroduce Netlify Forms (data-netlify).
 Notes: staff pages need the staff password on previews (Claude won't have it) - check them locally with npm run build. Team members get access by being added as collaborators on the GitHub repo and starting chats with the repo attached. No CMS is installed; the owner prefers changes go through Claude.
