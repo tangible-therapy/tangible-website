@@ -2,9 +2,10 @@
 //   GET                         → { show, steps, done, submittedAt, director, supervisor, headshots, review? }
 //   POST { step, done: bool }   → tick/untick one step (slack | orientation | paperwork | headshots | supervision;
 //                                 the last two only for therapists/associates, see stepsFor())
-//   POST { lessons?: [slug], skillsReview?: true } → save Orientation progress to the account (any signed-in staff;
-//        sent by public/scripts/orientation.js and the skills review page). When every lesson is opened and the
-//        skills review is passed, the Orientation step ticks itself.
+//   POST { lessons?: [slug], quizzes?: [{ slug, answers }], skillsReview?: true } → save Orientation progress to the
+//        account (any signed-in staff; sent by public/scripts/orientation.js and the skills review page). Quiz answers
+//        are re-checked here against src/data/orientation.json and only saved when 100% correct. When every lesson is
+//        opened, every quiz is passed and the skills review is passed, the Orientation step ticks itself.
 // Shown to approved staff who haven't finished orientation (needsOnboarding in src/data/staff-access.ts), and for
 // now to owners as a preview (ONBOARDING_PREVIEW_FOR_OWNERS).
 // When every step is ticked the steps lock and the person shows up as "ready for approval" on directors'
@@ -23,9 +24,21 @@ const directorFor = (p: StaffRecord) => {
   return { name: o.director, email: o.directorEmail };
 };
 
-const LESSONS = (orientation as { slug: string }[]).map((l) => l.slug);
-const orientationFinished = (ob: { lessons?: string[]; skillsReview?: string }) =>
-  !!ob.skillsReview && LESSONS.every((s) => (ob.lessons || []).includes(s));
+type OLesson = { slug: string; sections: { t: string; questions?: { answer: number[] }[] }[][] };
+const LESSONS = (orientation as OLesson[]).map((l) => l.slug);
+// Answer keys of the on-page quizzes (slug → per question, the correct option indexes).
+const QUIZ_KEYS: Record<string, number[][]> = Object.fromEntries(
+  (orientation as OLesson[]).flatMap((l) => {
+    const q = l.sections.flat().find((i) => i.t === 'quiz');
+    return q ? [[l.slug, q.questions!.map((x) => x.answer)]] : [];
+  }),
+);
+const sameSet = (a: unknown, b: number[]) =>
+  Array.isArray(a) && a.length === b.length && [...a].map(Number).sort().join() === [...b].sort().join();
+const quizPassed = (slug: string, answers: unknown) =>
+  !!QUIZ_KEYS[slug] && Array.isArray(answers) && answers.length === QUIZ_KEYS[slug].length && QUIZ_KEYS[slug].every((k, i) => sameSet(answers[i], k));
+const orientationFinished = (ob: { lessons?: string[]; quizzes?: Record<string, string>; skillsReview?: string }) =>
+  !!ob.skillsReview && LESSONS.every((s) => (ob.lessons || []).includes(s)) && Object.keys(QUIZ_KEYS).every((s) => ob.quizzes?.[s]);
 
 const view = async (p: StaffRecord) => ({
   show: showsOnboarding(p),
@@ -35,7 +48,10 @@ const view = async (p: StaffRecord) => ({
   submittedAt: p.onboarding?.submittedAt || null,
   lessons: p.onboarding?.lessons || [],
   lessonCount: LESSONS.length,
+  quizzes: p.onboarding?.quizzes || {},
+  quizCount: Object.keys(QUIZ_KEYS).length,
   skillsReview: !!p.onboarding?.skillsReview,
+  orientationComplete: !!p.orientationComplete,
   director: directorFor(p),
   supervisor: p.supervisor ? { email: p.supervisor, name: (await getPerson(p.supervisor))?.name || p.supervisor } : null,
   headshots: HEADSHOTS_CONTACT,
@@ -60,16 +76,26 @@ export default async (req: Request) => {
 
   const b = await req.json().catch(() => ({}) as any);
 
-  // Orientation progress (lessons opened / skills review passed), saved for anyone signed in.
-  if (Array.isArray(b.lessons) || b.skillsReview) {
+  // Orientation progress (lessons opened / quizzes passed / skills review passed), saved for anyone signed in.
+  if (Array.isArray(b.lessons) || Array.isArray(b.quizzes) || b.skillsReview) {
     const p = (await getPerson(me.email))!;
     const ob = { ...(p.onboarding || {}) };
     const known = new Set(ob.lessons || []);
     const before = known.size;
     for (const s of (Array.isArray(b.lessons) ? b.lessons : []).slice(0, 200)) if (LESSONS.includes(s)) known.add(s);
     const passed = !!b.skillsReview && !ob.skillsReview;
-    if (known.size === before && !passed) return json(await view(p));
+    const quizzes = { ...(ob.quizzes || {}) };
+    let newQuiz = false;
+    for (const q of (Array.isArray(b.quizzes) ? b.quizzes : []).slice(0, 10)) {
+      if (q && typeof q.slug === 'string' && !quizzes[q.slug] && quizPassed(q.slug, q.answers)) {
+        quizzes[q.slug] = new Date().toISOString();
+        known.add(q.slug);
+        newQuiz = true;
+      }
+    }
+    if (known.size === before && !passed && !newQuiz) return json(await view(p));
     ob.lessons = LESSONS.filter((s) => known.has(s));
+    ob.quizzes = quizzes;
     if (passed) ob.skillsReview = new Date().toISOString();
     if (showsOnboarding(p) && !ob.submittedAt && orientationFinished(ob)) {
       ob.done = { ...(ob.done || {}), orientation: ob.done?.orientation || new Date().toISOString() };

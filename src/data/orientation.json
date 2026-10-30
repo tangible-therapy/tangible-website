@@ -299,8 +299,104 @@
   "sections": [
    [
     {
-     "t": "form",
-     "src": "https://docs.google.com/forms/d/e/1FAIpQLSehlGF09ycgTaCl6T61N2I0zkHo8eTXTlaooj_Lt6D2EvQkvQ/viewform?embedded=true"
+     "t": "quiz",
+     "intro": "Answer every question, then check your answers. You need 100% to move on. If something is marked wrong, review the lesson it points to and try again.",
+     "questions": [
+      {
+       "q": "How should you submit your hours?",
+       "many": false,
+       "options": [
+        "Via the Submit Hours button in the Employee Portal",
+        "Text them to my supervisor",
+        "Allow my supervisor to count my time sheet"
+       ],
+       "answer": [
+        0
+       ],
+       "review": "Submitting Hours"
+      },
+      {
+       "q": "How is PTO accrued?",
+       "many": false,
+       "options": [
+        "It's a set amount given out at the beginning of each year",
+        "It accrues by a set amount each month",
+        "It accrues based on hours worked: more hours, more PTO"
+       ],
+       "answer": [
+        2
+       ],
+       "review": "Attendance"
+      },
+      {
+       "q": "How many sessions per pay period are required to be considered full-time?",
+       "many": false,
+       "options": [
+        "It's based on hours, not sessions, including meetings",
+        "An average of 50+ session hours in a pay period (about 25 a week)",
+        "Full-time is decided at hiring and doesn't depend on hours"
+       ],
+       "answer": [
+        1
+       ],
+       "review": "Benefits"
+      },
+      {
+       "q": "How do you get paid for no-shows and late cancellations?",
+       "many": false,
+       "options": [
+        "If I decide to bill the client for the no-show",
+        "I get paid no matter what",
+        "It's up to the receptionist or supervisor to decide"
+       ],
+       "answer": [
+        0
+       ],
+       "review": "Submitting Hours"
+      },
+      {
+       "q": "What counts towards your payable hours?",
+       "many": true,
+       "options": [
+        "Sessions",
+        "Continuing education",
+        "Team meetings",
+        "Supervision",
+        "Notes"
+       ],
+       "answer": [
+        0,
+        2,
+        3
+       ],
+       "review": "Submitting Hours"
+      },
+      {
+       "q": "If I'm hurt at work, I should report it to my supervisor right away.",
+       "many": false,
+       "options": [
+        "True",
+        "False"
+       ],
+       "answer": [
+        0
+       ],
+       "review": "Benefits"
+      },
+      {
+       "q": "When can you take time off?",
+       "many": false,
+       "options": [
+        "Only when I have the PTO accrued",
+        "When I'm sick or going on vacation",
+        "Whenever I want, as long as how often and how long I'm away doesn't become disruptive to clients"
+       ],
+       "answer": [
+        2
+       ],
+       "review": "Attendance"
+      }
+     ]
     }
    ]
   ]
@@ -864,8 +960,138 @@
   "sections": [
    [
     {
-     "t": "form",
-     "src": "https://docs.google.com/forms/d/e/1FAIpQLSdJ6Y9YnqBvbfa0teiFk2lIdEOxbsqEEYhuhB38GYqTn3mMCA/viewform?embedded=true"
+     "t": "quiz",
+     "intro": "Answer every question, then check your answers. You need 100% to move on. If something is marked wrong, review the lesson it points to and try again.",
+     "questions": [
+      {
+       "q": "What client documents need to be filled out before I meet with a client?",
+       "many": false,
+       "options": [
+        "All the documents",
+        "All documents except the financial agreement and credit card info",
+        "The documents can be filled out at any time"
+       ],
+       "answer": [
+        0
+       ],
+       "review": "Scheduling"
+      },
+      {
+       "q": "How does the billing team know what to charge clients?",
+       "many": false,
+       "options": [
+        "The attendance status (Show, No show, Canceled)",
+        "CPT codes",
+        "The attendance status and CPT codes combined"
+       ],
+       "answer": [
+        2
+       ],
+       "review": "Billing Procedures"
+      },
+      {
+       "q": "How soon after a session do notes need to be completed?",
+       "many": false,
+       "options": [
+        "1 week",
+        "72 hours",
+        "The same day"
+       ],
+       "answer": [
+        1
+       ],
+       "review": "Documentation"
+      },
+      {
+       "q": "What makes a client a severe risk level for suicide?",
+       "many": true,
+       "options": [
+        "Specific plans or intentions to act",
+        "Passive suicidality",
+        "A history of suicide attempts",
+        "Your gut reaction to their risk level",
+        "Escalating risk factors, such as increased hopelessness or burdensomeness"
+       ],
+       "answer": [
+        0,
+        2,
+        4
+       ],
+       "review": "Navigating Crisis"
+      },
+      {
+       "q": "If a client needs hospitalization, they may:",
+       "many": false,
+       "options": [
+        "Have a trusted family member watch them at home instead",
+        "Be taken to the hospital by a loved one or a police officer",
+        "Take themselves to the hospital",
+        "Choose for themselves whether they should be admitted"
+       ],
+       "answer": [
+        1
+       ],
+       "review": "Navigating Crisis"
+      },
+      {
+       "q": "Each client must have a treatment plan on file.",
+       "many": false,
+       "options": [
+        "True",
+        "False"
+       ],
+       "answer": [
+        0
+       ],
+       "review": "Documentation"
+      },
+      {
+       "q": "When should I communicate with reception?",
+       "many": true,
+       "options": [
+        "To let them know I have open availability",
+        "Only when they text me first",
+        "Whenever there is a change in the schedule",
+        "When there are customer service issues",
+        "Any other time that feels relevant (over-communicate rather than under-communicate)"
+       ],
+       "answer": [
+        0,
+        2,
+        3,
+        4
+       ],
+       "review": "Working with Reception"
+      },
+      {
+       "q": "Which of these does NOT need to be covered in a first session?",
+       "many": false,
+       "options": [
+        "Confidentiality",
+        "Session length",
+        "Late cancellation / no-show policy",
+        "Billing policies",
+        "Treatment modalities"
+       ],
+       "answer": [
+        4
+       ],
+       "review": "First Session"
+      },
+      {
+       "q": "Where can you find a client's intake paperwork in SimplePractice?",
+       "many": false,
+       "options": [
+        "It will be sent to me in an email",
+        "Under the Files tab in the client's profile",
+        "In the client's profile under Billing"
+       ],
+       "answer": [
+        1
+       ],
+       "review": "Scheduling"
+      }
+     ]
     }
    ]
   ]
@@ -1449,8 +1675,122 @@
   "sections": [
    [
     {
-     "t": "form",
-     "src": "https://docs.google.com/forms/d/e/1FAIpQLSdTshIIIt8UgiZPjSAuADaXvAm3TlOH7Df7-pq8ykSdnraogQ/viewform?embedded=true"
+     "t": "quiz",
+     "intro": "Answer every question, then check your answers. You need 100% to move on. If something is marked wrong, review the lesson it points to and try again.",
+     "questions": [
+      {
+       "q": "Being a professional means:",
+       "many": false,
+       "options": [
+        "Carrying yourself in a way that portrays confidence and kindness",
+        "Always having the right answers",
+        "Telling clients what to do"
+       ],
+       "answer": [
+        0
+       ],
+       "review": "Be the Professional"
+      },
+      {
+       "q": "Why is it valuable to hone your craft?",
+       "many": false,
+       "options": [
+        "It helps me feel better and more confident in the work I do",
+        "More skills make me more valuable to my clients",
+        "Clients, the world and our work are always changing. We must evolve with the work to get better.",
+        "All of the above"
+       ],
+       "answer": [
+        3
+       ],
+       "review": "Hone Your Craft"
+      },
+      {
+       "q": "What makes us Tangible?",
+       "many": false,
+       "options": [
+        "Practical skills that empower clients",
+        "That clients can feel better",
+        "We have expert therapists"
+       ],
+       "answer": [
+        0
+       ],
+       "review": "Skill Based Practice"
+      },
+      {
+       "q": "Great therapy starts with a plan.",
+       "many": false,
+       "options": [
+        "True",
+        "False"
+       ],
+       "answer": [
+        0
+       ],
+       "review": "Plan For Success"
+      },
+      {
+       "q": "Countertransference is bad for therapy.",
+       "many": false,
+       "options": [
+        "True",
+        "False"
+       ],
+       "answer": [
+        1
+       ],
+       "review": "Follow Your Heart"
+      },
+      {
+       "q": "Following your intuition takes patience and courage.",
+       "many": false,
+       "options": [
+        "True",
+        "False"
+       ],
+       "answer": [
+        0
+       ],
+       "review": "Follow Your Heart"
+      },
+      {
+       "q": "I can work hard enough to make up the difference when clients lack motivation or effort.",
+       "many": false,
+       "options": [
+        "True",
+        "False"
+       ],
+       "answer": [
+        1
+       ],
+       "review": "Self Care"
+      },
+      {
+       "q": "If I make mistakes, I should keep them to myself.",
+       "many": false,
+       "options": [
+        "True",
+        "False"
+       ],
+       "answer": [
+        1
+       ],
+       "review": "Customer Service"
+      },
+      {
+       "q": "Learning requires taking chances, and I'm allowed to make mistakes.",
+       "many": false,
+       "options": [
+        "True",
+        "False"
+       ],
+       "answer": [
+        0
+       ],
+       "review": "Self Care"
+      }
+     ]
     }
    ]
   ]

@@ -716,6 +716,38 @@ html { scroll-behavior: smooth; }
 @media (max-width: 760px) { .orient-sandbox { grid-template-columns: minmax(0, 1fr); } .orient-sandbox-text { padding: 0 .3rem .4rem; } }
 .orient-form iframe { width: 100%; height: 1600px; border: 0; border-radius: 16px; background: #fff; }
 .orient-form p { font-size: .85rem; text-align: center; opacity: .7; }
+/* On-page orientation quizzes (100% needed to unlock the next section) */
+.orient-quiz { max-width: 760px; }
+.orient-quiz [hidden] { display: none !important; }
+.oq-intro { background: #f5f7f5; border-radius: 14px; padding: .9rem 1.1rem; margin: 0 0 1.4rem; }
+.oq-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 1rem; }
+.oq-q fieldset { border: 1.5px solid rgba(59,63,60,.14); border-radius: 16px; padding: 1.1rem 1.2rem 1rem; margin: 0; background: #fff; transition: border-color .15s, background .15s; }
+.oq-q.is-wrong fieldset { border-color: #c4574a; background: #fdf6f5; }
+.oq-q legend { float: left; width: 100%; padding: 0; margin: 0 0 .7rem; font-weight: 600; line-height: 1.4; }
+.oq-q legend + * { clear: both; }
+.oq-num { color: var(--slate); margin-right: .15rem; }
+.oq-many { font-weight: 400; font-size: .88rem; opacity: .7; }
+.oq-opt { display: flex; gap: .7rem; align-items: flex-start; padding: .55rem .7rem; border-radius: 10px; cursor: pointer; line-height: 1.4; }
+.oq-opt:hover { background: #f2f5f2; }
+.oq-opt input { width: 18px; height: 18px; margin: .12rem 0 0; flex: none; accent-color: var(--slate); cursor: pointer; }
+.oq-opt:has(input:checked) { background: #eef2ee; }
+.is-passed .oq-opt { cursor: default; }
+.is-passed .oq-opt:hover { background: none; }
+.is-passed .oq-opt:has(input:checked) { background: #eef2ee; }
+.oq-fb { margin: .6rem 0 0; color: #a3443a; font-size: .92rem; }
+.oq-fb a { color: inherit; font-weight: 600; }
+.oq-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1.2rem; margin-top: 1.4rem; }
+.oq-actions .btn { border: 0; cursor: pointer; font: inherit; }
+.oq-result { margin: 0; font-weight: 600; }
+.oq-pass { margin-top: 1.4rem; display: grid; gap: .25rem; background: var(--slate); color: #fff; border-radius: 16px; padding: 1.1rem 1.3rem; }
+.oq-pass strong { font-size: 1.15rem; }
+/* Lessons locked until the quiz before them is passed */
+a.is-locked { opacity: .45; cursor: not-allowed; }
+a.is-locked .orient-check { background: none; border-style: dashed; }
+.orient-body.is-locked > :not(.orient-locked):not(.orient-eyebrow):not(h1) { display: none; }
+.orient-locked { background: #f5f7f5; border-radius: 20px; padding: 1.6rem 1.5rem; margin: 1.2rem 0 2rem; }
+.orient-locked h2 { margin: .2rem 0 .5rem; }
+.orient-locked p { margin: 0 0 1rem; }
 .orient-wistia p { font-size: .85rem; text-align: center; opacity: .7; margin-top: .6rem; }
 .orient-pager { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 2.5rem; padding-top: 2rem; border-top: 1px solid rgba(59,63,60,.12); }
 .orient-pager a { display: grid; gap: .2rem; padding: 1.1rem 1.3rem; border-radius: 16px; background: #f5f7f5; color: var(--charcoal); text-decoration: none; font-weight: 500; }

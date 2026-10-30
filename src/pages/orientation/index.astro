@@ -1,7 +1,7 @@
 ---
 // Staff-only new-employee orientation course (password-protected by netlify/edge-functions/staff-gate.ts)
 import Base from '../../layouts/Base.astro';
-import { chapters, lessons, summary } from '../../lib/orientation';
+import { chapters, lessons, summary, quizSlugs } from '../../lib/orientation';
 const isQuiz = (t: string) => /quiz/i.test(t);
 ---
 <Base title="Orientation | Tangible Therapy" description="New employee orientation for Tangible Therapy staff." noindex>
@@ -30,7 +30,7 @@ const isQuiz = (t: string) => /quiz/i.test(t);
             <ul class="orient-lessons">
               {c.lessons.map((l) => (
                 <li>
-                  <a href={`/orientation/${l.slug}`} data-lesson={l.slug}>
+                  <a href={`/orientation/${l.slug}`} data-lesson={l.slug} data-order={lessons.indexOf(l)} data-quiz={quizSlugs.includes(l.slug) ? '' : undefined} data-title={l.title}>
                     <span class="orient-check" aria-hidden="true"></span>
                     <span class="orient-lesson-text">
                       <span class="orient-lesson-title">{l.title}{isQuiz(l.title) && <span class="orient-tag">Quiz</span>}</span>
