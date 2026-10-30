@@ -45,7 +45,7 @@ export default async (req: Request) => {
     const yn = (v: unknown) => (/^(yes|no)$/i.test(String(v)) ? String(v) : '');
     const out = await callScript({
       action: 'profile', name, office, photo,
-      credential: text(b.credential, 40), bio: text(b.bio, 6000), seo: text(b.seo, 300), spId: text(b.spId, 40),
+      credential: text(b.credential, 40), bio: text(b.bio, 6000), seo: text(b.seo, 300), spId: (/clinician[-_]?id["'=:\s]+["']?(\d{4,})/i.exec(String(b.spId ?? ''))?.[1]) || text(b.spId, 40),
       booking: yn(b.booking), show: yn(b.show), gender: text(b.gender, 40), birthday: text(b.birthday, 10),
       ages: list(b.ages), modalities: list(b.modalities), comfortable: list(b.comfortable), specialties: list(b.specialties),
     });

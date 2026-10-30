@@ -232,6 +232,12 @@
   to = "/ourteam/p/:splat"
   status = 301
 
+# Retired reception "Payroll" instructions page (Oct 2026): payroll is filled in automatically by Submit Hours
+[[redirects]]
+  from = "/reception-onboarding-1"
+  to = "/reception-portal"
+  status = 301
+
 # Retired Google Ads landing page
 [[redirects]]
   from = "/google"

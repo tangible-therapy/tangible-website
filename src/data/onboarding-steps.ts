@@ -17,7 +17,7 @@ export const HIRE_STEPS: OnboardingStepDef[] = [
   { id: 'malpractice', title: 'Added to malpractice insurance', who: 'clinician' },
   { id: 'hours', title: 'Linked in Supervision Hours', who: 'associate' },
   { id: 'availibility', title: 'Availability set up in SimplePractice', who: 'clinician' },
-  { id: 'booking-id', title: 'SimplePractice booking ID found', who: 'clinician' },
+  { id: 'booking-id', title: 'SimplePractice booking code copied', who: 'clinician' },
   { id: 'website', title: 'Added to the website', who: 'clinician' },
   { id: 'psychology-today', title: 'Psychology Today profile created', who: 'clinician' },
 ];
