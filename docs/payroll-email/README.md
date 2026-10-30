@@ -27,6 +27,10 @@ the Employee folder, the same people who can already see the signed contract in 
 Changing things: payroll address, sender name and sign-off are at the top of the script (PAYROLL_TO,
 SIGN_OFF). Run **preview** in the editor to see what would be sent without sending anything.
 
+Status: set up 29 Oct 2026 in frontdesk@'s Apps Script (project "Payroll email", created from frontdesk@'s Drive:
+New → More → Google Apps Script; script.google.com's own "New project" link failed with two accounts signed in).
+The "New hire folders" web app was redeployed the same day with the payroll-info change.
+
 ## One-time setup (front desk account, ~5 minutes — Claude can't do the Google approval)
 1. Signed in as **frontdesk@tangiblementalhealth.com**, open https://script.google.com → **New project**. Name it
    **Payroll email**.
