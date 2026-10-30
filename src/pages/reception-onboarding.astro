@@ -86,10 +86,13 @@ const HOW: Record<string, string> = {
   'booking-id': `<ol>
     <li>In SimplePractice go to <b>Settings</b> → <b>Widgets</b> → <b>Appointment request</b>.</li>
     <li>Preview their row and copy the <b>clinicianId</b> number into the <b>SimplePractice clinician ID</b> column of their row in the website profiles tab.</li></ol>`,
-  website: `<p>No code needed. The website reads the ${a(THERAPIST_SHEET, 'tangible sheets')} Google Sheet.</p><ol>
-    <li>In <b>website profiles</b>, add a row: Name, Credential, Photo (Drive link to their headshot), Bio, SimplePractice clinician ID, Online booking and Show on website.</li>
-    <li>Add them to the <b>openings</b>, <b>modalities</b> and <b>Insurances</b> tabs, spelling their name the same.</li>
-    <li>It goes live about 15 minutes after the last edit, once the photo link works. The <b>Website status</b> column says what’s missing.</li></ol>`,
+  website: `<p>Use the ${a('/employeeportal/website-profile', 'Website Profiles')} page. No code needed: it fills in the tangible sheet for you, and the website updates itself from that sheet.</p><ol>
+    <li>Check first: their onboarding form answers (populations, modalities, specialties, photo, birthday) are added to the sheet automatically, so they may already be there. Start typing <span data-f="full">their name</span> in the name box; if they're found, their current info fills in.</li>
+    <li>Fill in or fix anything missing, especially <b>Credential</b>, <b>Office</b>, <b>Photo</b> (their headshot), <b>Bio</b> and the <b>SimplePractice clinician ID</b> (from the step above). Then click <b>Save</b>. Blank boxes never erase what's already there.</li>
+    <li>Type their name exactly as on the sheet (first + last). If the page warns “Not on the website or the sheet yet”, double-check the spelling before saving, so they aren't added twice.</li>
+    <li>In the ${a(THERAPIST_SHEET, 'tangible sheets')} Google Sheet, type their openings after the colon on their highlighted line in the <b>openings</b> tab, and tick the plans they take in the <b>Insurances</b> tab (these two are still edited in the sheet).</li>
+    <li>They show up on the website about 15 minutes later, but only once they have both a photo and a bio. The <b>Website status</b> column in the sheet's website profiles tab says what's missing.</li></ol>
+    <div class="ob-actions"><a class="pt-btn ghost" href="/employeeportal/website-profile" ${ext}>Open Website Profiles</a> <a class="pt-btn ghost" href="${THERAPIST_SHEET}" ${ext}>Open the tangible sheet</a></div>`,
   'psychology-today': `<p class="pt-muted">Step-by-step instructions haven’t been written yet.</p>`,
 };
 const steps = HIRE_STEPS.map((s) => ({ id: s.id, title: s.title, who: s.who || '', auto: !!s.auto }));

@@ -55,7 +55,6 @@ export const receptionLinks: StaffLink[] = [
   { label: 'Start of Day Check-in', href: '/scheduling-new-client-1' },
   { label: 'Scheduling New Client', href: '/scheduling-new-client' },
   { label: 'Crisis Call', href: '/crisis-call' },
-  { label: 'Payroll', href: '/reception-onboarding-1' },
 ];
 
 // Pages that show the Employee Portal sidebar (PortalShell, added by src/layouts/Base.astro): every staff page
@@ -64,7 +63,7 @@ export const isCoursePath = (path: string) => path === '/orientation' || path.st
 
 // Header menu shown on every staff page instead of the public menu.
 // Pages listed in staffPaths get this header automatically.
-export const staffPaths = ['/orientation', '/employeeportal', '/digital-products-2', '/onboarding', '/reception-portal', '/reception-onboarding', '/scheduling-new-client', '/scheduling-new-client-1', '/reception-onboarding-1', '/crisis-call', '/staff-admin', '/hours'];
+export const staffPaths = ['/orientation', '/employeeportal', '/digital-products-2', '/onboarding', '/reception-portal', '/reception-onboarding', '/scheduling-new-client', '/scheduling-new-client-1', '/crisis-call', '/staff-admin', '/hours'];
 
 export const staffNav = [
   // Pulls from the Employee Links list above (blank links are skipped)
