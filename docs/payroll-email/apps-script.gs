@@ -24,6 +24,7 @@ var FILER = 'brady@tangiblementalhealth.com';
 var EMPLOYEE_FOLDER_ID = '1DCzPfLaGhpOIepDvmZ0krxgQl61bahwN';
 var SENT_LABEL = 'Payroll sent';
 var WAIT_LABEL = 'Payroll waiting';
+var GREETING = 'Hey Chelsea,';
 var SIGN_OFF = 'Thank you!\nTangible Therapy front desk';
 var KEEP_TRYING_DAYS = 14;
 
@@ -81,7 +82,7 @@ function handle_(thread, dryRun) {
   if (!dd) missing.push('the direct deposit file in their folder');
   if (missing.length) return waiting_(thread, name, missing, dryRun, folder);
 
-  var body = 'Hi,\n\nPlease add our new employee to payroll:\n\n' +
+  var body = GREETING + '\n\nPlease add our new employee to payroll:\n\n' +
     'Name: ' + name + '\n' +
     'Pay rate: ' + info.pay + '\n' +
     'Start date: ' + prettyDate_(info.start) + '\n\n' +

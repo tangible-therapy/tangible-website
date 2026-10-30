@@ -24,8 +24,8 @@ Safety: each folder is only ever sent once (remembered in the script's propertie
 filed" emails are ignored (front desk sends those by hand). Who can see the pay rate: anyone with access to
 the Employee folder, the same people who can already see the signed contract in it.
 
-Changing things: payroll address, sender name and sign-off are at the top of the script (PAYROLL_TO,
-SIGN_OFF). Run **preview** in the editor to see what would be sent without sending anything.
+Changing things: payroll address, greeting ("Hey Chelsea,"), sender name and sign-off are at the top of the
+script (PAYROLL_TO, GREETING, SIGN_OFF); the by-hand template on the onboarding page uses the same greeting. Run **preview** in the editor to see what would be sent without sending anything.
 
 Status: set up 29 Oct 2026 in frontdesk@'s Apps Script (project "Payroll email", created from frontdesk@'s Drive:
 New → More → Google Apps Script; script.google.com's own "New project" link failed with two accounts signed in).
