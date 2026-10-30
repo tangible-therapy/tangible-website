@@ -16,7 +16,7 @@ Two ways therapists get onto the "tangible sheets" Google Sheet without anyone e
    `onOnboardingProfile`): name = Preferred First + Last, "populations" → ages, "modalities" → modalities,
    "comfortable" diagnoses → full specialty list, "specialist in" → focus specialties, Date of Birth → birthday
    (month/day), marketing photo → photo (JPG/PNG only; HEIC is skipped with a log note). LGBTQ/Transgender
-   populations become an LGBTQ specialty. Office comes from **Start a new hire** (saved on their Employees
+   populations are saved as a single "LGBTQ" in the populations column. Office comes from **Start a new hire** (saved on their Employees
    folder as "Office: orem|provo|sandy"); with no office known they're only added to "website profiles".
 
 ## Where things go on the sheet
@@ -35,6 +35,12 @@ Two ways therapists get onto the "tangible sheets" Google Sheet without anyone e
 - Insurance is still edited on the Insurances tab by hand. Moving someone to another office: move their rows.
 
 ## Going live
+The website's specialty tags come from column F (focus specialties) only; column E ("comfortable") is used
+only when F is blank. Both columns stay on the sheet. Couples / no-couples still reads B, E and F.
+
+Picking a name fills the website info instantly; the sheet info (checkboxes, gender, birthday) arrives a few
+seconds later. If the sheet can't be read, a red message says so.
+
 A **new** therapist appears on the website once their "website profiles" row has both a photo and a bio
 (src/lib/team-loader.ts). Existing therapists keep their current bio when the cell is blank. The website
 rebuilds ~15 minutes after the last sheet edit (docs/sheet-sync). The "Website status" column (Website feed

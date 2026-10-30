@@ -355,6 +355,15 @@ function monthDay_(v) {
 }
 function pad2_(x) { return ('0' + Number(x)).slice(-2); }
 
+/** "Lesbian", "Gay", "Bisexual", "Queer", "Transgender", "LGBTQ+" -> one "LGBTQ" in the populations column
+ *  (the website shows it as an LGBTQ+ specialty; it's a population, not a diagnosis, so it stays out of E/F). */
+function lgbtqPopulation_(list) {
+  var re = /lgbt|lesbian|^gay$|bisexual|queer|transgender/i, had = list.some(function (x) { return re.test(x); });
+  var out = list.filter(function (x) { return !re.test(x); });
+  if (had) out.push('LGBTQ');
+  return out;
+}
+
 /** Website page -> profile object. photo = { name, type, data (base64) } is saved to Drive first. */
 function profileFromWebsite_(b) {
   var p = {
@@ -364,11 +373,7 @@ function profileFromWebsite_(b) {
     ages: list_(b.ages), modalities: list_(b.modalities), comfortable: list_(b.comfortable), specialties: list_(b.specialties),
     birthday: monthDay_(b.birthday), photoUrl: '', source: 'website',
   };
-  // "LGBTQ+" / "Transgender" are populations on the forms but LGBTQ+ specialties on the sheet.
-  if (p.ages.some(function (x) { return /lgbt|lesbian|gay|bisexual|queer|transgender/i.test(x); })) {
-    p.ages = p.ages.filter(function (x) { return !/lgbt|lesbian|gay|bisexual|queer|transgender/i.test(x); });
-    if (!p.comfortable.some(function (x) { return /lgbt/i.test(x); })) p.comfortable.push('LGBTQ');
-  }
+  p.ages = lgbtqPopulation_(p.ages);
   if (b.photo && b.photo.data) {
     var type = String(b.photo.type || '').toLowerCase();
     if (['image/jpeg', 'image/png'].indexOf(type) === -1) throw new Error('The photo must be a JPG or PNG.');
@@ -500,11 +505,8 @@ function onOnboardingProfile(e) {
   var name = titleCase2_(cleanName_((preferred || legal) + ' ' + last));
   if (!last || !(preferred || legal)) return;
 
-  var pops = list_(pick(/populations/));
+  var pops = lgbtqPopulation_(list_(pick(/populations/)));
   var comfortable = list_(pick(/comfortable/));
-  // "Lesbian, Gay, Bisexual, Queer" / "Transgender" are populations on the form but LGBTQ+ specialties on the sheet.
-  if (pops.some(function (x) { return /lesbian|gay|bisexual|queer|transgender/i.test(x); }) && !comfortable.some(function (x) { return /lgbt/i.test(x); })) comfortable.push('LGBTQ');
-  pops = pops.filter(function (x) { return !/lesbian|gay|bisexual|queer|transgender/i.test(x); });
 
   var photoUrl = '', notes = [];
   var ids = pick(/professional photo/);

@@ -317,7 +317,12 @@ async function build(): Promise<FinderData> {
 
     const spec = new Set<string>();
     if (r) {
-      for (const [label, re] of SPECIALTY_WORDS) if (re.test(specText)) spec.add(label);
+      // Specialties shown on the website = column F ("specialize in"), plus LGBTQ+ from the populations column.
+      // Column E ("comfortable working with") is only used when F is blank, so nobody loses all their specialties
+      // before F is filled in (Oct 30 2026).
+      const focus = clean(r[5] ?? '') ? r[5] : r[4];
+      const shownText = [r[1], focus].join(' , ').replace(/(internet|video game)\s+addiction/gi, ' ');
+      for (const [label, re] of SPECIALTY_WORDS) if (re.test(shownText)) spec.add(label);
       if (sees.has('Couples')) spec.add('Couples');
     } else {
       for (const c of cats) { const x = CATEGORY_SPECIALTY[c.split('/')[1] ?? '']; if (x) spec.add(x); }

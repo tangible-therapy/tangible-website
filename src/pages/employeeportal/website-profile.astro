@@ -112,6 +112,7 @@ const box = (group: string, items: string[]) => items.map((x) => ({ group, x }))
   .wp .wp-bday-row { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: .4rem; }
   .wp .wp-found { margin: 0; font-size: .88rem; border-radius: 10px; padding: .55rem .75rem; background: #f6f4ec; color: #4a4630; line-height: 1.5; }
   .wp .wp-found.ok { background: #e8f1ea; color: #23432c; }
+  .wp .wp-found.err { background: #fbe9e4; color: #6b2a17; }
   .wp .wp-photo { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-top: .3rem; }
   .wp .wp-photo img { width: 96px; height: 120px; object-fit: cover; object-position: 50% 20%; border-radius: 12px; background: #eef0ee; }
   .wp .wp-photo .pt-muted { margin-top: .3rem; }
@@ -176,25 +177,44 @@ const box = (group: string, items: string[]) => items.map((x) => ({ group, x }))
       if (!match) { match = new Option(v, v); sel.appendChild(match); }
       sel.value = match.value;
     }
-    function fill(sheet, site) {
+    // Website info fills in instantly; sheet info (populations, modalities, diagnoses, gender, birthday) arrives
+    // a few seconds later. Anything the person already changed meanwhile is left alone.
+    function setIf(k, fn) { if (!dirty[k]) fn(); }
+    function fillSite(site) {
+      setIf('credential', function () { $('wp-credential').value = site.credential || ''; });
+      setIf('bio', function () { $('wp-bio').value = site.bio || ''; });
+      setIf('seo', function () { $('wp-seo').value = site.seo || ''; });
+      setIf('spId', function () { $('wp-spid').value = site.spId || ''; });
+      setIf('booking', function () { setSelect('wp-booking', site.booking ? 'Yes' : 'No'); });
+      setIf('show', function () { setSelect('wp-show', site.hidden ? 'No' : 'Yes'); });
+      if (!photo) {
+        if (site.photo) { $('wp-preview').src = site.photo; $('wp-preview').hidden = false; $('wp-photo-note').textContent = 'Current website photo. Choose a file to replace it.'; }
+        else { $('wp-preview').hidden = true; $('wp-photo-note').textContent = 'No photo yet. A new therapist needs one to go on the website.'; }
+      }
+    }
+    function fillSheet(sheet, site) {
       var p = sheet.profile || {}, m = sheet.modalities || {}, o = sheet.openings || {};
-      $('wp-credential').value = p.credential || o.credential || (site && site.credential) || '';
-      $('wp-bio').value = p.bio || (site && site.bio) || '';
-      $('wp-seo').value = p.seo || (site && site.seo) || '';
-      $('wp-spid').value = p.spId || (site && site.spId) || '';
-      setSelect('wp-booking', p.booking || (site ? (site.booking ? 'Yes' : 'No') : ''));
-      setSelect('wp-show', p.show || (site ? (site.hidden ? 'No' : 'Yes') : ''));
-      setSelect('wp-gender', m.gender || '');
-      var other = setChecks('modalities', m.modalities);
-      $('wp-mod-other').value = other.join(', ');
-      setChecks('ages', m.ages); setChecks('comfortable', m.comfortable); setChecks('specialties', m.specialties);
+      // The sheet wins where it has a value.
+      if (p.credential || o.credential) setIf('credential', function () { $('wp-credential').value = p.credential || o.credential; });
+      if (p.bio) setIf('bio', function () { $('wp-bio').value = p.bio; });
+      if (p.seo) setIf('seo', function () { $('wp-seo').value = p.seo; });
+      if (p.spId) setIf('spId', function () { $('wp-spid').value = p.spId; });
+      if (p.booking) setIf('booking', function () { setSelect('wp-booking', p.booking); });
+      if (p.show) setIf('show', function () { setSelect('wp-show', p.show); });
+      setIf('gender', function () { setSelect('wp-gender', m.gender || ''); });
+      setIf('modalities', function () { $('wp-mod-other').value = setChecks('modalities', m.modalities).join(', '); });
+      setIf('ages', function () { setChecks('ages', m.ages); });
+      setIf('comfortable', function () { setChecks('comfortable', m.comfortable); });
+      setIf('specialties', function () { setChecks('specialties', m.specialties); });
       var b = /^(\d{2})-(\d{2})$/.exec(sheet.birthday || '');
-      $('wp-bmonth').value = b ? b[1] : ''; $('wp-bday').value = b ? b[2] : '';
-      // Photo: the website's current photo (the sheet's Drive link can't be shown here).
-      photo = null; $('wp-photo').value = '';
-      if (site && site.photo) { $('wp-preview').src = site.photo; $('wp-preview').hidden = false; $('wp-photo-note').textContent = 'Current website photo. Choose a file to replace it.'; }
-      else if (p.photo) { $('wp-preview').hidden = true; $('wp-photo-note').textContent = 'They have a photo on the sheet. Choose a file to replace it.'; }
-      else { $('wp-preview').hidden = true; $('wp-photo-note').textContent = 'No photo yet. A new therapist needs one to go on the website.'; }
+      if (!dirty.bmonth && !dirty.bday) { $('wp-bmonth').value = b ? b[1] : ''; $('wp-bday').value = b ? b[2] : ''; }
+      if (!site && !photo) $('wp-photo-note').textContent = p.photo ? 'They have a photo on the sheet. Choose a file to replace it.' : 'No photo yet. A new therapist needs one to go on the website.';
+    }
+    function clearForm() {
+      [].slice.call(form.querySelectorAll('input[type=checkbox]')).forEach(function (c) { c.checked = false; });
+      ['wp-credential', 'wp-bio', 'wp-seo', 'wp-spid', 'wp-mod-other'].forEach(function (id) { $(id).value = ''; });
+      ['wp-booking', 'wp-show', 'wp-gender', 'wp-bmonth', 'wp-bday', 'wp-office'].forEach(function (id) { $(id).value = ''; });
+      photo = null; $('wp-photo').value = ''; $('wp-preview').hidden = true; $('wp-photo-note').textContent = 'Leave empty to keep their current photo.';
       dirty = {};
     }
 
@@ -202,26 +222,31 @@ const box = (group: string, items: string[]) => items.map((x) => ({ group, x }))
       var name = cleanName();
       if (name.split(' ').length < 2 || name === lastLookup) return;
       lastLookup = name;
+      clearForm();
       var site = website.filter(function (t) { return key(t.name) === key(name); })[0] || null;
-      found.hidden = false; found.className = 'wp-found wp-wide'; found.textContent = 'Loading their current info…';
+      existing = !!site;
+      found.hidden = false; found.className = 'wp-found wp-wide';
+      if (site) { fillSite(site); found.className = 'wp-found wp-wide ok'; found.textContent = 'Filled in from ' + name + '’s website profile. Loading populations, modalities and diagnoses from the sheet…'; }
+      else found.textContent = 'Checking the sheet…';
       api('/api/website-profile?name=' + encodeURIComponent(name)).then(function (res) {
         if (name !== lastLookup) return;
         found.textContent = '';
         existing = !!(res.found || site);
         if (!existing) {
+          found.className = 'wp-found wp-wide';
           found.append('Not on the website or the sheet yet. Saving will add ' + name + ' as a new therapist, so choose their office. They go on the website once they have a photo and a bio.');
           return;
         }
-        fill(res, site);
+        fillSheet(res, site);
         found.className = 'wp-found wp-wide ok';
+        var m = res.modalities;
         found.append('Filled in with ' + name + '’s current info' + (site ? ' from the website' : '') + (res.found ? (site ? ' and the sheet' : ' from the sheet') : '') + '. Change what you need, then save. Sections you don’t touch stay as they are.');
+        if (!m) { found.append(el('br')); found.append('They have no row on the modalities tab yet, so populations, modalities and diagnoses are empty.'); }
         if (res.profile && res.profile.status) { found.append(el('br')); found.append('Website status: ' + res.profile.status); }
       }).catch(function (e) {
         if (name !== lastLookup) return;
-        // The sheet couldn't be read: still fill in what the website has.
-        existing = !!site; found.textContent = '';
-        if (site) { fill({}, site); found.className = 'wp-found wp-wide ok'; found.append('Filled in from the website (couldn’t read the sheet: ' + e.message + '). Change what you need, then save.'); }
-        else found.append('Couldn’t check the sheet: ' + e.message);
+        found.className = 'wp-found wp-wide err';
+        found.textContent = 'Couldn’t load their info from the sheet (' + e.message + '). ' + (site ? 'What’s shown comes from the website only; the checkboxes are empty, and anything you tick will replace what the sheet has. Try picking the name again in a moment.' : 'Try picking the name again in a moment.');
       });
     }
     $('wp-name').addEventListener('input', function () {
@@ -287,9 +312,8 @@ const box = (group: string, items: string[]) => items.map((x) => ({ group, x }))
     });
 
     $('wp-clear').addEventListener('click', function () {
-      form.reset(); photo = null; lastLookup = ''; existing = false; dirty = {};
-      $('wp-preview').hidden = true; found.hidden = true; result.hidden = true;
-      $('wp-photo-note').textContent = 'Leave empty to keep their current photo.'; window.scrollTo(0, 0);
+      form.reset(); clearForm(); lastLookup = ''; existing = false;
+      found.hidden = true; result.hidden = true; window.scrollTo(0, 0);
     });
   })();
 </script>
