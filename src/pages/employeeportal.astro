@@ -42,49 +42,49 @@ const defaultTargets = JSON.stringify(LICENSES[0].targets);
       <ol class="ob-steps">
         <li class="ob-step" data-step="slack">
           <details>
-            <summary><span class="ob-dot" aria-hidden="true"></span><span class="ob-title">Join Slack</span><span class="ob-state" data-state></span></summary>
+            <summary><button type="button" class="ob-dot" role="checkbox" aria-checked="false" aria-label="Join Slack" data-tick="slack"></button><span class="ob-title">Join Slack</span><span class="ob-state" data-state></span></summary>
             <div class="ob-body">
               <p>Sign up at <a href="https://tangibletherapy.slack.com" target="_blank" rel="noopener">tangibletherapy.slack.com</a> with your Tangible email.</p>
-              <div class="ob-acts"><a class="pt-btn" href="https://tangibletherapy.slack.com" target="_blank" rel="noopener">Open Slack</a><button type="button" class="pt-btn ghost" data-tick="slack">Mark done</button></div>
+              <div class="ob-acts"><a class="pt-btn" href="https://tangibletherapy.slack.com" target="_blank" rel="noopener">Open Slack</a></div>
             </div>
           </details>
         </li>
         <li class="ob-step" data-step="orientation">
           <details>
-            <summary><span class="ob-dot" aria-hidden="true"></span><span class="ob-title">Complete Orientation</span><span class="ob-state" data-state></span></summary>
+            <summary><span class="ob-dot" title="Ticks itself when you finish" aria-hidden="true"></span><span class="ob-title">Complete Orientation</span><span class="ob-state" data-state></span></summary>
             <div class="ob-body">
               <p>About an hour, ending with a short SimplePractice skills review. Ticks itself when you finish.</p>
               <p class="ob-prog" id="ob-orient-prog"></p>
-              <div class="ob-acts"><a class="pt-btn" href="/orientation">Go to Orientation</a><button type="button" class="ob-link" data-tick="orientation">Finished on another device?</button></div>
+              <div class="ob-acts"><a class="pt-btn" href="/orientation">Go to Orientation</a></div>
             </div>
           </details>
         </li>
         <li class="ob-step" data-step="paperwork">
           <details>
-            <summary><span class="ob-dot" aria-hidden="true"></span><span class="ob-title">Complete Onboarding</span><span class="ob-state" data-state></span></summary>
+            <summary><button type="button" class="ob-dot" role="checkbox" aria-checked="false" aria-label="Complete Onboarding" data-tick="paperwork"></button><span class="ob-title">Complete Onboarding</span><span class="ob-state" data-state></span></summary>
             <div class="ob-body">
               <p>Fill in the W-4 and direct deposit form, then submit the onboarding form with your license.</p>
-              <div class="ob-acts"><a class="pt-btn" href="/onboarding">Go to Onboarding</a><button type="button" class="pt-btn ghost" data-tick="paperwork">Mark done</button></div>
+              <div class="ob-acts"><a class="pt-btn" href="/onboarding">Go to Onboarding</a></div>
             </div>
           </details>
         </li>
         <li class="ob-step" data-step="headshots" hidden>
           <details>
-            <summary><span class="ob-dot" aria-hidden="true"></span><span class="ob-title">Schedule headshots</span><span class="ob-state" data-state></span></summary>
+            <summary><button type="button" class="ob-dot" role="checkbox" aria-checked="false" aria-label="Schedule headshots" data-tick="headshots"></button><span class="ob-title">Schedule headshots</span><span class="ob-state" data-state></span></summary>
             <div class="ob-body">
               <p>Message <b data-fill-ob="headshots">Julie Clegg</b> on Slack to book a time. Wear neutral colors (not gray or black).</p>
               <div class="ob-draft"><span class="ob-draft-text" data-draft="headshots"></span><button type="button" class="ob-link" data-copy-draft="headshots">Copy</button></div>
-              <div class="ob-acts"><a class="pt-btn" href="https://tangibletherapy.slack.com" target="_blank" rel="noopener">Open Slack</a><button type="button" class="pt-btn ghost" data-tick="headshots">Mark done</button></div>
+              <div class="ob-acts"><a class="pt-btn" href="https://tangibletherapy.slack.com" target="_blank" rel="noopener">Open Slack</a></div>
             </div>
           </details>
         </li>
         <li class="ob-step" data-step="supervision" hidden>
           <details>
-            <summary><span class="ob-dot" aria-hidden="true"></span><span class="ob-title">Schedule supervision</span><span class="ob-state" data-state></span></summary>
+            <summary><button type="button" class="ob-dot" role="checkbox" aria-checked="false" aria-label="Schedule supervision" data-tick="supervision"></button><span class="ob-title">Schedule supervision</span><span class="ob-state" data-state></span></summary>
             <div class="ob-body">
               <p id="ob-sup"></p>
               <div class="ob-draft"><span class="ob-draft-text" data-draft="supervision"></span><button type="button" class="ob-link" data-copy-draft="supervision">Copy</button></div>
-              <div class="ob-acts"><a class="pt-btn" href="https://tangibletherapy.slack.com" target="_blank" rel="noopener">Open Slack</a><button type="button" class="pt-btn ghost" data-tick="supervision">Mark done</button></div>
+              <div class="ob-acts"><a class="pt-btn" href="https://tangibletherapy.slack.com" target="_blank" rel="noopener">Open Slack</a></div>
             </div>
           </details>
         </li>
@@ -371,9 +371,9 @@ const defaultTargets = JSON.stringify(LICENSES[0].targets);
           li.classList.toggle('done', ok);
           li.querySelector('[data-state]').textContent = ok ? 'Done' : st.id === 'orientation' && o.viewed ? o.viewed + '/' + o.total : '';
           li.querySelectorAll('[data-tick]').forEach(function (b) {
-            b.hidden = locked || (st.id === 'orientation' && ok);
-            if (st.id !== 'orientation') b.textContent = ok ? 'Undo' : 'Mark done';
-            b.classList.toggle('undo', ok);
+            b.setAttribute('aria-checked', String(ok));
+            b.disabled = locked;
+            b.title = locked ? '' : ok ? 'Click to untick' : 'Click to tick when done';
           });
         });
         card.querySelectorAll('[data-step]').forEach(function (li) { li.classList.toggle('next', !locked && li.dataset.step === next); });
@@ -414,8 +414,15 @@ const defaultTargets = JSON.stringify(LICENSES[0].targets);
           if (navigator.clipboard) navigator.clipboard.writeText(t).then(function () { b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); }, function () {});
         });
       });
+      // The circle is the checkbox. It sits inside the step's <summary>, so stop the click from opening/closing it.
       document.querySelectorAll('[data-tick]').forEach(function (b) {
-        b.addEventListener('click', function () { var on = !(ob.done || {})[b.dataset.tick]; b.disabled = true; obPost(b.dataset.tick, on).then(function () { b.disabled = false; }); });
+        b.addEventListener('click', function (e) {
+          e.preventDefault(); e.stopPropagation();
+          if (!ob || ob.submittedAt || b.dataset.busy) return;
+          var on = !(ob.done || {})[b.dataset.tick];
+          b.dataset.busy = '1'; b.setAttribute('aria-checked', String(on)); b.closest('.ob-step').classList.toggle('done', on);
+          obPost(b.dataset.tick, on).then(function () { delete b.dataset.busy; });
+        });
       });
       function renderReview(list) {
         var box = $('ob-rev-list'); box.innerHTML = '';
@@ -481,8 +488,14 @@ const defaultTargets = JSON.stringify(LICENSES[0].targets);
   .ob-step summary::after { content: ''; width: .45rem; height: .45rem; border-right: 1.5px solid #8a8f8b; border-bottom: 1.5px solid #8a8f8b; transform: rotate(45deg); margin: 0 .2rem 0 .3rem; transition: transform .2s; }
   .ob-step details[open] summary::after { transform: rotate(-135deg); }
   .ob-dot { flex: none; width: 1.15rem; height: 1.15rem; border-radius: 50%; border: 1.5px solid #b5bcb6; display: grid; place-items: center; box-sizing: border-box; }
+  button.ob-dot { padding: 0; background: #fff; cursor: pointer; font: inherit; width: 1.3rem; height: 1.3rem; border-radius: 5px; }
+  button.ob-dot:hover:not(:disabled) { border-color: var(--charcoal); }
+  button.ob-dot:focus-visible { outline: 2px solid var(--charcoal); outline-offset: 2px; }
+  button.ob-dot:disabled { cursor: default; }
+  span.ob-dot { width: 1.3rem; height: 1.3rem; border-radius: 5px; border-style: dashed; }
   .ob-step.done .ob-dot { background: var(--slate); border-color: var(--slate); }
-  .ob-step.done .ob-dot::after { content: '✓'; color: #fff; font-size: .65rem; font-weight: 700; }
+  .ob-step.done .ob-dot { border-style: solid; }
+  .ob-step.done .ob-dot::after { content: '✓'; color: #fff; font-size: .75rem; font-weight: 700; }
   .ob-step.next .ob-dot { border-color: var(--charcoal); border-width: 2px; }
   .ob-title { flex: 1; min-width: 0; font-size: .93rem; font-weight: 500; color: var(--charcoal); }
   .ob-step.done .ob-title { color: #8a8f8b; text-decoration: line-through; text-decoration-color: #c9cfca; }
