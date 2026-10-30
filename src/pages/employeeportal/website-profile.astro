@@ -6,6 +6,14 @@
 // its own ~15 minutes later. A NEW therapist goes on the website once both a photo and a bio are in.
 // Docs: docs/website-profile/README.md.
 import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+
+// Current website profiles (photo, bio, credential, booking...), used to fill in the form when someone picks an
+// existing therapist. The sheet's own values win where it has them.
+const website = (await getCollection('team')).map((e) => {
+  const [nm, ...cred] = String(e.data.name).split(',');
+  return { name: nm.trim(), credential: cred.join(',').trim(), photo: e.data.photo, bio: String(e.body ?? '').trim(), seo: e.data.seoDescription || '', spId: e.data.clinicianId || '', booking: e.data.booking !== false, hidden: !!e.data.hidden };
+}).sort((x, y) => x.name.localeCompare(y.name));
 
 const populations = ['Kids', 'Teens', 'Adults', 'Elderly', 'Couples', 'Families', 'LGBTQ+', 'Transgender'];
 const modalities = ['ACT', 'CBT', 'DBT', 'EFT', 'EMDR', 'ERP', 'IFS', 'Motivational Interviewing', 'Solution-focused', 'Family Therapy Models', 'Somatic', 'Mindfulness', 'Play Therapy', 'Gottman'];
@@ -22,7 +30,7 @@ const box = (group: string, items: string[]) => items.map((x) => ({ group, x }))
     </div>
   </div>
 
-  <p class="pt-soon wp-intro">Type their name. If they’re already on the website, you only need to fill in what’s changing: for a new photo, just add their name and the photo. Anything you leave blank stays as it is. A <b>new</b> therapist goes on the website once they have both a photo and a bio. Changes show on the website about 15 minutes after you submit.</p>
+  <p class="pt-soon wp-intro">Start typing their name and pick them from the list: the form fills in with what the website and the sheet have now. Change what you need and save; sections you don’t touch are left exactly as they are. A <b>new</b> therapist goes on the website once they have both a photo and a bio. Changes show on the website about 15 minutes after you submit.</p>
 
   <form class="wp-form" id="wp-form" novalidate>
     <section class="pt-card">
@@ -30,7 +38,7 @@ const box = (group: string, items: string[]) => items.map((x) => ({ group, x }))
       <div class="wp-grid">
         <label class="pt-field wp-wide">First and last name (as it should show on the website)
           <input id="wp-name" list="wp-names" autocomplete="off" required placeholder="Start typing to see who’s already on the sheet">
-          <datalist id="wp-names"></datalist>
+          <datalist id="wp-names">{website.map((t) => <option value={t.name} />)}</datalist>
         </label>
         <p class="wp-found wp-wide" id="wp-found" role="status" aria-live="polite" hidden></p>
         <label class="pt-field">Credential<input id="wp-credential" maxlength="40" placeholder="e.g. LCSW, ACMHC, AMFT"></label>
@@ -59,7 +67,7 @@ const box = (group: string, items: string[]) => items.map((x) => ({ group, x }))
             </div>
           </div>
         </div>
-        <label class="pt-field wp-wide">Bio<textarea id="wp-bio" rows="8" maxlength="6000" placeholder="Leave empty to keep their current bio. Put a blank line between paragraphs."></textarea></label>
+        <label class="pt-field wp-wide">Bio<textarea id="wp-bio" rows="8" maxlength="6000" placeholder="Each line becomes a paragraph on the website."></textarea></label>
         <label class="pt-field wp-wide">Search description (optional)<textarea id="wp-seo" rows="2" maxlength="300" placeholder="Short summary for Google. Leave empty and the website writes one from the bio."></textarea></label>
       </div>
     </section>
@@ -69,7 +77,7 @@ const box = (group: string, items: string[]) => items.map((x) => ({ group, x }))
       <p class="pt-muted">Tick everything that applies. If you tick anything in a group, it replaces that whole group on the sheet. Leave a group empty to keep it as is.</p>
       <fieldset class="wp-checks"><legend>Populations</legend>{box('ages', populations).map((o) => <label><input type="checkbox" name={o.group} value={o.x}> {o.x}</label>)}</fieldset>
       <fieldset class="wp-checks"><legend>Modalities</legend>{box('modalities', modalities).map((o) => <label><input type="checkbox" name={o.group} value={o.x}> {o.x}</label>)}
-        <label class="wp-other">Other <input id="wp-mod-other" placeholder="comma separated"></label></fieldset>
+        <label class="wp-other">Other <input id="wp-mod-other" data-group="modalities" placeholder="comma separated"></label></fieldset>
       <fieldset class="wp-checks"><legend>Diagnoses they’re comfortable working with</legend>{box('comfortable', diagnoses).map((o) => <label><input type="checkbox" name={o.group} value={o.x}> {o.x}</label>)}</fieldset>
       <fieldset class="wp-checks"><legend>Diagnoses they specialize in</legend>{box('specialties', diagnoses).map((o) => <label><input type="checkbox" name={o.group} value={o.x}> {o.x}</label>)}</fieldset>
     </section>
@@ -122,10 +130,14 @@ const box = (group: string, items: string[]) => items.map((x) => ({ group, x }))
   @media (max-width: 760px) { .wp .wp-grid { grid-template-columns: minmax(0, 1fr); } }
 </style>
 
-<script is:inline>
+<script is:inline define:vars={{ website }}>
   (function () {
     var $ = function (id) { return document.getElementById(id); };
-    var form = $('wp-form'), found = $('wp-found'), result = $('wp-result'), photo = null, lastLookup = '';
+    var form = $('wp-form'), found = $('wp-found'), result = $('wp-result'), photo = null, lastLookup = '', existing = false;
+    // Fields and checkbox groups the person changed. For someone already on the sheet only these are sent,
+    // so untouched answers (even oddly worded ones like "teens 11+") stay exactly as they are.
+    var dirty = {};
+    var FIELDS = { credential: 'wp-credential', office: 'wp-office', gender: 'wp-gender', bio: 'wp-bio', seo: 'wp-seo', spId: 'wp-spid', booking: 'wp-booking', show: 'wp-show', bmonth: 'wp-bmonth', bday: 'wp-bday' };
 
     function api(url, body) {
       return fetch(url, body ? { method: 'POST', headers: { 'content-type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(body) } : { credentials: 'same-origin' })
@@ -133,46 +145,101 @@ const box = (group: string, items: string[]) => items.map((x) => ({ group, x }))
         .then(function (res) { if (!res || res.error) throw new Error((res && res.error) || 'Something went wrong.'); return res; });
     }
     function el(tag, text) { var n = document.createElement(tag); if (text != null) n.textContent = text; return n; }
+    function key(s) { var w = String(s || '').replace(/\([^)]*\)/g, ' ').split(':')[0].toLowerCase().replace(/[^a-zÀ-ɏ\s'-]/g, ' ').trim().split(/\s+/).filter(Boolean); return w.length > 1 ? w[0] + ' ' + w[w.length - 1] : (w[0] || ''); }
+    function cleanName() { return $('wp-name').value.trim().replace(/\s+/g, ' '); }
 
-    // Name suggestions: everyone already on the sheet.
+    // Name suggestions: everyone on the website (already in the page) + anyone only on the sheet.
+    var known = {};
+    website.forEach(function (t) { known[key(t.name)] = 1; });
     api('/api/website-profile?names=1').then(function (res) {
       var dl = $('wp-names');
-      (res.names || []).forEach(function (n) { var o = document.createElement('option'); o.value = n; dl.appendChild(o); });
+      (res.names || []).forEach(function (n) { if (known[key(n)]) return; known[key(n)] = 1; var o = document.createElement('option'); o.value = n; dl.appendChild(o); });
     }).catch(function () {});
 
-    // Look the person up so staff can see what's there and only fill in changes.
+    // ---- filling the form with what's there now ----
+    function setChecks(group, text) {
+      var parts = String(text || '').split(/\s*[,;\n]\s*/).map(function (x) { return x.trim(); }).filter(Boolean), used = {};
+      [].slice.call(form.querySelectorAll('input[name="' + group + '"]')).forEach(function (cb) {
+        var v = cb.value.toLowerCase().replace(/[^a-z]/g, '');
+        var hit = parts.filter(function (p) {
+          var q = p.toLowerCase().replace(/[^a-z]/g, '');
+          return q === v || (q.length > 3 && (q.indexOf(v) === 0 || v.indexOf(q) === 0)) || (group === 'ages' && v.length > 3 && q.indexOf(v.slice(0, 4)) !== -1);
+        });
+        cb.checked = hit.length > 0; hit.forEach(function (p) { used[p] = 1; });
+      });
+      return parts.filter(function (p) { return !used[p]; });
+    }
+    function setSelect(id, value) {
+      var sel = $(id), v = String(value || '').trim();
+      if (!v) { sel.value = ''; return; }
+      var match = [].slice.call(sel.options).filter(function (o) { return o.value.toLowerCase() === v.toLowerCase() || o.text.toLowerCase() === v.toLowerCase(); })[0];
+      if (!match) { match = new Option(v, v); sel.appendChild(match); }
+      sel.value = match.value;
+    }
+    function fill(sheet, site) {
+      var p = sheet.profile || {}, m = sheet.modalities || {}, o = sheet.openings || {};
+      $('wp-credential').value = p.credential || o.credential || (site && site.credential) || '';
+      $('wp-bio').value = p.bio || (site && site.bio) || '';
+      $('wp-seo').value = p.seo || (site && site.seo) || '';
+      $('wp-spid').value = p.spId || (site && site.spId) || '';
+      setSelect('wp-booking', p.booking || (site ? (site.booking ? 'Yes' : 'No') : ''));
+      setSelect('wp-show', p.show || (site ? (site.hidden ? 'No' : 'Yes') : ''));
+      setSelect('wp-gender', m.gender || '');
+      var other = setChecks('modalities', m.modalities);
+      $('wp-mod-other').value = other.join(', ');
+      setChecks('ages', m.ages); setChecks('comfortable', m.comfortable); setChecks('specialties', m.specialties);
+      var b = /^(\d{2})-(\d{2})$/.exec(sheet.birthday || '');
+      $('wp-bmonth').value = b ? b[1] : ''; $('wp-bday').value = b ? b[2] : '';
+      // Photo: the website's current photo (the sheet's Drive link can't be shown here).
+      photo = null; $('wp-photo').value = '';
+      if (site && site.photo) { $('wp-preview').src = site.photo; $('wp-preview').hidden = false; $('wp-photo-note').textContent = 'Current website photo. Choose a file to replace it.'; }
+      else if (p.photo) { $('wp-preview').hidden = true; $('wp-photo-note').textContent = 'They have a photo on the sheet. Choose a file to replace it.'; }
+      else { $('wp-preview').hidden = true; $('wp-photo-note').textContent = 'No photo yet. A new therapist needs one to go on the website.'; }
+      dirty = {};
+    }
+
     function lookup() {
-      var name = $('wp-name').value.trim().replace(/\s+/g, ' ');
+      var name = cleanName();
       if (name.split(' ').length < 2 || name === lastLookup) return;
       lastLookup = name;
-      found.hidden = false; found.className = 'wp-found wp-wide'; found.textContent = 'Checking the sheet…';
+      var site = website.filter(function (t) { return key(t.name) === key(name); })[0] || null;
+      found.hidden = false; found.className = 'wp-found wp-wide'; found.textContent = 'Loading their current info…';
       api('/api/website-profile?name=' + encodeURIComponent(name)).then(function (res) {
         if (name !== lastLookup) return;
         found.textContent = '';
-        if (!res.found) {
-          found.append('Not on the sheet yet. Saving will add ' + name + ' as a new therapist, so choose their office. They go on the website once they have a photo and a bio.');
+        existing = !!(res.found || site);
+        if (!existing) {
+          found.append('Not on the website or the sheet yet. Saving will add ' + name + ' as a new therapist, so choose their office. They go on the website once they have a photo and a bio.');
           return;
         }
+        fill(res, site);
         found.className = 'wp-found wp-wide ok';
-        var p = res.profile || {}, m = res.modalities || {}, bits = [];
-        if (p.credential || (res.openings && res.openings.credential)) bits.push('credential ' + (p.credential || res.openings.credential));
-        bits.push(p.photo ? 'has a photo' : 'no photo yet');
-        bits.push(p.bio ? 'has a bio' : 'no bio on the sheet (a website bio may already exist)');
-        if (m.ages) bits.push('populations: ' + m.ages);
-        if (m.modalities) bits.push('modalities: ' + m.modalities);
-        if (m.specialties) bits.push('specialties: ' + m.specialties);
-        if (res.birthday) bits.push('birthday saved');
-        found.append('Found ' + (p.name || m.name || name) + ' on the sheet: ' + bits.join(' · ') + '. Only fill in what should change.');
-        if (p.status) { found.append(el('br')); found.append('Website status: ' + p.status); }
-      }).catch(function (e) { found.textContent = 'Couldn’t check the sheet: ' + e.message; });
+        found.append('Filled in with ' + name + '’s current info' + (site ? ' from the website' : '') + (res.found ? (site ? ' and the sheet' : ' from the sheet') : '') + '. Change what you need, then save. Sections you don’t touch stay as they are.');
+        if (res.profile && res.profile.status) { found.append(el('br')); found.append('Website status: ' + res.profile.status); }
+      }).catch(function (e) {
+        if (name !== lastLookup) return;
+        // The sheet couldn't be read: still fill in what the website has.
+        existing = !!site; found.textContent = '';
+        if (site) { fill({}, site); found.className = 'wp-found wp-wide ok'; found.append('Filled in from the website (couldn’t read the sheet: ' + e.message + '). Change what you need, then save.'); }
+        else found.append('Couldn’t check the sheet: ' + e.message);
+      });
     }
+    $('wp-name').addEventListener('input', function () {
+      // Picking a suggestion fills the form right away.
+      var v = cleanName(); if ([].slice.call($('wp-names').options).some(function (o) { return o.value === v; })) lookup();
+    });
     $('wp-name').addEventListener('change', lookup);
     $('wp-name').addEventListener('blur', lookup);
 
+    // Track what was changed.
+    Object.keys(FIELDS).forEach(function (k) { ['input', 'change'].forEach(function (ev) { $(FIELDS[k]).addEventListener(ev, function () { dirty[k] = 1; }); }); });
+    form.addEventListener('change', function (e) { var g = e.target.name || (e.target.dataset && e.target.dataset.group); if (g) dirty[g] = 1; });
+    $('wp-mod-other').addEventListener('input', function () { dirty.modalities = 1; });
+
     // Photo: shrink to max 1600 px and send as JPEG (keeps uploads small; also turns PNG into JPEG).
     $('wp-photo').addEventListener('change', function () {
-      var f = this.files && this.files[0];
-      photo = null; $('wp-preview').hidden = true; $('wp-photo-note').textContent = 'Leave empty to keep their current photo.';
+      var f = this.files && this.files[0], input = this;
+      photo = null;
       if (!f) return;
       var img = new Image(), url = URL.createObjectURL(f);
       img.onload = function () {
@@ -182,10 +249,10 @@ const box = (group: string, items: string[]) => items.map((x) => ({ group, x }))
         var data = c.toDataURL('image/jpeg', 0.88);
         photo = { type: 'image/jpeg', data: data.split(',')[1] };
         $('wp-preview').src = data; $('wp-preview').hidden = false;
-        $('wp-photo-note').textContent = 'Ready: ' + c.width + ' × ' + c.height + (img.naturalHeight < img.naturalWidth ? '. Tip: a portrait (taller than wide) photo crops best.' : '.');
+        $('wp-photo-note').textContent = 'New photo ready: ' + c.width + ' × ' + c.height + (img.naturalHeight < img.naturalWidth ? '. Tip: a portrait (taller than wide) photo crops best.' : '.');
         URL.revokeObjectURL(url);
       };
-      img.onerror = function () { $('wp-photo-note').textContent = 'This browser can’t open that photo. If it’s an iPhone (HEIC) photo, save it as a JPG first and try again.'; this.value = ''; URL.revokeObjectURL(url); }.bind(this);
+      img.onerror = function () { $('wp-photo-note').textContent = 'This browser can’t open that photo. If it’s an iPhone (HEIC) photo, save it as a JPG first and try again.'; input.value = ''; URL.revokeObjectURL(url); };
       img.src = url;
     });
 
@@ -193,18 +260,19 @@ const box = (group: string, items: string[]) => items.map((x) => ({ group, x }))
 
     form.addEventListener('submit', function (e) {
       e.preventDefault();
-      var name = $('wp-name').value.trim().replace(/\s+/g, ' ');
+      var name = cleanName();
       result.hidden = false; result.className = 'pt-card wp-result';
       if (name.split(' ').length < 2) { result.className += ' err'; result.textContent = 'Enter their first and last name.'; $('wp-name').focus(); return; }
+      var send = function (k) { return !existing || dirty[k]; };
       var mods = checked('modalities').concat($('wp-mod-other').value.split(',').map(function (x) { return x.trim(); }).filter(Boolean));
       var bday = $('wp-bmonth').value && $('wp-bday').value ? $('wp-bmonth').value + '-' + $('wp-bday').value : '';
-      var body = {
-        name: name, credential: $('wp-credential').value.trim(), office: $('wp-office').value, gender: $('wp-gender').value,
-        bio: $('wp-bio').value.trim(), seo: $('wp-seo').value.trim(), spId: $('wp-spid').value.trim(),
-        booking: $('wp-booking').value, show: $('wp-show').value, birthday: bday,
-        ages: checked('ages'), modalities: mods, comfortable: checked('comfortable'), specialties: checked('specialties'),
-        photo: photo,
-      };
+      var body = { name: name, photo: photo, office: $('wp-office').value };
+      ['credential', 'gender', 'bio', 'seo', 'spId', 'booking', 'show'].forEach(function (k) { if (send(k)) body[k] = $(FIELDS[k]).value.trim(); });
+      if (send('bmonth') || send('bday')) body.birthday = bday;
+      if (send('ages')) body.ages = checked('ages');
+      if (send('modalities')) body.modalities = mods;
+      if (send('comfortable')) body.comfortable = checked('comfortable');
+      if (send('specialties')) body.specialties = checked('specialties');
       var btn = $('wp-send'); btn.disabled = true; btn.setAttribute('aria-busy', 'true');
       result.textContent = 'Saving to the sheet…';
       api('/api/website-profile', body).then(function (res) {
@@ -213,13 +281,14 @@ const box = (group: string, items: string[]) => items.map((x) => ({ group, x }))
         var ul = el('ul'); (res.changes || []).forEach(function (c) { ul.append(el('li', c)); }); result.append(ul);
         if ((res.notes || []).length) { var nl = el('ul'); res.notes.forEach(function (n) { nl.append(el('li', n)); }); result.append(el('p', 'Heads up:')); result.append(nl); }
         result.append(el('p', 'The website updates about 15 minutes after the last change to the sheet.'));
-        lastLookup = ''; lookup();
+        dirty = {}; photo = null; existing = true;
       }).catch(function (e2) { result.className += ' err'; result.textContent = 'Couldn’t save: ' + e2.message; })
         .then(function () { btn.disabled = false; btn.removeAttribute('aria-busy'); });
     });
 
     $('wp-clear').addEventListener('click', function () {
-      form.reset(); photo = null; lastLookup = ''; $('wp-preview').hidden = true; found.hidden = true; result.hidden = true;
+      form.reset(); photo = null; lastLookup = ''; existing = false; dirty = {};
+      $('wp-preview').hidden = true; found.hidden = true; result.hidden = true;
       $('wp-photo-note').textContent = 'Leave empty to keep their current photo.'; window.scrollTo(0, 0);
     });
   })();

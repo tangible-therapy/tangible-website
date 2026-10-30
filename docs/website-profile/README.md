@@ -4,10 +4,13 @@ Two ways therapists get onto the "tangible sheets" Google Sheet without anyone e
 
 1. **Add/Update Website Profile page** — /employeeportal/website-profile (Reception menu "Website Profiles";
    front desk, directors, owner). A form built into the page (a Google Form with a photo upload can't be
-   embedded). Only the name is required: fill in just what's changing (e.g. name + new photo). Blank fields and
-   empty checkbox groups keep what's on the sheet; anything filled in replaces it (newer answers win). Typing a
-   name looks them up and shows what the sheet has; the name box suggests everyone already on the sheet, and
-   the page warns "Not on the sheet yet" before adding someone new (names must match exactly: first + last,
+   embedded). The name box suggests everyone on the website (built into the page) and on the sheet. Picking an
+   existing therapist FILLS IN the form with their current info (sheet values first, then the website's own
+   profile: credential, bio, SEO text, SimplePractice ID, booking, show, photo preview; populations/modalities/
+   diagnoses/gender/birthday from the sheet; modalities that don't match a checkbox go in "Other"). Only the
+   fields and checkbox groups that were changed are sent, so untouched answers stay exactly as worded. Blank
+   still means "keep" (it never erases). Someone new: everything filled in is sent, and the page warns "Not on
+   the website or the sheet yet" before adding them (names must match exactly: first + last,
    capitals/extra spaces/middle names/bracket notes ignored, nicknames are NOT guessed).
 2. **New Employee Onboarding form** — each response updates the sheet automatically (trigger
    `onOnboardingProfile`): name = Preferred First + Last, "populations" → ages, "modalities" → modalities,
