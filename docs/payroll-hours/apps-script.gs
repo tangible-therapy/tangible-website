@@ -153,15 +153,22 @@ function formColumns_(sh) {
     time: find(function (h) { return h.indexOf('timestamp') === 0; }),
     name: find(function (h) { return h === 'name'; }),
     hours: find(function (h) { return h.indexOf('hours worked') === 0; }),
-    pto: find(function (h) { return h.indexOf('pto') >= 0; }),
-    meetings: find(function (h) { return h.indexOf('meetings') >= 0; }),
-    noShows: find(function (h) { return h.indexOf('no shows') >= 0; }),
+    // Matched by how each question STARTS: the first question's long header also mentions PTO, meetings and
+    // no shows, so "contains" would pick the wrong column.
+    pto: find(function (h) { return h.indexOf('hours of pto') === 0 || h.indexOf('pto') === 0; }),
+    meetings: find(function (h) { return h.indexOf('how many of those hours') === 0 || h.indexOf('meetings') === 0; }),
+    noShows: find(function (h) { return h.indexOf('how many no shows') === 0 || h.indexOf('no shows') === 0; }),
     billable: find(function (h) { return h.indexOf('billable') === 0; }),
     period: find(function (h) { return h === 'pay period'; }),
     email: find(function (h) { return h === 'email'; }),
   };
   ['time', 'name', 'hours', 'pto', 'meetings', 'noShows'].forEach(function (k) {
     if (cols[k] < 0) throw new Error('The "' + FORM_TAB + '" tab is missing its "' + k + '" column (headers changed?).');
+  });
+  var used = {};
+  ['time', 'name', 'hours', 'pto', 'meetings', 'noShows'].forEach(function (k) {
+    if (used[cols[k]]) throw new Error('Two answers matched the same column on the "' + FORM_TAB + '" tab (headers changed?).');
+    used[cols[k]] = true;
   });
   if (cols.period < 0) { cols.period = lastCol; sh.getRange(1, lastCol + 1).setValue('Pay period'); lastCol++; }
   if (cols.email < 0) { cols.email = lastCol; sh.getRange(1, lastCol + 1).setValue('Email'); }
