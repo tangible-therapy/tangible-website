@@ -5,12 +5,12 @@
 import Base from '../layouts/Base.astro';
 import { LICENSES } from '../data/hours';
 ---
-<Base title="Hours Tracker | Tangible Therapy" description="Supervision hours tracker." noindex>
+<Base title="Supervision Hours | Tangible Therapy" description="Log and approve supervised hours toward licensure." noindex>
   <section class="sec t-light hr">
     <div class="sec-in"><div class="wrap hr-wrap">
       <header class="hr-head">
         <p class="hr-eyebrow">Licensure</p>
-        <h1>Hours tracker</h1>
+        <h1>Supervision Hours</h1>
         <p class="hr-lede" >Log your supervised hours toward licensure. Your supervisor approves them, and only approved hours count toward your totals.</p>
         <div class="hr-tabs" role="tablist" id="hr-tabs" hidden>
           <button type="button" role="tab" data-tab="mine" aria-selected="true">My hours</button>
@@ -203,7 +203,7 @@ import { LICENSES } from '../data/hours';
           who.appendChild(el('h2', null, 'Supervisor: ' + mine.supervisorName));
         } else {
           who.appendChild(el('h2', null, 'No supervisor linked yet'));
-          who.appendChild(el('p', 'hr-muted', 'You can start logging now. Ask your supervisor to add you in the Hours tracker; your entries will then go to them for approval.'));
+          who.appendChild(el('p', 'hr-muted', 'You can start logging now. Ask your supervisor to add you in Supervision Hours; your entries will then go to them for approval.'));
         }
         top.appendChild(who); s.appendChild(top);
         s.appendChild(progress(mine.link, mine.approved, mine.pending));
@@ -365,9 +365,9 @@ import { LICENSES } from '../data/hours';
           document.querySelector('.hr-lede').textContent = 'See your supervisees\u2019 progress toward licensure and approve the hours they log.';
           tab('team');
         } else if (!b.canLog) {
-          $('hr-status').innerHTML = ''; $('hr-status').appendChild(el('p', 'hr-muted', 'The hours tracker is for associates and supervisors. Ask a director to update your role if you need it.'));
+          $('hr-status').innerHTML = ''; $('hr-status').appendChild(el('p', 'hr-muted', 'Supervision Hours is for associates and supervisors. Ask a director to update your role if you need it.'));
         }
-      }).catch(function (e) { $('hr-status').innerHTML = ''; $('hr-status').appendChild(el('p', 'hr-err', e.message === 'Please sign in.' ? 'The hours tracker needs Google sign-in, which isn’t switched on here yet.' : e.message)); });
+      }).catch(function (e) { $('hr-status').innerHTML = ''; $('hr-status').appendChild(el('p', 'hr-err', e.message === 'Please sign in.' ? 'Supervision Hours needs Google sign-in, which isn’t switched on here yet.' : e.message)); });
     })();
   </script>
 </Base>
