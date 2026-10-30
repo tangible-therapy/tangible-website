@@ -68,10 +68,11 @@ const stages: Stage[] = [
         <li>Ask <span data-fill="director">the office director</span> to add them at ${a('/staff-admin', 'Staff Admin')} (only directors can open it). Send them:
           <span class="ob-chip" data-fill="staffline">Name, email, role, office</span> <button type="button" class="ob-mini" data-copy="staffline">Copy</button></li>
         <li>Roles: <b>Therapist</b> for licensed clinicians, <b>Associate (pre-licensed)</b> for anyone logging supervised hours, <b>Admin / front desk</b> for reception. Someone can have more than one.</li>
-        <li>If they sign in before they’re added, they show up as <b>pending</b> and the director just clicks Approve.</li></ol>
+        <li>If they sign in before they’re added, they show up as <b>pending</b> and the director just clicks Approve.</li>
+        <li>Leave <b>Already completed orientation</b> unticked. That’s what gives them the new-hire checklist on their dashboard.</li></ol>
         <p class="ob-tip">Until Google sign-in is switched on for the live site, also send them the staff password from the team password manager.</p>` },
       { id: 'slack', title: 'Get them on Slack', body: `
-        <p>Nothing to do here. Anyone with a Tangible email can join ${a(SLACK, 'Tangible’s Slack')} on their own, and the welcome email (step below) includes the link. Tick this once they’ve joined.</p>
+        <p>Nothing to do here. Anyone with a Tangible email can join ${a(SLACK, 'Tangible’s Slack')} on their own, and the checklist on their Employee Portal dashboard walks them through it. Tick this once they’ve joined.</p>
         <p class="pt-muted">If they can’t get in: open Slack, click <b>Tangible Therapy</b> (top left) → <b>Invite people</b>, and enter their Tangible email.</p>` },
       { id: 'simple', who: 'clinician', title: 'Add them to SimplePractice', body: `<ol>
         <li>Open ${a(SIMPLEPRACTICE, 'SimplePractice')} → <b>Settings</b> → <b>Team</b> → <b>Team members</b>.</li>
@@ -87,8 +88,8 @@ const stages: Stage[] = [
     title: 'Paperwork and payroll',
     when: 'Once their email works',
     steps: [
-      { id: 'onboarding', title: 'Send the welcome email (orientation + onboarding)', body: `
-        <p>Fill in the new hire details at the top and the email below is ready to send.</p>
+      { id: 'onboarding', title: 'Send the welcome email', body: `
+        <p>Fill in the new hire details at the top and the email below is ready to send. It points them to the Employee Portal, where a checklist on their dashboard walks them through Slack, Orientation and Onboarding. When they finish, they show up for their director to approve (on the director’s dashboard and in Staff Admin).</p>
         <div class="ob-mail">
           <p class="ob-mail-meta"><b>To:</b> <span data-fill="emailOrPersonal">their email</span><br><b>Subject:</b> Welcome to Tangible!</p>
           <pre class="ob-mail-body" data-fill="welcomeBody"></pre>
@@ -329,14 +330,10 @@ let num = 0;
       var first = val('first'), last = val('last'), o = office(), full = (first + ' ' + last).trim();
       var welcome = 'Hi ' + (first || '[first name]') + ',\n\n' +
         'Welcome to the Tangible team! We’re excited to have you on board.\n\n' +
-        'To get started, please complete our orientation and onboarding:\n\n' +
-        '1. Go to the Employee Portal: https://tangiblementalhealth.com/employeeportal\n' +
-        '2. Sign in with your new Tangible email (' + (email() || '[Tangible email]') + '). You should have an email from Google about your new account.\n' +
-        '3. Under “New employees”, open Orientation. It covers important things you’ll need for your work at Tangible, so take the time you need. It takes about an hour.\n' +
-        '4. When you’ve finished Orientation, complete Onboarding (also under “New employees”).\n' +
-        '5. Join our team Slack at https://tangibletherapy.slack.com. Sign up with your Tangible email address.\n\n' +
-        'If you have any questions, just reach out and we’ll help you through it.\n\n' +
-        'When you’ve finished both, please contact your practice director, ' + o.director + ' (' + o.email + '), to set up a time to finish onboarding.\n\n' +
+        'To get started, go to the Employee Portal and sign in with your new Tangible email (' + (email() || '[Tangible email]') + '):\n' +
+        'https://tangiblementalhealth.com/employeeportal\n\n' +
+        'You should already have an email from Google with your sign-in details. Once you’re in, your dashboard has a short checklist that walks you through everything: joining our team Slack, Orientation and your onboarding paperwork. When it’s all done, your practice director, ' + o.director + ', will set up a time with you to finish onboarding.\n\n' +
+        'If you have any questions, just reach out to ' + o.director + ' (' + o.email + ') and we’ll help you through it.\n\n' +
         'Welcome aboard!';
       var payroll = 'Hi,\n\nPlease add our new employee to payroll:\n\n' +
         'Name: ' + (full || '[name]') + '\n' +

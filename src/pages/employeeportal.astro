@@ -5,10 +5,15 @@
 // the training meetings and "Suggest a training topic" from the office's Team Dashboard sheet
 // (/api/dashboard — see docs/office-dashboards), room claims (/api/rooms) for the rooms count, and for
 // associates their supervised hours (/api/hours, the same data as the Hours Tracker page).
+// New hires (approved, orientation not complete) get a "Get set up" checklist at the top (/api/onboarding):
+// join Slack, complete Orientation (ticks itself when every lesson was opened and the skills review passed in
+// this browser), complete Onboarding. Finished checklists appear for directors in "New hires ready for approval".
 // Find a Room is its own page: src/pages/employeeportal/rooms.astro.
 import Base from '../layouts/Base.astro';
 import { OFFICES } from '../data/staff-access';
 import { LICENSES } from '../data/hours';
+import orientation from '../data/orientation.json';
+const lessonSlugs = (orientation as { slug: string }[]).map((l) => l.slug);
 const offices = OFFICES.map((o) => ({ id: o.id, label: o.label.replace(/ \(.*\)/, '') }));
 const defaultTargets = JSON.stringify(LICENSES[0].targets);
 ---
@@ -25,6 +30,65 @@ const defaultTargets = JSON.stringify(LICENSES[0].targets);
     </div>
 
     <p class="pt-muted" id="pd-intro">Everything you need is in the menu.</p>
+
+    <article class="pt-card ob-card" id="ob-card" hidden data-slugs={JSON.stringify(lessonSlugs)}>
+      <div class="ob-card-head">
+        <div>
+          <p class="pt-eyebrow">New here?</p>
+          <h2 id="ob-heading">Let’s get you set up</h2>
+          <p class="pt-muted" id="ob-sub">Work through these three steps. When they’re all ticked, your practice director sees it on their dashboard and will finish your onboarding with you.</p>
+        </div>
+        <p class="ob-count"><strong id="ob-n">0</strong> of 3 done</p>
+      </div>
+      <div class="ob-bar"><i id="ob-bar"></i></div>
+      <ol class="ob-steps">
+        <li class="ob-step" data-step="slack">
+          <span class="ob-dot" aria-hidden="true"></span>
+          <div class="ob-body">
+            <h3>Join Slack</h3>
+            <p>Slack is where the team talks day to day. Go to <a href="https://tangibletherapy.slack.com" target="_blank" rel="noopener">tangibletherapy.slack.com</a> and sign up with your Tangible email<span data-me-email></span>. It’s worth installing the Slack app on your phone and computer too.</p>
+            <div class="ob-acts">
+              <a class="pt-btn" href="https://tangibletherapy.slack.com" target="_blank" rel="noopener">Open Slack</a>
+              <button type="button" class="pt-btn ghost" data-tick="slack">I’ve joined Slack</button>
+            </div>
+          </div>
+        </li>
+        <li class="ob-step" data-step="orientation">
+          <span class="ob-dot" aria-hidden="true"></span>
+          <div class="ob-body">
+            <h3>Complete Orientation</h3>
+            <p>Orientation covers how we work at Tangible, our policies and SimplePractice. It takes about an hour. Go through every lesson; the last one is a short SimplePractice skills review. This step ticks itself when you’ve finished.</p>
+            <p class="ob-prog" id="ob-orient-prog"></p>
+            <div class="ob-acts">
+              <a class="pt-btn" href="/orientation">Go to Orientation</a>
+              <button type="button" class="ob-link" data-tick="orientation" id="ob-orient-other">I finished it on another device</button>
+            </div>
+          </div>
+        </li>
+        <li class="ob-step" data-step="paperwork">
+          <span class="ob-dot" aria-hidden="true"></span>
+          <div class="ob-body">
+            <h3>Complete Onboarding</h3>
+            <p>On the Onboarding page, download and fill in the W-4 and direct deposit form, then open the onboarding form and upload them with your license. Use your Tangible Google account so the uploads work.</p>
+            <div class="ob-acts">
+              <a class="pt-btn" href="/onboarding">Go to Onboarding</a>
+              <button type="button" class="pt-btn ghost" data-tick="paperwork">I’ve submitted the form</button>
+            </div>
+          </div>
+        </li>
+      </ol>
+      <p class="ob-msg" id="ob-msg" role="status"></p>
+    </article>
+
+    <article class="pt-card ob-review" id="ob-review" hidden>
+      <div class="ob-card-head">
+        <h2>New hires ready for approval</h2>
+        <a class="pd-link" href="/staff-admin#onboarding">Staff Admin ›</a>
+      </div>
+      <p class="pt-muted">They’ve joined Slack and finished Orientation and Onboarding. Approve them once you’ve met to finish onboarding; their checklist then goes away.</p>
+      <ul class="ob-rev-list" id="ob-rev-list"></ul>
+      <p class="ob-msg" id="ob-rev-msg" role="status"></p>
+    </article>
     <p class="pt-soon" id="pd-soon" hidden>This office's dashboard isn't connected yet. It's coming soon.</p>
     <p class="pt-soon" id="pd-error" hidden></p>
 
@@ -252,8 +316,82 @@ const defaultTargets = JSON.stringify(LICENSES[0].targets);
         }).catch(function () { $('pd-updated').textContent = ''; $('pd-error').textContent = 'The dashboard couldn’t load. Please refresh the page.'; $('pd-error').hidden = false; });
       }
 
+      // ----- new-hire checklist + directors' approvals -----
+      var ob = null;
+      function lsGet(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } }
+      function orientationHere() {
+        var slugs = JSON.parse($('ob-card').dataset.slugs || '[]');
+        var seen = lsGet('tt-orientation-done') || {};
+        var n = slugs.filter(function (s) { return seen[s]; }).length;
+        var sr = lsGet('spq.progress.v1') || {};
+        return { viewed: n, total: slugs.length, review: !!sr.finished, complete: slugs.length > 0 && n >= slugs.length && !!sr.finished };
+      }
+      function obPost(step, done) {
+        $('ob-msg').textContent = '';
+        return fetch('/api/onboarding', { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ step: step, done: done }) })
+          .then(function (r) { return r.json(); })
+          .then(function (b) { if (b && b.steps) { ob = b; renderOb(); } if (b && b.error) $('ob-msg').textContent = b.error; })
+          .catch(function () { $('ob-msg').textContent = 'That didn’t save. Please try again.'; });
+      }
+      function renderOb() {
+        var card = $('ob-card');
+        if (!ob || !ob.show) { card.hidden = true; return; }
+        card.hidden = false;
+        var done = ob.done || {}, locked = !!ob.submittedAt, n = 0;
+        var o = orientationHere();
+        // Orientation ticks itself once every lesson was opened and the skills review passed in this browser.
+        if (!locked && o.complete && !done.orientation && !renderOb.syncing) { renderOb.syncing = true; obPost('orientation', true).then(function () { renderOb.syncing = false; }); }
+        ob.steps.forEach(function (st) {
+          var li = card.querySelector('[data-step="' + st.id + '"]'); var ok = !!done[st.id]; if (ok) n++;
+          li.classList.toggle('done', ok);
+          card.querySelectorAll('[data-tick="' + st.id + '"]').forEach(function (b) {
+            b.hidden = locked || (st.id === 'orientation' && ok);
+            if (st.id !== 'orientation') b.textContent = ok ? 'Undo' : b.dataset.label;
+            b.classList.toggle('undo', ok);
+          });
+        });
+        $('ob-orient-prog').hidden = !!done.orientation; $('ob-orient-prog').textContent = 'On this device: ' + o.viewed + ' of ' + o.total + ' lessons opened · Skills review ' + (o.review ? 'passed' : 'not finished yet') + '.';
+        $('ob-n').textContent = n; $('ob-bar').style.width = Math.round(n / 3 * 100) + '%';
+        var d = ob.director || {};
+        if (locked) {
+          card.classList.add('sent');
+          $('ob-heading').textContent = 'All done. Nice work!';
+          $('ob-sub').textContent = 'Your checklist is with ' + (d.name || 'your practice director') + ' for approval. They’ll set up a time with you to finish onboarding, and this list will disappear once they approve it.';
+        }
+      }
+      document.querySelectorAll('[data-tick]').forEach(function (b) {
+        b.dataset.label = b.textContent;
+        b.addEventListener('click', function () { var on = !(ob.done || {})[b.dataset.tick]; b.disabled = true; obPost(b.dataset.tick, on).then(function () { b.disabled = false; }); });
+      });
+      function renderReview(list) {
+        var box = $('ob-rev-list'); box.innerHTML = '';
+        $('ob-review').hidden = !list.length;
+        list.forEach(function (p) {
+          var li = el('li', 'ob-rev');
+          var who = el('div', 'ob-rev-who'); who.appendChild(el('strong', null, p.name)); who.appendChild(el('span', null, p.officeLabel + ' · finished ' + new Date(p.submittedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })));
+          var btn = el('button', 'pt-btn', 'Approve'); btn.type = 'button';
+          btn.onclick = function () {
+            btn.disabled = true; $('ob-rev-msg').textContent = '';
+            fetch('/api/staff-admin', { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ approveOnboarding: p.email }) })
+              .then(function (r) { return r.json().then(function (b) { if (!r.ok) throw new Error(b.error || 'Something went wrong.'); }); })
+              .then(function () { $('ob-rev-msg').textContent = 'Approved ' + p.name + '.'; renderReview(list.filter(function (x) { return x.email !== p.email; })); $('ob-review').hidden = false; })
+              .catch(function (e) { btn.disabled = false; $('ob-rev-msg').textContent = e.message; });
+          };
+          li.appendChild(who); li.appendChild(btn); box.appendChild(li);
+        });
+      }
+      function loadOnboarding() {
+        fetch('/api/onboarding', { credentials: 'same-origin' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (b) {
+          if (!b) return;
+          ob = b; renderOb();
+          if (b.review) renderReview(b.review);
+        }).catch(function () {});
+      }
+
       function start(m) {
         me = m;
+        document.querySelectorAll('[data-me-email]').forEach(function (n) { if (me.email) n.textContent = ' (' + me.email + ')'; });
+        loadOnboarding();
         var first = me.firstName ? me.firstName.charAt(0).toUpperCase() + me.firstName.slice(1) : '';
         var h = nowParts().mins;
         $('pd-hello').textContent = (h < 720 ? 'Good morning' : h < 1020 ? 'Good afternoon' : 'Good evening') + (first ? ', ' + first : '');
@@ -274,6 +412,43 @@ const defaultTargets = JSON.stringify(LICENSES[0].targets);
 </Base>
 
 <style is:global>
+  .ob-card { margin-bottom: 1.2rem; border: 2px solid var(--sage); }
+  .ob-card.sent { border-color: #bcd6c2; }
+  .ob-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
+  .ob-card h2, .ob-review h2 { font-size: 1.3rem; font-weight: 600; margin: .1rem 0 .3rem; color: var(--charcoal); }
+  .ob-card .pt-eyebrow { margin: 0; }
+  .ob-count { margin: 0; font-size: .95rem; color: #5d635e; white-space: nowrap; }
+  .ob-count strong { color: var(--charcoal); font-size: 1.2rem; }
+  .ob-bar { height: 6px; border-radius: 6px; background: #e6e9e6; overflow: hidden; margin: .9rem 0 .4rem; }
+  .ob-bar i { display: block; height: 100%; width: 0; background: var(--slate); transition: width .3s; }
+  .ob-steps { list-style: none; margin: 0; padding: 0; }
+  .ob-step { display: flex; gap: .9rem; padding: 1rem 0; border-top: 1px solid #e6e9e6; }
+  .ob-step:first-child { border-top: 0; }
+  .ob-dot { flex: none; width: 1.6rem; height: 1.6rem; border-radius: 50%; border: 2px solid #b5bcb6; margin-top: .1rem; display: grid; place-items: center; box-sizing: border-box; }
+  .ob-step.done .ob-dot { background: var(--slate); border-color: var(--slate); }
+  .ob-step.done .ob-dot::after { content: '✓'; color: #fff; font-size: .85rem; font-weight: 700; }
+  .ob-body { min-width: 0; flex: 1; }
+  .ob-body h3 { font-size: 1.05rem; font-weight: 600; margin: 0 0 .25rem; color: var(--charcoal); }
+  .ob-step.done .ob-body h3 { color: #5d635e; }
+  .ob-body p { margin: 0 0 .5rem; font-size: .93rem; line-height: 1.55; }
+  .ob-step.done .ob-body p:not(.ob-prog) { display: none; }
+  .ob-prog { font-size: .85rem !important; color: #5d635e; }
+  .ob-acts { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+  .ob-acts a.pt-btn { text-decoration: none; display: inline-flex; align-items: center; }
+  .ob-step.done .ob-acts a.pt-btn { display: none; }
+  .ob-acts .pt-btn.undo { font-size: .8rem; padding: .3rem .8rem; min-height: 0; }
+  .ob-link { font: inherit; font-size: .82rem; color: #5d635e; background: none; border: 0; text-decoration: underline; cursor: pointer; padding: .3rem; }
+  .ob-acts [hidden] { display: none !important; }
+  .ob-msg { font-size: .85rem; color: #8a2f1c; margin: .4rem 0 0; }
+  .ob-msg:empty { display: none; }
+  .ob-review { margin-bottom: 1.2rem; border: 2px solid #e3b341; }
+  .ob-review .ob-msg { color: #23432c; }
+  .ob-rev-list { list-style: none; margin: .6rem 0 0; padding: 0; }
+  .ob-rev { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: .7rem 0; border-top: 1px solid #e6e9e6; }
+  .ob-rev-who { display: flex; flex-direction: column; min-width: 0; }
+  .ob-rev-who strong { font-weight: 600; }
+  .ob-rev-who span { font-size: .85rem; color: #5d635e; }
+  @media (max-width: 520px) { .ob-step { gap: .7rem; } .ob-count { white-space: normal; } }
   .pd-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .9rem; margin-bottom: 1.2rem; }
   .pd-tile { display: flex; flex-direction: column; gap: .1rem; background: #fff; border-radius: 16px; padding: .9rem 1.15rem; color: var(--charcoal) !important; text-decoration: none !important; box-shadow: 0 1px 2px rgba(0,0,0,.04); min-width: 0; }
   a.pd-tile:hover { box-shadow: 0 2px 10px rgba(0,0,0,.08); }

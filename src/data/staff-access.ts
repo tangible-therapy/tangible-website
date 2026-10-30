@@ -34,10 +34,28 @@ export type StaffRecord = {
   office: Office;
   status: 'approved' | 'pending';
   orientationComplete?: boolean;
+  onboarding?: Onboarding;
   addedBy?: string;
   updatedAt?: string;
   lastSignIn?: string;
 };
+
+// New-hire checklist on the Employee Portal dashboard (/api/onboarding). Shown to approved staff who haven't
+// finished orientation; when every step is ticked they show up on directors' dashboards, and once a director
+// approves at /staff-admin, orientationComplete becomes true and the checklist disappears.
+export type OnboardingStep = 'slack' | 'orientation' | 'paperwork';
+export const ONBOARDING_STEPS: { id: OnboardingStep; label: string }[] = [
+  { id: 'slack', label: 'Join Slack' },
+  { id: 'orientation', label: 'Complete Orientation' },
+  { id: 'paperwork', label: 'Complete Onboarding' },
+];
+export type Onboarding = {
+  done?: Partial<Record<OnboardingStep, string>>; // step → when it was ticked (ISO)
+  submittedAt?: string; // all steps ticked; waiting for a director's approval
+  approvedAt?: string;
+  approvedBy?: string;
+};
+export const needsOnboarding = (r: StaffRecord | null) => !!r && r.status === 'approved' && !isOwner(r.email) && !r.orientationComplete;
 
 export const isOwner = (email: string) => OWNER_EMAILS.includes(email.toLowerCase());
 export const isWorkEmail = (email?: string | null) => !!email && email.toLowerCase().endsWith('@' + WORK_DOMAIN);

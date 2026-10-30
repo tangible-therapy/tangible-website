@@ -1,6 +1,7 @@
 // /api/staff-admin — the staff list behind /staff-admin. Only owners and directors can use it.
 //   GET                      → everyone on the list
 //   POST { people: [...] }   → add or update people (email, name, roles, office, status, orientationComplete)
+//   POST { approveOnboarding: email } → approve a new hire's finished checklist (orientation complete)
 //   DELETE ?email=...        → remove someone (they lose access within a minute)
 import { currentPerson, listPeople, getPerson, savePerson, deletePerson } from '../lib/staff-session.ts';
 import { canManage, isOwner, isWorkEmail, ROLES, OFFICES, type StaffRecord, type Role, type Office } from '../../src/data/staff-access.ts';
@@ -22,6 +23,15 @@ export default async (req: Request) => {
 
   if (req.method === 'POST') {
     const body = await req.json().catch(() => null);
+    // Approve a new hire's finished checklist: marks orientation complete, which removes it from their dashboard.
+    if (body?.approveOnboarding) {
+      const email = String(body.approveOnboarding).trim().toLowerCase();
+      const p = await getPerson(email);
+      if (!p || isOwner(email)) return json({ error: 'That person isn\u2019t on the staff list.' }, 404);
+      const now = new Date().toISOString();
+      await savePerson({ ...p, orientationComplete: true, onboarding: { ...(p.onboarding || {}), approvedAt: now, approvedBy: me!.email } });
+      return json({ saved: [email], problems: [], people: await listPeople() });
+    }
     const list: any[] = Array.isArray(body?.people) ? body.people : [];
     if (!list.length || list.length > 300) return json({ error: 'Nothing to save.' }, 400);
     const problems: string[] = [];
