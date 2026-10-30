@@ -36,6 +36,7 @@ export type StaffRecord = {
   orientationComplete?: boolean;
   supervisor?: string; // email of their clinical supervisor (set by Reception Onboarding or Staff Admin)
   onboarding?: Onboarding;
+  welcomeSentAt?: string; // when Reception Onboarding's welcome email went out (sent once)
   addedBy?: string;
   updatedAt?: string;
   lastSignIn?: string;
@@ -84,7 +85,7 @@ export const canManage = (r: StaffRecord | null) => !!r && r.status === 'approve
 const RESTRICTED: { paths: string[]; roles: Role[] }[] = [
   {
     // Reception section
-    paths: ['/reception-portal', '/reception-onboarding', '/reception-onboarding-1', '/api/new-hire-folder', '/api/new-hire-email', '/api/new-hire-contract', '/api/website-profile', '/employeeportal/website-profile', '/scheduling-new-client', '/scheduling-new-client-1', '/crisis-call'],
+    paths: ['/reception-portal', '/reception-onboarding', '/reception-onboarding-1', '/api/new-hire-folder', '/api/new-hire-email', '/api/new-hire-contract', '/api/new-hire-welcome', '/api/new-hires', '/api/website-profile', '/employeeportal/website-profile', '/scheduling-new-client', '/scheduling-new-client-1', '/crisis-call'],
     roles: ['frontdesk', 'director'],
   },
   { paths: ['/staff-admin'], roles: ['director'] },

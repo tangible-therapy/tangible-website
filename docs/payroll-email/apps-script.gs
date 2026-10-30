@@ -56,6 +56,27 @@ function run_(dryRun) {
       console.log('Error on "' + t.getFirstMessageSubject() + '": ' + (err && err.message ? err.message : err));
     }
   });
+  // Uploads the file mover couldn't file: payroll isn't sent automatically for these, so tell the website.
+  if (dryRun) return;
+  GmailApp.search('from:' + FILER + ' subject:"onboarding files NOT filed" newer_than:' + KEEP_TRYING_DAYS + 'd', 0, 30).forEach(function (t) {
+    t.getMessages().forEach(function (m) {
+      var f = /drive\.google\.com\/drive\/folders\/([\w-]+)/.exec(m.getPlainBody());
+      if (!f) return;
+      var st = getState_(f[1]);
+      if (!st || st.state !== 'sent') setState_(f[1], 'failed', 'Some of their files couldn’t be filed automatically, so payroll wasn’t emailed. See the “NOT filed” email in frontdesk@.');
+    });
+  });
+}
+
+// What happened with each new hire's payroll email, by Drive folder id (read by the website through the
+// Front desk mailer: kind "payrollStatus"). state: waiting | sent | failed.
+function setState_(folderId, state, detail) {
+  var old = getState_(folderId);
+  if (old && old.state === state && old.detail === detail) return;
+  PropertiesService.getScriptProperties().setProperty('pstate:' + folderId, JSON.stringify({ state: state, detail: detail, at: new Date().toISOString() }));
+}
+function getState_(folderId) {
+  try { return JSON.parse(PropertiesService.getScriptProperties().getProperty('pstate:' + folderId) || 'null'); } catch (e) { return null; }
 }
 
 function handle_(thread, dryRun) {
@@ -71,7 +92,8 @@ function handle_(thread, dryRun) {
 
   var folder = DriveApp.getFolderById(m[1]);
   if (!inEmployeeFolder_(folder)) return { name: name, result: 'skipped (folder is not in the Employee folder)' };
-  if (props.getProperty('sent:' + folder.getId())) return { name: name, result: 'already sent' };
+  if (props.getProperty('sent:' + folder.getId())) { if (!dryRun) setState_(folder.getId(), 'sent', ''); return { name: name, result: 'already sent' }; }
+  try {
 
   var info = payrollInfo_(folder.getDescription() || '');
   var w4 = newest_(folder, / - W-4\b/i), dd = newest_(folder, / - Direct Deposit/i);
@@ -80,7 +102,10 @@ function handle_(thread, dryRun) {
   if (!info.start) missing.push('their start date');
   if (!w4) missing.push('the W-4 file in their folder');
   if (!dd) missing.push('the direct deposit file in their folder');
-  if (missing.length) return waiting_(thread, name, missing, dryRun, folder);
+  if (missing.length) {
+    if (!dryRun) setState_(folder.getId(), 'waiting', 'Missing ' + missing.join(', ') + '.');
+    return waiting_(thread, name, missing, dryRun, folder);
+  }
 
   var body = GREETING + '\n\nPlease add our new employee to payroll:\n\n' +
     'Name: ' + name + '\n' +
@@ -96,7 +121,12 @@ function handle_(thread, dryRun) {
     name: 'Tangible Therapy Front Desk',
   });
   props.setProperty('sent:' + folder.getId(), new Date().toISOString());
+  setState_(folder.getId(), 'sent', 'Sent to ' + PAYROLL_TO + '.');
   return { name: name, result: 'sent' };
+  } catch (err) {
+    if (!dryRun) setState_(folder.getId(), 'failed', String(err && err.message ? err.message : err).slice(0, 200));
+    throw err;
+  }
 }
 
 /** Emails front desk once per filing email about what's missing; keeps checking until fixed. */
@@ -108,10 +138,10 @@ function waiting_(thread, name, missing, dryRun, folder) {
   var fixPay = missing.some(function (x) { return /pay rate|start date/.test(x); });
   var fixFile = missing.some(function (x) { return /file/.test(x); });
   var body = 'The payroll email for ' + name + ' hasn\'t been sent yet because this is missing:\n- ' + missing.join('\n- ') + '\n\n' +
-    (fixPay ? 'Pay rate / start date: on the Reception Onboarding page, type their name, pay rate and start date in the New hire box and click "Start a new hire". It finds their existing folder and saves them.\n\n' : '') +
+    (fixPay ? 'Pay rate / start date: on the Reception Onboarding page, open their profile and fix their pay or start date under "Their details". It saves to their folder by itself.\n\n' : '') +
     (fixFile ? 'Missing file: save it in their folder named "' + name + ' - W-4" or "' + name + ' - Direct Deposit form".\n\n' : '') +
     'The payroll email then goes out by itself within 10 minutes (for the next ' + KEEP_TRYING_DAYS + ' days). ' +
-    'Or send it by hand with the button in step 8, and it won\'t be sent again.' +
+    'Or send it by hand ("Send payroll email by hand" under "Paperwork filed and payroll emailed" in their profile), and it won\'t be sent again.' +
     (folder ? '\n\nTheir folder: ' + folder.getUrl() : '');
   GmailApp.sendEmail(FRONT_DESK, 'Payroll email waiting: ' + name, body);
   props.setProperty(key, '1');
@@ -146,6 +176,63 @@ function prettyDate_(ymd) {
 }
 
 function label_(n) { return GmailApp.getUserLabelByName(n) || GmailApp.createLabel(n); }
+
+// ---------- "Front desk mailer" web app ----------
+// "Finish setup" on /reception-onboarding asks the website (/api/new-hire-welcome) to send the new hire's
+// welcome email; the website calls this web app so it goes out FROM frontdesk@. The website builds the text
+// (src/data/welcome-email.ts) and only sends to new hires. This side only accepts the welcome email, needs the
+// key, and sends each person's welcome once (unless the website asks to resend).
+// It also answers kind "payrollStatus" (read-only): what happened with each new hire's payroll email, so the
+// Reception Onboarding profile can show "Waiting for their paperwork / Payroll email waiting / sent / failed".
+// Deploy → New deployment → Web app, Execute as Me, Who has access Anyone. Netlify env var
+// NEW_HIRE_MAIL_SCRIPT = web app URL + ?key=<MAILER_KEY> (run setupMailer to make/see the key).
+function doPost(e) {
+  var key = PropertiesService.getScriptProperties().getProperty('MAILER_KEY');
+  if (!key || !e || !e.parameter || e.parameter.key !== key) return json_({ error: 'unauthorized' });
+  var b = {};
+  try { b = JSON.parse((e.postData && e.postData.contents) || '{}'); } catch (err) { return json_({ error: 'Bad request.' }); }
+  if (b.kind === 'payrollStatus') { // read-only: payroll email status for these folders
+    var states = {};
+    (Array.isArray(b.folderIds) ? b.folderIds : []).slice(0, 50).forEach(function (id) {
+      id = String(id); if (!/^[\w-]{10,80}$/.test(id)) return;
+      var st = getState_(id); if (st) states[id] = st;
+    });
+    return json_({ states: states });
+  }
+  if (b.kind !== 'welcome' || b.subject !== 'Welcome to Tangible!') return json_({ error: 'Only the welcome email can be sent this way.' });
+  var to = (Array.isArray(b.to) ? b.to : []).map(function (x) { return String(x).trim().toLowerCase(); })
+    .filter(function (x) { return /^[^\s@,;]+@[^\s@,;]+\.[a-z]{2,}$/.test(x); }).slice(0, 2);
+  var body = String(b.body || '').slice(0, 4000);
+  if (!to.length || !body) return json_({ error: 'Missing recipient or text.' });
+  var lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    var props = PropertiesService.getScriptProperties(), doneKey = 'welcome:' + to.join(',');
+    if (props.getProperty(doneKey) && !b.resend) return json_({ sent: false, already: true, to: to });
+    GmailApp.sendEmail(to.join(','), b.subject, body, { name: 'Tangible Therapy' });
+    props.setProperty(doneKey, new Date().toISOString());
+    return json_({ sent: true, to: to });
+  } catch (err) {
+    return json_({ error: 'Gmail said: ' + (err && err.message ? err.message : err) });
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// Opening the web app link in a browser just says it's running (nothing else is shown).
+function doGet() { return json_({ ok: true, service: 'Front desk mailer' }); }
+
+/** Run once from the editor: makes the mailer key (if needed) and logs it for the Netlify variable. */
+function setupMailer() {
+  var props = PropertiesService.getScriptProperties();
+  if (!props.getProperty('MAILER_KEY')) props.setProperty('MAILER_KEY', Utilities.getUuid().replace(/-/g, ''));
+  console.log('Running as: ' + Session.getActiveUser().getEmail());
+  console.log('Mailer key (add it to the end of the web app URL as ?key=...): ' + props.getProperty('MAILER_KEY'));
+}
+
+function json_(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+}
 
 /** One-time setup: checks access, makes the labels and installs the 10-minute check. */
 function setup() {
