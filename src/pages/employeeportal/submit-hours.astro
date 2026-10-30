@@ -50,7 +50,6 @@ import { SUBMIT_HOURS_FORM } from '../../data/staff';
             <input type="number" name="meetings" min="0" max="300" step="0.25" inputmode="decimal" placeholder="0" />
           </label>
         </div>
-        <p class="sh-billable" id="sh-billable" aria-live="polite"></p>
       </section>
 
       <section class="pt-card sh-card" id="sh-sup" hidden>
@@ -60,7 +59,6 @@ import { SUBMIT_HOURS_FORM } from '../../data/staff';
           <label class="sh-field">
             <span>Direct client care</span>
             <input type="number" name="direct" min="0" step="0.25" inputmode="decimal" placeholder="0" />
-            <button type="button" class="sh-link" id="sh-use-billable" hidden></button>
           </label>
           <label class="sh-field">
             <span>Individual supervision</span>
@@ -124,17 +122,6 @@ import { SUBMIT_HOURS_FORM } from '../../data/staff';
         $('sh-backup').hidden = false;
       }
 
-      function billable() {
-        var hrs = val('hours'), m = val('meetings') || 0;
-        var b = hrs === '' ? null : Math.max(0, hrs - m);
-        $('sh-billable').textContent = b === null ? '' : 'Billable hours: ' + h(b);
-        var btn = $('sh-use-billable');
-        btn.hidden = b === null || !state || !state.associate || Number(f.elements.direct.value) === b;
-        if (!btn.hidden) btn.textContent = 'Use my billable hours (' + h(b) + ')';
-        return b;
-      }
-      ['hours', 'meetings'].forEach(function (k) { f.elements[k].addEventListener('input', billable); });
-      $('sh-use-billable').onclick = function () { f.elements.direct.value = billable(); billable(); };
 
       function fill(s) {
         state = s;
@@ -149,7 +136,6 @@ import { SUBMIT_HOURS_FORM } from '../../data/staff';
           ['direct', 'individual', 'group', 'observation', 'other'].forEach(function (k) { f.elements[k].value = s.supervised[k] || ''; });
           $('sh-sup-status').textContent = s.supervised.status === 'approved' ? 'Your supervisor already approved these. If you change them, they’ll go back for approval.' : s.supervised.status === 'returned' ? 'Your supervisor sent these back. Fix them and submit again.' : 'Sent to your supervisor, waiting for approval.';
         }
-        billable();
         f.hidden = false;
       }
 
@@ -222,9 +208,7 @@ import { SUBMIT_HOURS_FORM } from '../../data/staff';
   .sh-field input { font: inherit; font-size: 1rem; font-weight: 400; padding: .6rem .8rem; border: 1px solid #c9cfca; border-radius: 10px; background: #fff; color: var(--charcoal); min-width: 0; max-width: 220px; margin-top: auto; }
   .sh-field input:focus-visible { outline: 2px solid var(--slate); outline-offset: 1px; }
   .sh-wide { grid-column: 1 / -1; }
-  .sh-billable { margin: 1rem 0 0; font-size: .9rem; color: #2f6b3a; font-weight: 500; min-height: 1.2em; }
   .sh-tag { font-size: .7rem; font-weight: 500; background: #e3f0e5; color: #2f6b3a; border-radius: 300px; padding: .2em .7em; vertical-align: middle; margin-left: .35rem; }
-  .sh-link { font: inherit; font-size: .78rem; font-weight: 400; background: none; border: 0; padding: 0; color: var(--slate); text-decoration: underline; cursor: pointer; text-align: left; align-self: flex-start; }
   .sh-submit { display: flex; flex-direction: column; align-items: flex-start; gap: .75rem; }
   .sh-go { font-size: .95rem; padding: .75rem 1.6rem; }
   .sh-checks { list-style: none; padding: 0; margin: 0 0 1.2rem; display: grid; gap: .6rem; }
