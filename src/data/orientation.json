@@ -870,34 +870,41 @@
    [
     {
      "t": "text",
-     "md": "## How to use Slack Videos"
+     "md": "# How to Use Slack"
     },
     {
      "t": "text",
-     "md": "## 1"
+     "md": "These three short videos from Slack cover what you'll use most. Watch them in order."
     },
     {
      "t": "text",
-     "md": "## 2"
-    },
-    {
-     "t": "text",
-     "md": "## 3"
+     "md": "### 1. Getting started\nA quick tour of Slack: channels, direct messages and finding your way around."
     },
     {
      "t": "youtube",
      "id": "FTuOS8E1LZk",
-     "start": "45"
+     "start": "45",
+     "title": "How to use Slack: Your quick start guide"
+    },
+    {
+     "t": "text",
+     "md": "### 2. Conversations and threads\nHow to post, reply in a thread and keep conversations tidy."
     },
     {
      "t": "youtube",
      "id": "zfjuEyRWHwM",
-     "start": "78"
+     "start": "78",
+     "title": "Conversations in Slack"
+    },
+    {
+     "t": "text",
+     "md": "### 3. Notifications\nHow to set notifications so you see what matters during work hours."
     },
     {
      "t": "youtube",
      "id": "6pvVQw03QZY",
-     "start": null
+     "start": null,
+     "title": "Essential guide to Slack notifications"
     }
    ]
   ]

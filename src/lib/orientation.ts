@@ -6,7 +6,7 @@ export type Item =
   | { t: 'image'; src: string; alt: string }
   | { t: 'form'; src: string }
   | { t: 'quiz'; intro?: string; questions: QuizQuestion[] }
-  | { t: 'youtube'; id: string; start: string | null }
+  | { t: 'youtube'; id: string; start: string | null; title?: string }
   | { t: 'wistia'; id: string; title: string }
   | { t: 'sandbox'; href: string; img: string; title: string; text: string; button?: string };
 // On-page quiz (replaced the Google Form quizzes, Oct 2026). `answer` = indexes of the correct options;
