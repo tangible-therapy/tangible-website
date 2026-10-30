@@ -53,8 +53,8 @@ link) · **Bio** · **SEO description** (optional) · **SimplePractice clinician
 script). Each header has a note explaining it.
 
 - **New therapist** (no profile on the website yet): add a row. They appear on the website (profile at
-  `/ourteam/p/first-last`, the finder, filter pages and carousels) **only once the Photo link is
-  filled in** and the script can open the photo. Until then the status says "Waiting for photo".
+  `/ourteam/p/first-last`, the finder, filter pages and carousels) **only once the Photo link and the Bio
+  are filled in** and the script can open the photo. Until then the status says "Waiting for photo".
   Office, status, ages, specialties and insurance still come from the openings / modalities /
   Insurances tabs, so add them there too (same name spelling).
 - **Existing therapist**: add a row with their name and fill only what should change. A photo link

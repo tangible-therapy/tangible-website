@@ -101,6 +101,10 @@ const defaultTargets = JSON.stringify(LICENSES[0].targets);
       <ul class="ob-rev-list" id="ob-rev-list"></ul>
       <p class="ob-msg" id="ob-rev-msg" role="status"></p>
     </article>
+    <article class="pt-card pd-bdays" id="pd-bdays" hidden>
+      <h2>Upcoming birthdays</h2>
+      <ul class="pd-bday-list" id="pd-bday-list"></ul>
+    </article>
     <p class="pt-soon" id="pd-soon" hidden>This office's dashboard isn't connected yet. It's coming soon.</p>
     <p class="pt-soon" id="pd-error" hidden></p>
 
@@ -471,7 +475,40 @@ const defaultTargets = JSON.stringify(LICENSES[0].targets);
   </script>
 </Base>
 
+<script is:inline>
+  // Upcoming staff birthdays (next 30 days) from /api/birthdays (private Birthdays tab, month and day only).
+  (function () {
+    var card = document.getElementById('pd-bdays'), list = document.getElementById('pd-bday-list');
+    if (!card) return;
+    fetch('/api/birthdays', { credentials: 'same-origin' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (b) {
+      if (!b || !b.birthdays || !b.birthdays.length) return;
+      var now = new Date(), today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      var items = b.birthdays.map(function (x) {
+        var m = +x.md.slice(0, 2) - 1, d = +x.md.slice(3, 5), next = new Date(today.getFullYear(), m, d);
+        if (next < today) next = new Date(today.getFullYear() + 1, m, d);
+        return { name: x.name, date: next, days: Math.round((next - today) / 86400000) };
+      }).filter(function (x) { return x.days <= 30; }).sort(function (a, z) { return a.days - z.days || a.name.localeCompare(z.name); });
+      if (!items.length) return;
+      items.forEach(function (x) {
+        var li = document.createElement('li'); if (x.days === 0) li.className = 'today';
+        var n = document.createElement('span'); n.className = 'pd-bday-name'; n.textContent = x.name;
+        var w = document.createElement('span'); w.className = 'pd-bday-when';
+        w.textContent = x.days === 0 ? 'Today 🎉' : x.days === 1 ? 'Tomorrow' : x.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        li.append(n, w); list.append(li);
+      });
+      card.hidden = false;
+    }).catch(function () {});
+  })();
+</script>
+
 <style is:global>
+  .pd-bdays { margin: 0 0 1rem; }
+  .pd-bday-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .5rem; }
+  .pd-bday-list li { display: flex; flex-direction: column; background: #f4f6f4; border-radius: 12px; padding: .5rem .8rem; min-width: 9rem; }
+  .pd-bday-list li.today { background: var(--sage); }
+  .pd-bday-name { font-weight: 600; font-size: .92rem; color: var(--charcoal); }
+  .pd-bday-when { font-size: .8rem; color: #5d635e; }
+
   .ob-card { margin-bottom: 1.2rem; padding-bottom: .6rem; }
   .ob-card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
   .ob-card h2, .ob-review h2 { font-size: 1.1rem; font-weight: 600; margin: 0; color: var(--charcoal); }

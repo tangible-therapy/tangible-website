@@ -469,7 +469,7 @@ const steps = HIRE_STEPS.map((s) => ({ id: s.id, title: s.title, who: s.who || '
 
     // ---- folder + contract ----
     function makeFolder(h) {
-      return api('/api/new-hire-folder', { first: h.first, last: h.last, payRate: payRate(h), startDate: h.start })
+      return api('/api/new-hire-folder', { first: h.first, last: h.last, payRate: payRate(h), startDate: h.start, office: h.office })
         .then(function (res) { if (!res.url) throw new Error('Google didn’t return the folder link.'); return upd(h, { folder: { id: res.id || null, url: res.url, name: res.name, created: !!res.created, payroll: res.payroll || null } }); });
     }
     function contractProblem(h) {
@@ -518,7 +518,7 @@ const steps = HIRE_STEPS.map((s) => ({ id: s.id, title: s.title, who: s.who || '
         .then(function (hasAcct) {
           var save = !h.folder ? Promise.reject(new Error('their Drive folder is missing.')) : (function () {
             var parts = h.folder.name.split(' '), last = parts.pop(), first = parts.join(' ');
-            return api('/api/new-hire-folder', { first: first, last: last, payRate: payRate(h), startDate: h.start })
+            return api('/api/new-hire-folder', { first: first, last: last, payRate: payRate(h), startDate: h.start, office: h.office })
               .then(function (res) { return upd(h, { folder: Object.assign({}, h.folder, { payroll: res.payroll || null }) }).then(function (nh) { h = nh; return res.payroll; }); });
           })();
           return save.then(function (pr) {
@@ -586,7 +586,7 @@ const steps = HIRE_STEPS.map((s) => ({ id: s.id, title: s.title, who: s.who || '
           render();
           if ((k === 'pay' || k === 'start') && nh.folder) {
             var parts = nh.folder.name.split(' '), last = parts.pop(), first = parts.join(' ');
-            api('/api/new-hire-folder', { first: first, last: last, payRate: payRate(nh), startDate: nh.start })
+            api('/api/new-hire-folder', { first: first, last: last, payRate: payRate(nh), startDate: nh.start, office: nh.office })
               .then(function (res) { return upd(nh, { folder: Object.assign({}, nh.folder, { payroll: res.payroll || null }) }); })
               .catch(function (err) { note(nh, 'Saved, but couldn’t update their folder for payroll: ' + err.message, true); render(); });
           }

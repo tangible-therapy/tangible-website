@@ -49,6 +49,8 @@ export const learningSites = [
 export const receptionLinks: StaffLink[] = [
   { label: 'Reception Portal', href: '/reception-portal' },
   { label: 'Reception Onboarding', href: '/reception-onboarding' },
+  // Add/Update Website Profile: form that updates the tangible sheet (docs/website-profile/README.md)
+  { label: 'Website Profiles', href: '/employeeportal/website-profile' },
   { label: 'Start of Day Check-in', href: '/scheduling-new-client-1' },
   { label: 'Scheduling New Client', href: '/scheduling-new-client' },
   { label: 'Crisis Call', href: '/crisis-call' },
