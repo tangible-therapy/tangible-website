@@ -20,6 +20,10 @@ What gets filled in on the contract (from the Word masters in the Management fol
 - Keep those sample words and the three ______ lines in the masters, or the script stops with a clear message
   ("Couldn't find the pay rate…"). A filled Google Doc copy "(sent for signing)" is left in their folder.
 
+It also saves the **pay rate** and **start date** from the New hire box in the folder's description
+("Payroll info: pay rate <x> | start date <yyyy-mm-dd>"), for the automatic payroll email (docs/payroll-email/).
+Typing them after the folder exists saves them again; blank values never erase saved ones.
+
 How it fits together:
 - Page: src/pages/reception-onboarding.astro. COO signer, location directors, copy-to address and contract
   types: src/data/contracts.ts.

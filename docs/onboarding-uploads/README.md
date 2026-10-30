@@ -16,7 +16,8 @@ a Google Apps Script:
 4. emails frontdesk@ a note with the folder link and the list of files, or what it couldn't do so front
    desk can finish by hand.
 
-Front desk still emails payroll with the W-4 and direct deposit form attached (rest of step 8).
+The payroll email (rest of step 8) is sent automatically from frontdesk@ by the "Payroll email" script, which
+reacts to this script's "Onboarding files filed" email: see docs/payroll-email/.
 
 Notes:
 - It's a separate Apps Script project. The "Untitled project" alerts script keeps sending its normal
