@@ -7,6 +7,9 @@
  *                        that folder as a Google Doc, fill in name / effective date / pay / employer signer,
  *                        add hidden SignWell signature tags, and return it as a PDF for SignWell.
  *  - action "saveSigned": save the signed PDF from SignWell into the employee's folder.
+ *  The "folder" action also saves the pay rate and start date front desk typed (when given) in the folder's
+ *  DESCRIPTION as "Payroll info: pay rate <x> | start date <yyyy-mm-dd>", for the automatic payroll email sent
+ *  from frontdesk@ (docs/payroll-email/). Blank values never overwrite saved ones.
  * New folders and files inherit the Employee folder's sharing.
  *
  * Needs the Drive API advanced service (Services → Drive API, v3) to turn the Word contracts into Google Docs.
@@ -60,10 +63,26 @@ function folder_(body) {
   var existing = parent.getFoldersByName(name);
   while (existing.hasNext()) {
     var f = existing.next();
-    if (!f.isTrashed()) return { id: f.getId(), url: f.getUrl(), name: f.getName(), created: false };
+    if (!f.isTrashed()) return { id: f.getId(), url: f.getUrl(), name: f.getName(), created: false, payroll: savePayroll_(f, body) };
   }
   var folder = parent.createFolder(name);
-  return { id: folder.getId(), url: folder.getUrl(), name: folder.getName(), created: true };
+  return { id: folder.getId(), url: folder.getUrl(), name: folder.getName(), created: true, payroll: savePayroll_(folder, body) };
+}
+
+/** Writes/updates the "Payroll info:" line in the folder description. Returns what's now saved. */
+function savePayroll_(folder, body) {
+  var pay = String(body.payRate || '').replace(/[|\r\n]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 40);
+  var start = /^\d{4}-\d{2}-\d{2}$/.test(String(body.startDate || '')) ? String(body.startDate) : '';
+  var desc = folder.getDescription() || '';
+  var m = /Payroll info: pay rate (.*?) \| start date (\S*)/.exec(desc);
+  var oldPay = m && m[1] !== '-' ? m[1] : '', oldStart = m && m[2] !== '-' ? m[2] : '';
+  var newPay = pay || oldPay, newStart = start || oldStart;
+  if (newPay || newStart) {
+    var line = 'Payroll info: pay rate ' + (newPay || '-') + ' | start date ' + (newStart || '-');
+    var rest = desc.replace(/Payroll info: .*(\n|$)/, '').trim();
+    if (line !== (m && m[0])) folder.setDescription(rest ? rest + '\n' + line : line);
+  }
+  return { payRate: !!newPay, startDate: newStart };
 }
 
 // The folder must be inside the Employees folder (so the website can't be used to write anywhere else).
@@ -103,13 +122,17 @@ function contract_(body) {
   var runs = [], r = null;
   while ((r = b.findText('_{10,}', r))) runs.push(r);
   if (runs.length !== 3) throw new Error('Expected 3 signature lines (________) in the ' + t.label + ' contract, found ' + runs.length + '.');
-  var tags = ['{{s:' + coo + ':y::::200:32}}', '{{s:' + hire + ':y::::200:32}}', '{{af_n:' + hire + ':y::::200:18}}'];
+  var tags = ['{{s:' + coo + ':y::::180:26}}', '{{s:' + hire + ':y::::180:26}}', '{{af_n:' + hire + ':y::::180:16}}'];
   for (var i = runs.length - 1; i >= 0; i--) { // backwards, because two lines can share one paragraph
     var el = runs[i].getElement().asText(), s = runs[i].getStartOffset(), e = runs[i].getEndOffsetInclusive();
-    el.deleteText(s, e);
+    // Swap only as many underscores as the tag is wide and keep the rest (white), so the line keeps its
+    // width and whatever follows it (the EMPLOYEE column) stays where it was.
+    var len = e - s + 1, k = Math.min(len, Math.ceil(tagUnits_(tags[i]) / 0.556));
+    el.deleteText(s, s + k - 1);
     el.insertText(s, tags[i]);
-    el.setForegroundColor(s, s + tags[i].length - 1, '#ffffff');
-    el.setUnderline(s, s + tags[i].length - 1, false);
+    var end = s + tags[i].length + (len - k) - 1;
+    el.setForegroundColor(s, end, '#ffffff');
+    el.setUnderline(s, end, false);
   }
   removeSignatureImages_(b);
   if (dir) addDirectorBlock_(b, dir);
@@ -117,6 +140,13 @@ function contract_(body) {
 
   var pdf = DriveApp.getFileById(copy.id).getAs('application/pdf');
   return { docId: copy.id, docUrl: 'https://docs.google.com/document/d/' + copy.id + '/edit', fileName: 'Employment Contract - ' + name + '.pdf', pdf: Utilities.base64Encode(pdf.getBytes()) };
+}
+
+// Approximate width of a text tag in em (Arial), to know how many underscores (0.556em each) it replaces.
+function tagUnits_(t) {
+  var w = { '{': 0.334, '}': 0.334, ':': 0.278, 's': 0.5, 'y': 0.5, 'f': 0.278, '_': 0.556 }, u = 0;
+  for (var i = 0; i < t.length; i++) u += w[t[i]] || 0.556;
+  return u;
 }
 
 // Adds "LOCATION DIRECTOR:" with a signature space (SignWell signer 1) and their printed name under the
@@ -130,7 +160,7 @@ function addDirectorBlock_(body, name) {
   var at = body.getChildIndex(top) + 1;
   // Match the font of the existing signature block.
   var ref = hit.getElement().asText(), font = ref.getFontFamily(hit.getStartOffset()) || 'Arial', size = ref.getFontSize(hit.getStartOffset()) || 11;
-  var tag = '{{s:1:y::::200:32}}';
+  var tag = '{{s:1:y::::180:26}}';
   // Same spacing as the employer/employee block, so SignWell's signature box doesn't cover the labels.
   var lines = [['', false], ['LOCATION DIRECTOR:', true], ['', false], [tag, false], ['Signature', false], ['', false], [name, false], ['Printed Name', false]];
   for (var i = 0; i < lines.length; i++) {
