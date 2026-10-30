@@ -173,10 +173,12 @@ import { SUBMIT_HOURS_FORM } from '../../data/staff';
         if (r.queued) {
           ul.appendChild(li(null, 'Saved. The payroll sheet couldn’t be reached just now, so your hours will be sent automatically in a few minutes. Nothing else to do.'));
         } else {
-          ul.appendChild(li(true, r.form && r.form.status === 'updated' ? 'Your earlier answers for this pay period were replaced.' : 'Your answers were saved.'));
-          var p = r.payroll || {};
+          var fd = 'front desk ' + (r.alerted ? 'was emailed and will' : 'will need to') + ' add it by hand. You don’t need to do anything.';
+          var fm = r.form || {}, p = r.payroll || {};
+          if (fm.status === 'updated' || fm.status === 'added') ul.appendChild(li(true, fm.status === 'updated' ? 'Your earlier answers for this pay period were replaced.' : 'Your answers were saved.'));
+          else ul.appendChild(li(false, 'Your answers couldn’t be saved to the Tangible payroll records, so ' + fd));
           if (p.status === 'written' || p.status === 'added') ul.appendChild(li(true, 'Your hours and PTO are on the payroll sheet' + (p.status === 'added' ? ' (you were added as a new employee).' : '.')));
-          else ul.appendChild(li(false, 'Your name couldn’t be matched on the payroll sheet, so front desk ' + (r.alerted ? 'was emailed and will' : 'will need to') + ' add your hours by hand. You don’t need to do anything.'));
+          else ul.appendChild(li(false, 'Your hours couldn’t be put on the payroll sheet (for example, your name wasn’t found), so ' + fd));
         }
         if (r.tracker) {
           if (r.tracker.status === 'saved') ul.appendChild(li(true, 'Your supervised hours went to Supervision Hours for your supervisor to approve.'));

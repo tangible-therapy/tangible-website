@@ -14,7 +14,8 @@
  *     Nothing else on that sheet is changed.
  *  If someone isn't on a sheet yet, they're added (name only, plus their numbers) ONLY when the website has
  *  verified they're a recent new hire (made with "Start a new hire" on Reception Onboarding). Anyone else who
- *  can't be found is saved in step 1 only, and front desk gets an email to add them by hand.
+ *  can't be found is saved in step 1 only. Each place is saved on its own: whenever any of the three can't be
+ *  saved, the others still are, and front desk gets one email listing what was and wasn't saved.
  *
  * The key lives only in this script's properties and in the Netlify environment variable PAYROLL_HOURS_SCRIPT
  * (web app URL + ?key=...) — never in the website code.
@@ -112,19 +113,29 @@ function submit_(b) {
   var nums = { hours: hours, pto: pto, meetings: meetings, noShows: noShows, billable: Math.max(0, (hours || 0) - (meetings || 0)) };
   var out = { ok: true, period: p, form: null, roster: null, payroll: null };
 
-  out.form = saveFormRow_(p, names[0], email, nums);
-  try { out.roster = saveRoster_(names, nums, newHire); } catch (err) { out.roster = { status: 'error', detail: String(err.message || err) }; }
-  try { out.payroll = savePayroll_(p, names, nums, newHire); } catch (err) { out.payroll = { status: 'error', detail: String(err.message || err) }; }
+  // Each place is saved on its own: if one fails, the others are still saved, and front desk gets ONE email
+  // saying what didn't line up so they can fix it by hand.
+  var safe = function (fn) { try { return fn(); } catch (err) { return { status: 'error', detail: String(err && err.message || err).slice(0, 300) }; } };
+  out.form = safe(function () { return saveFormRow_(p, names[0], email, nums); });
+  out.roster = safe(function () { return saveRoster_(names, nums, newHire); });
+  out.payroll = safe(function () { return savePayroll_(p, names, nums, newHire); });
+  console.log(JSON.stringify({ who: email, period: p.tab, form: out.form, roster: out.roster, payroll: out.payroll }));
 
-  // Anything that couldn't go on the payroll company's sheet → front desk adds it by hand.
-  if (out.payroll.status !== 'written' && out.payroll.status !== 'added') {
+  var ok = function (r) { return r && (r.status === 'added' || r.status === 'updated' || r.status === 'written'); };
+  var places = [
+    ['Payroll company sheet ("' + p.tab + '" tab): Hours ' + hours + ', Vacation ' + (pto === '' ? 0 : pto), out.payroll],
+    ['Tangible Data → "' + FORM_TAB + '" tab (all answers)', out.form],
+    ['Tangible Data → "' + ROSTER_TAB + '" tab (their row)', out.roster],
+  ];
+  var failed = places.filter(function (x) { return !ok(x[1]); });
+  if (failed.length) {
     try {
-      MailApp.sendEmail(ALERT_TO, 'Hours need to be added to payroll by hand: ' + names[0],
-        names[0] + ' (' + email + ') submitted hours on the Employee Portal for ' + p.tab + ', but they couldn\'t be put on the payroll company\'s sheet automatically.\n\n' +
-        'Reason: ' + (out.payroll.detail || out.payroll.status) + '\n\n' +
-        'Hours: ' + hours + '\nPTO: ' + (pto === '' ? 0 : pto) + '\n\n' +
-        'Everything they entered is saved in Tangible Data → "' + FORM_TAB + '". Please add their Hours and Vacation on the "' + p.tab + '" tab.\n' +
-        'If this happens every pay period for the same person, add their name to ALIASES in the "Payroll hours" script.');
+      MailApp.sendEmail(ALERT_TO, 'Payroll sheets don\'t match — please fix by hand: ' + names[0],
+        names[0] + ' (' + email + ') submitted hours on the Employee Portal for the pay period ' + p.tab + '.\n\n' +
+        'What they entered:\n  Hours worked: ' + hours + '\n  PTO: ' + (pto === '' ? 0 : pto) + '\n  Meetings/supervision/consults: ' + (meetings === '' ? 0 : meetings) + '\n  No-shows: ' + (noShows === '' ? 0 : noShows) + '\n\n' +
+        'Saved:\n' + (places.filter(function (x) { return ok(x[1]); }).map(function (x) { return '  ✓ ' + x[0]; }).join('\n') || '  (nothing)') + '\n\n' +
+        'NOT saved — please add by hand:\n' + failed.map(function (x) { return '  ✗ ' + x[0] + '\n      Reason: ' + (x[1] && (x[1].detail || x[1].status) || 'unknown'); }).join('\n') + '\n\n' +
+        'If a name isn\'t found every pay period, add it to ALIASES in the "Payroll hours" script.');
       out.alerted = true;
     } catch (err) { console.error('alert email failed: ' + err); }
   }

@@ -40,6 +40,12 @@ Anyone else who can't be found (or matches two rows) is still saved in "Payroll 
 an email** "Hours need to be added to payroll by hand: <name>" (ALERT_TO in the script). The person is told
 front desk will handle it.
 
+## If one place can't be saved
+The three places are saved separately. If any of them fails (name not found, a header changed, a tab missing…),
+the others are still saved, and front desk (ALERT_TO) gets ONE email, "Payroll sheets don't match — please fix
+by hand: <name>", listing what they entered, what was saved and what wasn't (with the reason). The person sees
+which part front desk will fix. Each submission is also written to the script's Executions log.
+
 ## If Google can't be reached
 The submission is saved in Netlify Blobs store "payroll-outbox" (latest one per person) and re-sent on their next
 visit and every 15 minutes (netlify/functions/payroll-retry.mts). The person sees "saved, will be sent
