@@ -1,26 +1,244 @@
 ---
-// Staff-only (staff gate covers /employeeportal/*). The "Submit Hours" Google Form, embedded so staff stay in the
-// portal (sidebar added by Base.astro). Form ID: SUBMIT_HOURS_FORM in src/data/staff.ts.
-// Supervised hours toward licensure are logged separately in Supervision Hours (/hours).
+// Staff-only (staff gate covers /employeeportal/*). Submit Hours: a form built into the portal (needs Google
+// sign-in). Data from/to /api/submit-hours (netlify/functions/submit-hours.mts):
+//  - every answer → Tangible Data "Payroll Form" tab; Hours + PTO → the payroll company's newest pay-period tab
+//    (through the "Payroll hours" Apps Script, docs/payroll-hours/). Submitting again in the same pay period
+//    replaces the earlier answers.
+//  - associates also enter supervised hours → one Supervision Hours entry per pay period for their supervisor.
+// If the Google connection isn't set up (no PAYROLL_HOURS_SCRIPT) the old "Submit Hours" Google Form is shown
+// instead (SUBMIT_HOURS_FORM in src/data/staff.ts); it's also offered as a backup if the sheet can't be reached.
 import Base from '../../layouts/Base.astro';
 import GoogleForm from '../../components/GoogleForm.astro';
 import { SUBMIT_HOURS_FORM } from '../../data/staff';
 ---
 <Base title="Submit Hours | Employee Portal | Tangible Therapy" description="Submit your hours." noindex>
-  <div class="pt-page">
+  <div class="pt-page sh">
     <div class="pt-head">
       <div>
         <p class="pt-eyebrow">Employee Portal</p>
         <h1>Submit hours</h1>
       </div>
+      <p class="sh-period" id="sh-period" hidden></p>
     </div>
-    <div class="pt-card sh-card">
+
+    <div class="pt-card sh-loading" id="sh-loading"><p class="pt-muted">Loading your pay period…</p></div>
+    <div class="sh-alert bad" id="sh-problem" role="alert" hidden></div>
+    <div class="sh-alert" id="sh-waiting" role="status" hidden></div>
+
+    <form id="sh-form" class="sh-grid" novalidate hidden>
+      <section class="pt-card sh-card">
+        <h2>Your hours</h2>
+        <p class="pt-muted sh-intro" id="sh-intro"></p>
+        <div class="sh-fields">
+          <label class="sh-field sh-wide">
+            <span>Hours worked <b aria-hidden="true">*</b></span>
+            <small>Sessions, no-shows or late cancels, meetings and consult calls (a consult call counts as .25 hrs). Don’t count PTO here.</small>
+            <input type="number" name="hours" min="0" max="300" step="0.25" inputmode="decimal" required />
+          </label>
+          <label class="sh-field">
+            <span>PTO hours used</span>
+            <small>Leave blank if none.</small>
+            <input type="number" name="pto" min="0" max="300" step="0.25" inputmode="decimal" placeholder="0" />
+          </label>
+          <label class="sh-field">
+            <span>No-shows</span>
+            <small>How many sessions were no-shows.</small>
+            <input type="number" name="noShows" min="0" max="300" step="1" inputmode="numeric" placeholder="0" />
+          </label>
+          <label class="sh-field sh-wide">
+            <span>Of your hours worked, how many were meetings, supervision or consult calls?</span>
+            <input type="number" name="meetings" min="0" max="300" step="0.25" inputmode="decimal" placeholder="0" />
+          </label>
+        </div>
+        <p class="sh-billable" id="sh-billable" aria-live="polite"></p>
+      </section>
+
+      <section class="pt-card sh-card" id="sh-sup" hidden>
+        <h2>Supervised hours <span class="sh-tag">Associates</span></h2>
+        <p class="pt-muted">For your licensure hours. These go to <a href="/hours">Supervision Hours</a> for your supervisor to approve. Only hours, no client details.</p>
+        <div class="sh-fields">
+          <label class="sh-field">
+            <span>Direct client care</span>
+            <input type="number" name="direct" min="0" step="0.25" inputmode="decimal" placeholder="0" />
+            <button type="button" class="sh-link" id="sh-use-billable" hidden></button>
+          </label>
+          <label class="sh-field">
+            <span>Individual supervision</span>
+            <input type="number" name="individual" min="0" step="0.25" inputmode="decimal" placeholder="0" />
+          </label>
+          <label class="sh-field">
+            <span>Group supervision</span>
+            <input type="number" name="group" min="0" step="0.25" inputmode="decimal" placeholder="0" />
+          </label>
+          <label class="sh-field">
+            <span>…of which direct observation</span>
+            <input type="number" name="observation" min="0" step="0.25" inputmode="decimal" placeholder="0" />
+          </label>
+          <label class="sh-field sh-wide">
+            <span>Other work time</span>
+            <small>Notes, admin, trainings… (counts toward your total hours only)</small>
+            <input type="number" name="other" min="0" step="0.25" inputmode="decimal" placeholder="0" />
+          </label>
+        </div>
+        <p class="pt-note" id="sh-sup-status"></p>
+        <p class="pt-note">Hours from before this pay period? Add them in bulk on <a href="/hours">Supervision Hours</a>.</p>
+      </section>
+
+      <div class="sh-submit">
+        <p class="sh-err" id="sh-err" role="alert" hidden></p>
+        <button class="pt-btn sh-go" type="submit" id="sh-go">Submit hours</button>
+      </div>
+    </form>
+
+    <section class="pt-card sh-card sh-done" id="sh-done" hidden tabindex="-1">
+      <h2 id="sh-done-title">Hours submitted</h2>
+      <ul class="sh-checks" id="sh-checks"></ul>
+      <button class="pt-btn ghost" type="button" id="sh-again">Change my answers</button>
+    </section>
+
+    <section class="pt-card sh-card sh-backup" id="sh-backup" hidden>
+      <h2 id="sh-backup-title">Submit hours</h2>
+      <p class="pt-muted" id="sh-backup-text" hidden></p>
       <GoogleForm id={SUBMIT_HOURS_FORM} title="Submit Hours" height={1200} />
-    </div>
+    </section>
   </div>
+
+  <script is:inline>
+    (function () {
+      var $ = function (id) { return document.getElementById(id); };
+      var f = $('sh-form'), state = null;
+      var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      function d(iso) { var p = iso.split('-'); return { y: +p[0], m: +p[1] - 1, d: +p[2] }; }
+      function range(p) {
+        var a = d(p.start), b = d(p.end);
+        return MONTHS[a.m] + ' ' + a.d + (a.y !== b.y ? ', ' + a.y : '') + ' – ' + MONTHS[b.m] + ' ' + b.d + ', ' + b.y;
+      }
+      function h(n) { n = Math.round(n * 100) / 100; return n.toLocaleString('en-US') + (n === 1 ? ' hr' : ' hrs'); }
+      function val(name) { var v = f.elements[name].value; return v === '' ? '' : Number(v); }
+      function li(ok, text) { var x = document.createElement('li'); x.className = ok === true ? 'ok' : ok === false ? 'bad' : 'wait'; x.textContent = text; return x; }
+
+      function backup(title, text) {
+        $('sh-loading').hidden = true; f.hidden = true;
+        $('sh-backup-title').textContent = title;
+        $('sh-backup-text').textContent = text || ''; $('sh-backup-text').hidden = !text;
+        $('sh-backup').hidden = false;
+      }
+
+      function billable() {
+        var hrs = val('hours'), m = val('meetings') || 0;
+        var b = hrs === '' ? null : Math.max(0, hrs - m);
+        $('sh-billable').textContent = b === null ? '' : 'Billable hours: ' + h(b);
+        var btn = $('sh-use-billable');
+        btn.hidden = b === null || !state || !state.associate || Number(f.elements.direct.value) === b;
+        if (!btn.hidden) btn.textContent = 'Use my billable hours (' + h(b) + ')';
+        return b;
+      }
+      ['hours', 'meetings'].forEach(function (k) { f.elements[k].addEventListener('input', billable); });
+      $('sh-use-billable').onclick = function () { f.elements.direct.value = billable(); billable(); };
+
+      function fill(s) {
+        state = s;
+        $('sh-loading').hidden = true;
+        $('sh-period').textContent = 'Pay period: ' + range(s.period); $('sh-period').hidden = false;
+        var intro = 'For the pay period ' + range(s.period) + '.';
+        if (s.previous) intro += ' You already submitted for this pay period; your answers are filled in. Submitting again replaces them.';
+        $('sh-intro').textContent = intro;
+        if (s.previous) ['hours', 'pto', 'meetings', 'noShows'].forEach(function (k) { var v = s.previous[k]; f.elements[k].value = v === '' || v == null ? '' : v; });
+        $('sh-sup').hidden = !s.associate;
+        if (s.associate && s.supervised) {
+          ['direct', 'individual', 'group', 'observation', 'other'].forEach(function (k) { f.elements[k].value = s.supervised[k] || ''; });
+          $('sh-sup-status').textContent = s.supervised.status === 'approved' ? 'Your supervisor already approved these. If you change them, they’ll go back for approval.' : s.supervised.status === 'returned' ? 'Your supervisor sent these back. Fix them and submit again.' : 'Sent to your supervisor, waiting for approval.';
+        }
+        billable();
+        f.hidden = false;
+      }
+
+      function load() {
+        fetch('/api/submit-hours', { credentials: 'same-origin' }).then(function (r) { return r.json().then(function (b) { if (!r.ok) throw new Error(b.error || 'Something went wrong.'); return b; }); })
+          .then(function (s) {
+            if (!s.setup) return backup('Submit hours');
+            if (s.waiting) { $('sh-waiting').textContent = 'Your hours for ' + s.waiting.period + ' are saved and waiting to reach the payroll sheet. They’ll go through automatically; nothing else to do.'; $('sh-waiting').hidden = false; }
+            if (!s.period) return backup('Use the backup form', 'The payroll sheet can’t be reached right now (' + (s.error || 'unknown problem') + '). Try again in a few minutes, or use this form instead.');
+            fill(s);
+          })
+          .catch(function (e) {
+            if (e.message === 'Please sign in.') return backup('Submit hours');
+            backup('Use the backup form', e.message);
+          });
+      }
+
+      f.addEventListener('submit', function (ev) {
+        ev.preventDefault();
+        var err = $('sh-err'); err.hidden = true;
+        if (f.elements.hours.value === '') { err.textContent = 'Enter the hours you worked.'; err.hidden = false; f.elements.hours.focus(); return; }
+        var body = { periodTab: state.period.tab, hours: val('hours'), pto: val('pto'), meetings: val('meetings'), noShows: val('noShows') };
+        if (state.associate) { body.supervised = {}; ['direct', 'individual', 'group', 'observation', 'other'].forEach(function (k) { body.supervised[k] = val(k) || 0; }); }
+        $('sh-go').disabled = true; $('sh-go').textContent = 'Submitting…';
+        fetch('/api/submit-hours', { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
+          .then(function (r) { return r.json().then(function (b) { if (!r.ok) throw new Error(b.error || 'Something went wrong.'); return b; }); })
+          .then(done)
+          .catch(function (e) { err.textContent = e.message; err.hidden = false; })
+          .finally(function () { $('sh-go').disabled = false; $('sh-go').textContent = 'Submit hours'; });
+      });
+
+      function done(r) {
+        var ul = $('sh-checks'); ul.innerHTML = '';
+        $('sh-done-title').textContent = 'Hours submitted for ' + range(r.period);
+        if (r.queued) {
+          ul.appendChild(li(null, 'Saved. The payroll sheet couldn’t be reached just now, so your hours will be sent automatically in a few minutes. Nothing else to do.'));
+        } else {
+          ul.appendChild(li(true, r.form && r.form.status === 'updated' ? 'Your earlier answers for this pay period were replaced.' : 'Your answers were saved.'));
+          var p = r.payroll || {};
+          if (p.status === 'written' || p.status === 'added') ul.appendChild(li(true, 'Your hours and PTO are on the payroll sheet' + (p.status === 'added' ? ' (you were added as a new employee).' : '.')));
+          else ul.appendChild(li(false, 'Your name couldn’t be matched on the payroll sheet, so front desk ' + (r.alerted ? 'was emailed and will' : 'will need to') + ' add your hours by hand. You don’t need to do anything.'));
+        }
+        if (r.tracker) {
+          if (r.tracker.status === 'saved') ul.appendChild(li(true, 'Your supervised hours went to Supervision Hours for your supervisor to approve.'));
+          else if (r.tracker.status === 'removed') ul.appendChild(li(true, 'Your supervised hours for this pay period were removed from Supervision Hours.'));
+          else ul.appendChild(li(false, 'Your supervised hours couldn’t be saved: ' + (r.tracker.error || 'unknown problem') + ' Try again, or add them on Supervision Hours.'));
+        }
+        f.hidden = true; $('sh-done').hidden = false; $('sh-done').focus();
+      }
+      $('sh-again').onclick = function () { $('sh-done').hidden = true; f.hidden = false; $('sh-intro').textContent = 'For the pay period ' + range(state.period) + '. Submitting again replaces your earlier answers.'; f.elements.hours.focus(); };
+
+      load();
+    })();
+  </script>
 </Base>
 
 <style is:global>
-  .sh-card { padding: .75rem; }
-  .sh-card .gform { max-width: 760px; margin: 0 auto; }
+  .sh [hidden] { display: none !important; }
+  .sh-period { margin: 0; font-size: .85rem; font-weight: 500; background: #fff; border-radius: 300px; padding: .45rem 1rem; color: var(--charcoal); }
+  .sh-grid { display: grid; gap: 1rem; max-width: 820px; }
+  .sh-card { max-width: 820px; box-sizing: border-box; }
+  .sh-loading, .sh-alert { max-width: 820px; margin-bottom: 1rem; box-sizing: border-box; }
+  .sh-alert { background: #eef2ee; border-radius: 14px; padding: .8rem 1rem; font-size: .9rem; color: var(--charcoal); }
+  .sh-alert.bad, .sh-err { background: #fbeceb; color: #8a1c14; border-radius: 12px; padding: .7rem 1rem; font-size: .88rem; margin: 0; }
+  .sh-intro { margin-bottom: 1rem; }
+  .sh-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem 1.1rem; margin-top: 1rem; }
+  .sh-field { display: flex; flex-direction: column; gap: .3rem; font-size: .9rem; color: var(--charcoal); font-weight: 500; }
+  .sh-field small { font-weight: 400; font-size: .78rem; color: #5d635e; line-height: 1.4; }
+  .sh-field b { color: #b3261e; font-weight: 500; }
+  .sh-field input { font: inherit; font-size: 1rem; font-weight: 400; padding: .6rem .8rem; border: 1px solid #c9cfca; border-radius: 10px; background: #fff; color: var(--charcoal); min-width: 0; max-width: 220px; margin-top: auto; }
+  .sh-field input:focus-visible { outline: 2px solid var(--slate); outline-offset: 1px; }
+  .sh-wide { grid-column: 1 / -1; }
+  .sh-billable { margin: 1rem 0 0; font-size: .9rem; color: #2f6b3a; font-weight: 500; min-height: 1.2em; }
+  .sh-tag { font-size: .7rem; font-weight: 500; background: #e3f0e5; color: #2f6b3a; border-radius: 300px; padding: .2em .7em; vertical-align: middle; margin-left: .35rem; }
+  .sh-link { font: inherit; font-size: .78rem; font-weight: 400; background: none; border: 0; padding: 0; color: var(--slate); text-decoration: underline; cursor: pointer; text-align: left; align-self: flex-start; }
+  .sh-submit { display: flex; flex-direction: column; align-items: flex-start; gap: .75rem; }
+  .sh-go { font-size: .95rem; padding: .75rem 1.6rem; }
+  .sh-checks { list-style: none; padding: 0; margin: 0 0 1.2rem; display: grid; gap: .6rem; }
+  .sh-checks li { position: relative; padding-left: 1.8rem; font-size: .92rem; line-height: 1.45; color: var(--charcoal); }
+  .sh-checks li::before { position: absolute; left: 0; top: .05em; width: 1.25rem; height: 1.25rem; border-radius: 50%; display: grid; place-items: center; font-size: .75rem; font-weight: 600; }
+  .sh-checks li.ok::before { content: '✓'; background: #e3f0e5; color: #2f6b3a; }
+  .sh-checks li.bad::before { content: '!'; background: #fdf3d8; color: #6b4e00; }
+  .sh-checks li.wait::before { content: '…'; background: #eceeec; color: #5d635e; }
+  .sh-done:focus { outline: none; }
+  .sh-backup .gform { max-width: 760px; margin: 1rem auto 0; }
+  .sh-backup { padding: .75rem; }
+  .sh-backup h2, .sh-backup > p { padding: .75rem .75rem 0; }
+  @media (max-width: 560px) {
+    .sh-fields { grid-template-columns: minmax(0, 1fr); }
+    .sh-field input { max-width: none; }
+  }
 </style>
