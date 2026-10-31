@@ -16,6 +16,8 @@ export type ScriptSubmit = PayrollAnswers & {
   names: string[];
   periodTab: string;
   newHire: { first: string; last: string } | null;
+  // false = admin-only or billing-only staff: left out of the company's billable hours (Tangible Health).
+  billableStaff?: boolean;
 };
 export type Outboxed = { body: ScriptSubmit; savedAt: string; tries: number; lastError: string };
 

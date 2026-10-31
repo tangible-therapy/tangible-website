@@ -1,0 +1,293 @@
+---
+// Tangible Health: owner-only dashboard of company health metrics (staff gate + owner-only rule in
+// src/data/staff-access.ts; data from /api/health → netlify/functions/health.mts).
+// First metric: payroll hours per pay period (Tangible Data → "Payroll" tab, columns I–L), which the "Payroll hours"
+// Apps Script fills in 5 days after each pay period ends (docs/payroll-hours/). Charts are drawn here as plain SVG.
+import Base from '../../layouts/Base.astro';
+---
+<Base title="Tangible Health | Employee Portal | Tangible Therapy" description="Company health metrics." noindex>
+  <div class="pt-page th">
+    <div class="pt-head">
+      <div>
+        <p class="pt-eyebrow">Owner dashboard</p>
+        <h1>Tangible Health</h1>
+      </div>
+      <div class="pt-seg" role="tablist" aria-label="Time range" id="th-range">
+        <button type="button" role="tab" data-range="6" aria-selected="false">6 months</button>
+        <button type="button" role="tab" data-range="12" aria-selected="true">1 year</button>
+        <button type="button" role="tab" data-range="0" aria-selected="false">All</button>
+      </div>
+    </div>
+
+    <p class="th-msg" id="th-msg" role="status">Loading…</p>
+
+    <div class="th-grid" id="th-body" hidden>
+      <section class="pt-card th-card">
+        <div class="th-card-head">
+          <div>
+            <h2>Payroll hours</h2>
+            <p class="pt-muted th-sub">Per pay period, by period end date</p>
+          </div>
+          <ul class="th-legend" aria-label="Legend">
+            <li><i style="background:var(--th-s1)"></i>Total hours paid</li>
+            <li><i style="background:var(--th-s2)"></i>Billable hours</li>
+          </ul>
+        </div>
+        <div class="th-stats" id="th-stats"></div>
+        <div class="th-chart" id="th-hours" role="img" aria-label="Line chart of total hours paid and billable hours per pay period"></div>
+        <p class="th-foot">Total hours paid includes PTO from November 2026; earlier periods are hours worked only. Gaps mean that period wasn’t recorded.</p>
+      </section>
+
+      <section class="pt-card th-card">
+        <div class="th-card-head">
+          <div>
+            <h2>No-shows</h2>
+            <p class="pt-muted th-sub">Per pay period</p>
+          </div>
+        </div>
+        <div class="th-chart short" id="th-noshows" role="img" aria-label="Column chart of no-shows per pay period"></div>
+      </section>
+
+      <details class="pt-card th-table-wrap">
+        <summary>Show as table</summary>
+        <div class="th-table-scroll"><table class="th-table" id="th-table">
+          <thead><tr><th scope="col">Period end</th><th scope="col">Total hours paid</th><th scope="col">Billable hours</th><th scope="col">No-shows</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </details>
+    </div>
+    <div class="th-tip" id="th-tip" role="tooltip" hidden></div>
+  </div>
+
+  <script is:inline>
+    (function () {
+      var $ = function (id) { return document.getElementById(id); };
+      var SVGNS = 'http://www.w3.org/2000/svg';
+      var all = [], range = 12;
+      try { var saved = localStorage.getItem('th-range'); if (saved !== null) range = Number(saved); } catch (e) {}
+
+      var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      function parse(iso) { var p = iso.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
+      function fmtDate(d) { return MONTHS[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear(); }
+      function fmtNum(n) { return n == null ? '—' : (Math.round(n * 100) / 100).toLocaleString('en-US'); }
+      function el(tag, attrs, parent) { var n = document.createElementNS(SVGNS, tag); for (var k in attrs) n.setAttribute(k, attrs[k]); if (parent) parent.appendChild(n); return n; }
+      // Clean, whole-number gridlines: step from 1/2/5 × 10ⁿ (plus 25, 250…), about 4 of them.
+      function niceStep(v) { if (!v) return 1; var raw = v / 4, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; var s = (m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 && p >= 10 ? 2.5 : m <= 5 ? 5 : 10) * p; return Math.max(1, s); }
+      function css(name) { return getComputedStyle(document.querySelector('.th')).getPropertyValue(name).trim(); }
+
+      // ---------- tooltip ----------
+      var tip = $('th-tip');
+      function showTip(html, x, y) {
+        tip.innerHTML = html; tip.hidden = false;
+        var w = tip.offsetWidth, h = tip.offsetHeight, vw = document.documentElement.clientWidth;
+        var left = Math.min(Math.max(8, x + 14), vw - w - 8);
+        if (x + 14 + w > vw - 8) left = Math.max(8, x - w - 14);
+        tip.style.left = left + 'px'; tip.style.top = Math.max(8, y - h - 12) + 'px';
+      }
+      function hideTip() { tip.hidden = true; }
+      function row(color, label, v) { return '<div class="th-tip-row"><i style="background:' + color + '"></i><span>' + label + '</span><b>' + fmtNum(v) + '</b></div>'; }
+
+      // ---------- shared frame ----------
+      function frame(box, rows, maxV) {
+        box.innerHTML = '';
+        var W = box.clientWidth, H = box.clientHeight;
+        var narrow = W < 520, m = { t: 14, r: narrow ? 44 : 64, b: 28, l: narrow ? 38 : 48 };
+        var svg = el('svg', { width: W, height: H, viewBox: '0 0 ' + W + ' ' + H }, box);
+        var x0 = rows.length ? parse(rows[0].date).getTime() : 0, x1 = rows.length ? parse(rows[rows.length - 1].date).getTime() : 1;
+        if (x1 === x0) { x0 -= 864e5 * 7; x1 += 864e5 * 7; }
+        var step = niceStep(maxV), ticks = Math.max(1, Math.ceil((maxV || 1) / step)), top = step * ticks;
+        var X = function (iso) { return m.l + (parse(iso).getTime() - x0) / (x1 - x0) * (W - m.l - m.r); };
+        var Y = function (v) { return m.t + (1 - v / top) * (H - m.t - m.b); };
+        var grid = el('g', { class: 'th-grid-l' }, svg);
+        for (var i = 0; i <= ticks; i++) {
+          var v = step * i, y = Y(v);
+          el('line', { x1: m.l, x2: W - m.r, y1: y, y2: y }, grid);
+          var t = el('text', { x: m.l - 8, y: y + 4, 'text-anchor': 'end', class: 'th-axis' }, svg); t.textContent = v >= 10000 ? Math.round(v / 1000) + 'K' : v.toLocaleString('en-US');
+        }
+        // Month ticks: about one every (span / 5) months, at the first of the month.
+        var start = new Date(x0), end = new Date(x1), months = (end.getFullYear() - start.getFullYear()) * 12 + end.getMonth() - start.getMonth();
+        var mstep = Math.max(1, Math.ceil(months / (narrow ? 3 : 6)));
+        var d = new Date(start.getFullYear(), start.getMonth() + 1, 1);
+        for (; d <= end; d = new Date(d.getFullYear(), d.getMonth() + mstep, 1)) {
+          var xx = m.l + (d.getTime() - x0) / (x1 - x0) * (W - m.l - m.r);
+          var lbl = el('text', { x: xx, y: H - 8, 'text-anchor': 'middle', class: 'th-axis' }, svg);
+          lbl.textContent = MONTHS[d.getMonth()] + (d.getMonth() === 0 || months > 12 ? ' ’' + String(d.getFullYear()).slice(2) : '');
+        }
+        return { svg: svg, X: X, Y: Y, m: m, W: W, H: H };
+      }
+
+      // ---------- line chart: total hours paid + billable ----------
+      function lineChart(rows) {
+        var box = $('th-hours');
+        var series = [{ key: 'paid', label: 'Total hours paid', color: css('--th-s1') }, { key: 'billable', label: 'Billable hours', color: css('--th-s2') }];
+        var max = 0; rows.forEach(function (r) { series.forEach(function (s) { if (r[s.key] > max) max = r[s.key]; }); });
+        var f = frame(box, rows, max), svg = f.svg;
+        series.forEach(function (s) {
+          var path = '', pen = false, pts = [];
+          rows.forEach(function (r, i) {
+            var v = r[s.key];
+            if (v == null) { pen = false; return; }
+            var x = f.X(r.date), y = f.Y(v);
+            path += (pen ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1);
+            var lone = !pen && (i === rows.length - 1 || rows[i + 1][s.key] == null);
+            if (lone) pts.push([x, y]);
+            pen = true;
+          });
+          el('path', { d: path, fill: 'none', stroke: s.color, 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }, svg);
+          pts.forEach(function (p) { el('circle', { cx: p[0], cy: p[1], r: 3, fill: s.color }, svg); });
+          // End dot + value
+          for (var i = rows.length - 1; i >= 0; i--) if (rows[i][s.key] != null) {
+            var ex = f.X(rows[i].date), ey = f.Y(rows[i][s.key]);
+            el('circle', { cx: ex, cy: ey, r: 4, fill: s.color, stroke: css('--th-surface'), 'stroke-width': 2 }, svg);
+            s.endY = ey; s.endX = ex; s.endV = rows[i][s.key];
+            break;
+          }
+        });
+        // End labels, nudged apart if they'd overlap.
+        var labs = series.filter(function (s) { return s.endV != null; }).sort(function (a, b) { return a.endY - b.endY; });
+        for (var k = 1; k < labs.length; k++) if (labs[k].endY - labs[k - 1].endY < 14) labs[k].labelY = labs[k - 1].endY + 14;
+        labs.forEach(function (s) { var t = el('text', { x: s.endX + 8, y: (s.labelY || s.endY) + 4, class: 'th-endlabel' }, svg); t.textContent = fmtNum(s.endV); });
+
+        // Hover: crosshair + tooltip on the nearest pay period.
+        var cross = el('line', { y1: f.m.t, y2: f.H - f.m.b, class: 'th-cross', visibility: 'hidden' }, svg);
+        var dots = series.map(function (s) { return el('circle', { r: 4.5, fill: s.color, stroke: css('--th-surface'), 'stroke-width': 2, visibility: 'hidden' }, svg); });
+        var hit = el('rect', { x: f.m.l, y: 0, width: f.W - f.m.l - f.m.r + 10, height: f.H, fill: 'transparent' }, svg);
+        function move(ev) {
+          var pt = ev.touches ? ev.touches[0] : ev, rect = svg.getBoundingClientRect(), mx = pt.clientX - rect.left, best = null, bd = 1e9;
+          rows.forEach(function (r) { var dx = Math.abs(f.X(r.date) - mx); if (dx < bd) { bd = dx; best = r; } });
+          if (!best) return;
+          var x = f.X(best.date);
+          cross.setAttribute('x1', x); cross.setAttribute('x2', x); cross.setAttribute('visibility', 'visible');
+          series.forEach(function (s, i) { var v = best[s.key]; if (v == null) dots[i].setAttribute('visibility', 'hidden'); else { dots[i].setAttribute('cx', x); dots[i].setAttribute('cy', f.Y(v)); dots[i].setAttribute('visibility', 'visible'); } });
+          showTip('<div class="th-tip-date">' + fmtDate(parse(best.date)) + '</div>' + series.map(function (s) { return row(s.color, s.label, best[s.key]); }).join(''), rect.left + x, rect.top + f.m.t + 10);
+        }
+        function out() { cross.setAttribute('visibility', 'hidden'); dots.forEach(function (d) { d.setAttribute('visibility', 'hidden'); }); hideTip(); }
+        hit.addEventListener('mousemove', move); hit.addEventListener('mouseleave', out);
+        hit.addEventListener('touchstart', move, { passive: true }); hit.addEventListener('touchmove', move, { passive: true }); hit.addEventListener('touchend', out);
+      }
+
+      // ---------- column chart: no-shows ----------
+      function barChart(rows) {
+        var box = $('th-noshows'), color = css('--th-s3');
+        var max = 0; rows.forEach(function (r) { if (r.noShows > max) max = r.noShows; });
+        var f = frame(box, rows, max), svg = f.svg;
+        var band = rows.length > 1 ? (f.W - f.m.l - f.m.r) / rows.length : 40, bw = Math.max(3, Math.min(24, band - 2));
+        var base = f.Y(0), lastI = -1;
+        rows.forEach(function (r, i) {
+          if (r.noShows == null) return;
+          lastI = i;
+          var x = f.X(r.date) - bw / 2, y = f.Y(r.noShows), h = base - y, rr = Math.min(4, bw / 2, h);
+          var d = h <= 0 ? '' : 'M' + x + ' ' + base + 'V' + (y + rr) + 'Q' + x + ' ' + y + ' ' + (x + rr) + ' ' + y + 'H' + (x + bw - rr) + 'Q' + (x + bw) + ' ' + y + ' ' + (x + bw) + ' ' + (y + rr) + 'V' + base + 'Z';
+          if (d) el('path', { d: d, fill: color }, svg);
+          var hitR = el('rect', { x: f.X(r.date) - Math.max(bw, band) / 2, y: f.m.t, width: Math.max(bw, band), height: base - f.m.t, fill: 'transparent' }, svg);
+          var show = function (ev) { var rect = svg.getBoundingClientRect(); showTip('<div class="th-tip-date">' + fmtDate(parse(r.date)) + '</div>' + row(color, 'No-shows', r.noShows), rect.left + f.X(r.date), rect.top + y); };
+          hitR.addEventListener('mouseenter', show); hitR.addEventListener('mousemove', show); hitR.addEventListener('mouseleave', hideTip);
+          hitR.addEventListener('touchstart', show, { passive: true }); hitR.addEventListener('touchend', hideTip);
+        });
+        if (lastI >= 0) { var r = rows[lastI], t = el('text', { x: f.X(r.date), y: f.Y(r.noShows) - 6, 'text-anchor': 'middle', class: 'th-endlabel' }, svg); t.textContent = fmtNum(r.noShows); }
+      }
+
+      // ---------- headline numbers ----------
+      function stats(rows) {
+        var box = $('th-stats'); box.innerHTML = '';
+        var last = function (k) { for (var i = rows.length - 1; i >= 0; i--) if (rows[i][k] != null) return i; return -1; };
+        [['paid', 'Total hours paid'], ['billable', 'Billable hours'], ['noShows', 'No-shows']].forEach(function (s) {
+          var i = last(s[0]); if (i < 0) return;
+          var prev = -1; for (var j = i - 1; j >= 0; j--) if (rows[j][s[0]] != null) { prev = j; break; }
+          var v = rows[i][s[0]], d = prev >= 0 ? v - rows[prev][s[0]] : null;
+          var tile = document.createElement('div'); tile.className = 'th-stat';
+          var lab = document.createElement('p'); lab.className = 'th-stat-l'; lab.textContent = s[1];
+          var num = document.createElement('p'); num.className = 'th-stat-v'; num.textContent = fmtNum(v);
+          var ch = document.createElement('p'); ch.className = 'th-stat-d';
+          ch.textContent = (d == null ? '' : (d > 0 ? '▲ ' : d < 0 ? '▼ ' : '') + fmtNum(Math.abs(d)) + ' vs previous · ') + fmtDate(parse(rows[i].date));
+          tile.append(lab, num, ch); box.appendChild(tile);
+        });
+      }
+
+      function table(rows) {
+        var tb = $('th-table').querySelector('tbody'); tb.innerHTML = '';
+        rows.slice().reverse().forEach(function (r) {
+          var tr = document.createElement('tr');
+          [fmtDate(parse(r.date)), fmtNum(r.paid), fmtNum(r.billable), fmtNum(r.noShows)].forEach(function (v, i) { var c = document.createElement(i ? 'td' : 'th'); if (!i) c.scope = 'row'; c.textContent = v; tr.appendChild(c); });
+          tb.appendChild(tr);
+        });
+      }
+
+      function render() {
+        var rows = all;
+        if (range && all.length) {
+          var last = parse(all[all.length - 1].date), from = new Date(last.getFullYear(), last.getMonth() - range, last.getDate());
+          rows = all.filter(function (r) { return parse(r.date) >= from; });
+        }
+        document.querySelectorAll('#th-range [data-range]').forEach(function (b) { b.setAttribute('aria-selected', String(Number(b.dataset.range) === range)); });
+        stats(rows); lineChart(rows); barChart(rows); table(rows);
+      }
+      document.querySelectorAll('#th-range [data-range]').forEach(function (b) {
+        b.onclick = function () { range = Number(b.dataset.range); try { localStorage.setItem('th-range', String(range)); } catch (e) {} render(); };
+      });
+      var t; window.addEventListener('resize', function () { clearTimeout(t); t = setTimeout(function () { if (all.length) render(); }, 150); });
+
+      fetch('/api/health', { credentials: 'same-origin' })
+        .then(function (r) { return r.json().then(function (b) { if (!r.ok) throw new Error(b.error || 'Something went wrong.'); return b; }); })
+        .then(function (b) {
+          all = (b.payroll || []).filter(function (r) { return r.paid != null || r.billable != null || r.noShows != null; }).sort(function (a, c) { return a.date < c.date ? -1 : 1; });
+          if (!all.length) { $('th-msg').textContent = 'No payroll totals yet.'; return; }
+          $('th-msg').textContent = b.stale ? 'Showing saved numbers (the sheet couldn’t be reached just now).' : '';
+          $('th-msg').hidden = !b.stale;
+          $('th-body').hidden = false;
+          render();
+        })
+        .catch(function (e) { $('th-msg').textContent = e.message; });
+    })();
+  </script>
+</Base>
+
+<style is:global>
+  .th { --th-s1: #2a78d6; --th-s2: #eb6834; --th-s3: #6250d6; --th-surface: #fff; --th-grid: #e6e9e6; --th-ink: var(--charcoal); --th-muted: #5d635e; }
+  .th [hidden] { display: none !important; }
+  .th-msg { margin: 0 0 1rem; color: var(--th-muted); font-size: .92rem; }
+  .th-grid { display: grid; gap: 1rem; }
+  .th-card { padding: 1.3rem 1.5rem 1.1rem; }
+  .th-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: .5rem 1rem; flex-wrap: wrap; }
+  .th-card h2 { margin: 0; }
+  .th-sub { font-size: .82rem; margin-top: .15rem; }
+  .th-legend { list-style: none; margin: 0; padding: 0; display: flex; gap: 1rem; flex-wrap: wrap; font-size: .82rem; color: var(--th-ink); }
+  .th-legend li { display: inline-flex; align-items: center; gap: .4rem; }
+  .th-legend i { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+  .th-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; margin: 1rem 0 .5rem; }
+  .th-stat { background: #f6f7f6; border-radius: 14px; padding: .75rem .9rem; }
+  .th-stat p { margin: 0; }
+  .th-stat-l { font-size: .78rem; color: var(--th-muted); }
+  .th-stat-v { font-size: 1.6rem; font-weight: 600; color: var(--th-ink); line-height: 1.25; font-variant-numeric: tabular-nums; }
+  .th-stat-d { font-size: .74rem; color: var(--th-muted); }
+  .th-chart { height: 280px; position: relative; margin-top: .5rem; }
+  .th-chart.short { height: 200px; }
+  .th-chart svg { display: block; overflow: visible; }
+  .th-grid-l line { stroke: var(--th-grid); stroke-width: 1; }
+  .th-axis { font-size: 11px; fill: var(--th-muted); font-variant-numeric: tabular-nums; }
+  .th-endlabel { font-size: 12px; font-weight: 600; fill: var(--th-ink); font-variant-numeric: tabular-nums; }
+  .th-cross { stroke: #9aa19b; stroke-width: 1; }
+  .th-foot { font-size: .76rem; color: var(--th-muted); margin: .6rem 0 0; }
+  .th-tip { position: fixed; z-index: 50; pointer-events: none; background: #fff; border: 1px solid #e3e7e3; border-radius: 10px; box-shadow: 0 6px 20px rgba(0,0,0,.12); padding: .5rem .7rem; font-size: .8rem; color: var(--charcoal); min-width: 170px; }
+  .th-tip-date { font-weight: 600; margin-bottom: .25rem; }
+  .th-tip-row { display: flex; align-items: center; gap: .45rem; }
+  .th-tip-row i { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+  .th-tip-row b { margin-left: auto; font-variant-numeric: tabular-nums; }
+  .th-table-wrap { padding: 1rem 1.5rem; }
+  .th-table-wrap summary { cursor: pointer; font-weight: 500; font-size: .9rem; }
+  .th-table-scroll { overflow-x: auto; margin-top: .75rem; max-height: 420px; overflow-y: auto; }
+  .th-table { width: 100%; border-collapse: collapse; font-size: .85rem; font-variant-numeric: tabular-nums; }
+  .th-table th, .th-table td { text-align: right; padding: .4rem .6rem; border-bottom: 1px solid #eef0ee; white-space: nowrap; }
+  .th-table th:first-child { text-align: left; font-weight: 400; }
+  .th-table thead th { font-weight: 600; color: var(--th-muted); position: sticky; top: 0; background: #fff; }
+  @media (max-width: 640px) {
+    .th-card { padding: 1rem 1rem .9rem; }
+    .th-stats { grid-template-columns: minmax(0, 1fr); }
+    .th-stat { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 .6rem; }
+    .th-stat-v { font-size: 1.3rem; }
+    .th-stat-d { flex-basis: 100%; }
+    .th-chart { height: 230px; }
+    .th-chart.short { height: 170px; }
+    .th-table-wrap { padding: .9rem 1rem; }
+  }
+</style>

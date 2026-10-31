@@ -62,7 +62,8 @@ export default async (req: Request) => {
   const newHire = await recentHire(me);
   const names = [...new Set([me.name, newHire ? `${newHire.first} ${newHire.last}` : ''].map((x) => (x || '').trim()).filter(Boolean))];
   if (!names.length) return json({ error: 'Your account has no name yet. Ask a director to add it in Staff Admin.' }, 400);
-  const body: ScriptSubmit = { action: 'submit', email: me.email, names, periodTab: asked.tab, newHire, hours, pto, meetings, noShows };
+  const body: ScriptSubmit = { action: 'submit', email: me.email, names, periodTab: asked.tab, newHire, hours, pto, meetings, noShows,
+    billableStaff: !(me.roles.length && me.roles.every((r) => r === 'frontdesk' || r === 'billing')) };
 
   let sheets: any = null, queuedError = '';
   try {
