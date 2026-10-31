@@ -49,6 +49,7 @@ function doPost(e) {
   try {
     if (body.action === 'period') return json_(periodInfo_(body));
     if (body.action === 'submit') return json_(submit_(body));
+    if (body.action === 'health') return json_(healthHistory_());
     return json_({ error: 'Unknown action.' });
   } catch (err) {
     console.error(err);
@@ -116,6 +117,7 @@ function submit_(b) {
   // Each place is saved on its own: if one fails, the others are still saved, and front desk gets ONE email
   // saying what didn't line up so they can fix it by hand.
   var safe = function (fn) { try { return fn(); } catch (err) { return { status: 'error', detail: String(err && err.message || err).slice(0, 300) }; } };
+  nums.billableStaff = b.billableStaff === false ? 'No' : 'Yes';
   out.form = safe(function () { return saveFormRow_(p, names[0], email, nums); });
   out.roster = safe(function () { return saveRoster_(names, nums, newHire); });
   out.payroll = safe(function () { return savePayroll_(p, names, nums, newHire); });
@@ -158,9 +160,10 @@ function formColumns_(sh) {
     pto: find(function (h) { return h.indexOf('hours of pto') === 0 || h.indexOf('pto') === 0; }),
     meetings: find(function (h) { return h.indexOf('how many of those hours') === 0 || h.indexOf('meetings') === 0; }),
     noShows: find(function (h) { return h.indexOf('how many no shows') === 0 || h.indexOf('no shows') === 0; }),
-    billable: find(function (h) { return h.indexOf('billable') === 0; }),
+    billable: find(function (h) { return h.indexOf('billable hours') === 0; }),
     period: find(function (h) { return h === 'pay period'; }),
     email: find(function (h) { return h === 'email'; }),
+    staff: find(function (h) { return h === 'billable staff'; }),
   };
   ['time', 'name', 'hours', 'pto', 'meetings', 'noShows'].forEach(function (k) {
     if (cols[k] < 0) throw new Error('The "' + FORM_TAB + '" tab is missing its "' + k + '" column (headers changed?).');
@@ -171,7 +174,9 @@ function formColumns_(sh) {
     used[cols[k]] = true;
   });
   if (cols.period < 0) { cols.period = lastCol; sh.getRange(1, lastCol + 1).setValue('Pay period'); lastCol++; }
-  if (cols.email < 0) { cols.email = lastCol; sh.getRange(1, lastCol + 1).setValue('Email'); }
+  if (cols.email < 0) { cols.email = lastCol; sh.getRange(1, lastCol + 1).setValue('Email'); lastCol++; }
+  // Yes = counts toward the company's billable hours; No = admin-only or billing-only staff (set by the website).
+  if (cols.staff < 0) { cols.staff = lastCol; sh.getRange(1, lastCol + 1).setValue('Billable staff'); }
   return cols;
 }
 
@@ -200,6 +205,7 @@ function saveFormRow_(p, name, email, nums) {
   set(cols.noShows, nums.noShows);
   set(cols.period, p.tab);
   set(cols.email, email);
+  if (nums.billableStaff) set(cols.staff, nums.billableStaff);
   if (cols.billable >= 0) {
     // Keep whatever the column already does: a formula filling the whole column → leave it; formulas per row →
     // copy the one from the row above; typed values → hours minus meetings (how it was filled in by hand).
@@ -323,6 +329,146 @@ function match_(names, people) {
     tried.push(names[i]);
   }
   return { status: 'notFound', detail: 'No row matches ' + tried.map(function (t) { return '"' + t + '"'; }).join(' or ') + '.' };
+}
+
+// ---------- Tangible Health: payroll totals history (Tangible Data → "Payroll" tab, columns I–L) ----------
+// Every day (trigger from setupHealthTrigger), once a pay period is 5 days past its end date, one row is added to
+// the Date / Total Hours Paid / Billable Hours / No Shows table, worked out from that period's "Payroll Form" rows:
+//   Total Hours Paid = hours worked + PTO (everyone)
+//   Billable Hours   = hours worked − meetings/supervision/consults (no-shows count as billable), leaving out
+//                      admin-only and billing-only staff ("Billable staff" = No)
+//   No Shows         = all no-shows
+// The owner's Tangible Health dashboard (/employeeportal/health) reads the table through action "health".
+
+var HEALTH_DAYS_AFTER = 5;
+
+function dailyHealth() { updateHealth_(false); }
+/** Run from the editor to (re)write the row for the newest closed pay period, even if it's already there. */
+function rebuildLatestHealth() { console.log(JSON.stringify(updateHealth_(true))); }
+
+/** Run once from the editor: daily trigger at about 7am. */
+function setupHealthTrigger() {
+  ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === 'dailyHealth') ScriptApp.deleteTrigger(t); });
+  ScriptApp.newTrigger('dailyHealth').timeBased().everyDays(1).atHour(7).create();
+  console.log('Daily Tangible Health update set up (about 7am). Newest closed pay period: ' + JSON.stringify(closedPeriod_()));
+}
+
+function day_(iso) { var p = iso.split('-'); return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2])); }
+function addDays_(d, n) { var x = new Date(d.getTime()); x.setDate(x.getDate() + n); return x; }
+
+/** The newest pay period whose end date was at least HEALTH_DAYS_AFTER days ago, plus the one before it. */
+function closedPeriod_() {
+  var tabs = SpreadsheetApp.openById(PAYROLL_SHEET_ID).getSheets().map(function (s) { return parseTab_(s.getName()); }).filter(Boolean);
+  tabs.sort(function (a, b) { return a.end < b.end ? -1 : a.end > b.end ? 1 : 0; });
+  var today = new Date(); today.setHours(0, 0, 0, 0);
+  var i = -1;
+  for (var k = 0; k < tabs.length; k++) if (addDays_(day_(tabs[k].end), HEALTH_DAYS_AFTER) <= today) i = k;
+  return i < 0 ? null : { period: tabs[i], prev: i > 0 ? tabs[i - 1] : null };
+}
+
+/** Where the history table is on the "Payroll" tab: header row and the Date column (Total Hours Paid is next to it). */
+function healthTable_() {
+  var sh = tab_(SpreadsheetApp.openById(DATA_SHEET_ID), ROSTER_TAB);
+  if (!sh) throw new Error('No "' + ROSTER_TAB + '" tab in Tangible Data.');
+  var top = sh.getRange(1, 1, Math.min(15, sh.getLastRow()), sh.getLastColumn()).getDisplayValues();
+  for (var r = 0; r < top.length; r++) for (var c = 1; c < top[r].length; c++) {
+    if (String(top[r][c]).trim().toLowerCase() === 'total hours paid' && String(top[r][c - 1]).trim().toLowerCase() === 'date') {
+      return { sh: sh, headRow: r + 1, col: c }; // col = 1-based column of Date
+    }
+  }
+  throw new Error('The Date / Total Hours Paid table wasn\'t found on the "' + ROSTER_TAB + '" tab.');
+}
+
+var num_ = function (v) { if (typeof v === 'number') return v; var m = /\d+(?:\.\d+)?/.exec(String(v || '')); return m ? Number(m[0]) : 0; };
+var r2_ = function (x) { return Math.round(x * 100) / 100; };
+
+function updateHealth_(force) {
+  var cp = closedPeriod_();
+  if (!cp) return { status: 'nothing', detail: 'No pay period is ' + HEALTH_DAYS_AFTER + ' days past its end yet.' };
+  var p = cp.period, end = day_(p.end), label = (end.getMonth() + 1) + '/' + end.getDate();
+  var t = healthTable_(), sh = t.sh;
+  var last = sh.getLastRow(), n = Math.max(0, last - t.headRow);
+  var dates = n ? sh.getRange(t.headRow + 1, t.col, n, 1).getValues() : [];
+  var lastFilled = 0, existing = 0;
+  for (var i = 0; i < dates.length; i++) {
+    var v = dates[i][0]; if (v === '' || v == null) continue;
+    lastFilled = i + 1;
+    var lab = v instanceof Date ? (v.getMonth() + 1) + '/' + v.getDate() : String(v).trim();
+    if (lab === label) existing = t.headRow + 1 + i;
+  }
+  // Only the last few rows can be this period (the same m/d a year earlier is further up).
+  if (existing && existing < t.headRow + lastFilled - 2) existing = 0;
+  if (existing && !force) return { status: 'already', period: p.tab, row: existing };
+
+  var tot = periodTotals_(p, cp.prev);
+  var row = existing || t.headRow + lastFilled + 1;
+  sh.getRange(row, t.col).setValue(end).setNumberFormat('m/d');
+  sh.getRange(row, t.col + 1, 1, 3).setValues([[tot.paid, tot.billable, tot.noShows]]);
+  var out = { status: existing ? 'updated' : 'added', period: p.tab, row: row, totals: tot };
+  console.log(JSON.stringify(out));
+  return out;
+}
+
+/** Totals for one pay period from "Payroll Form": rows tagged with that pay period (the website's form), plus untagged
+ *  rows (the old Google Form) sent between the previous period's cutoff and this one's. One row per person (latest). */
+function periodTotals_(p, prev) {
+  var sh = tab_(SpreadsheetApp.openById(DATA_SHEET_ID), FORM_TAB);
+  var cols = formColumns_(sh);
+  var data = sh.getRange(2, 1, Math.max(1, sh.getLastRow() - 1), sh.getLastColumn()).getValues();
+  var cutoff = addDays_(day_(p.end), HEALTH_DAYS_AFTER + 1);
+  var from = prev ? addDays_(day_(prev.end), HEALTH_DAYS_AFTER + 1) : addDays_(day_(p.start), -14);
+  var people = {}, tagged = {}, taggedFirst = {};
+  data.forEach(function (r) {
+    var per = String(r[cols.period] || '').trim(), name = String(r[cols.name] || '').trim();
+    if (!name && !r[cols.email]) return;
+    var key = per ? 'e:' + String(r[cols.email] || name).toLowerCase() : 'n:' + nameKey_(name);
+    if (per) { if (per !== p.tab) return; tagged[nameKey_(name)] = true; taggedFirst[parts_(name).first] = true; }
+    else {
+      var ts = r[cols.time] instanceof Date ? r[cols.time] : new Date(r[cols.time]);
+      if (!(ts >= from && ts < cutoff)) return;
+    }
+    var at = r[cols.time] instanceof Date ? r[cols.time].getTime() : 0;
+    if (people[key] && people[key].at > at) return;
+    people[key] = { at: at, name: name, tagged: !!per, hours: num_(r[cols.hours]), pto: num_(r[cols.pto]), meetings: num_(r[cols.meetings]),
+      noShows: num_(r[cols.noShows]), staff: cols.staff >= 0 ? String(r[cols.staff] || '').trim().toLowerCase() : '' };
+  });
+  var paid = 0, billable = 0, noShows = 0, count = 0;
+  Object.keys(people).forEach(function (k) {
+    var x = people[k];
+    // They also used the website form for this period (old-form rows sometimes have just a first name).
+    if (!x.tagged && (tagged[nameKey_(x.name)] || (!parts_(x.name).last && taggedFirst[parts_(x.name).first]))) return;
+    count++;
+    paid += x.hours + x.pto;
+    if (x.staff !== 'no') billable += Math.max(0, x.hours - x.meetings);
+    noShows += x.noShows;
+  });
+  return { paid: r2_(paid), billable: r2_(billable), noShows: r2_(noShows), people: count };
+}
+function nameKey_(s) { var p = parts_(s); return p.first + ' ' + p.last; }
+
+/** The whole history table for the dashboard, oldest first, with the year worked out (the sheet shows m/d only). */
+function healthHistory_() {
+  var t = healthTable_(), sh = t.sh;
+  var n = Math.max(0, sh.getLastRow() - t.headRow);
+  var vals = n ? sh.getRange(t.headRow + 1, t.col, n, 4).getValues() : [];
+  var rows = [];
+  vals.forEach(function (r) {
+    var v = r[0]; if (v === '' || v == null) return;
+    var m, d, y = null;
+    if (v instanceof Date) { m = v.getMonth() + 1; d = v.getDate(); y = v.getFullYear() > 2000 ? v.getFullYear() : null; }
+    else { var mm = /^(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/.exec(String(v).trim()); if (!mm) return; m = Number(mm[1]); d = Number(mm[2]); if (mm[3]) y = Number(mm[3]) < 100 ? 2000 + Number(mm[3]) : Number(mm[3]); }
+    var cell = function (x) { return x === '' || x == null || isNaN(Number(x)) ? null : Number(x); };
+    rows.push({ m: m, d: d, y: y, paid: cell(r[1]), billable: cell(r[2]), noShows: cell(r[3]) });
+  });
+  // Rows without a year: count back from the newest row (the year steps back whenever the month goes up).
+  var now = new Date(), year = now.getFullYear();
+  for (var i = rows.length - 1; i >= 0; i--) {
+    var r = rows[i];
+    if (i === rows.length - 1) { if (!r.y) year = (r.m > now.getMonth() + 2) ? now.getFullYear() - 1 : now.getFullYear(); }
+    else if (!r.y) { var next = rows[i + 1]; if (r.m > next.m) year = next.yFinal - 1; else year = next.yFinal; }
+    r.yFinal = r.y || year;
+  }
+  return { rows: rows.map(function (r) { return { date: r.yFinal + '-' + pad2_(r.m) + '-' + pad2_(r.d), paid: r.paid, billable: r.billable, noShows: r.noShows }; }) };
 }
 
 // ---------- setup + helpers ----------

@@ -77,3 +77,18 @@ To cut access: delete PAYROLL_KEY in Project Settings → Script properties.
   gets the "by hand" email for each submission until the script is adjusted.
 - If the "Payroll Form" headers change (Timestamp, Name, Hours Worked…, PTO, meetings, no shows), saving stops
   with an error the person sees.
+
+## Tangible Health totals (owner dashboard)
+Tangible Data → "Payroll" tab, columns I–L (Date / Total Hours Paid / Billable Hours / No Shows): the same script
+adds one row per pay period by itself, **5 days after the period's end date** (daily trigger `dailyHealth`, about
+7am, installed by running **setupHealthTrigger** once). Worked out from that period's "Payroll Form" rows (one per
+person, their latest):
+- **Total Hours Paid** = hours worked + PTO, everyone. (Rows before Nov 2026 were typed by hand as hours worked only.)
+- **Billable Hours** = hours worked − meetings/supervision/consults. No-shows count as billable. Admin-only and
+  billing-only staff are left out: the website marks their submissions **Billable staff = No** (new column on
+  "Payroll Form"; everyone else Yes).
+- **No Shows** = all no-shows.
+Rows from the old Google Form (no Pay period) count if they were sent after the previous period's cutoff.
+Date is the period's end date (shown m/d). **rebuildLatestHealth** (run in the editor) rewrites the newest row, e.g.
+after a late submission. The owner-only page /employeeportal/health reads the table (action "health", cached
+10 minutes in Netlify Blobs store "health").

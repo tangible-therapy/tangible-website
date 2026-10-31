@@ -5,7 +5,8 @@
 import type { Role } from './staff-access';
 
 // roles: show the link only to these roles (everyone if left out). Pages are protected separately (staff-access.ts).
-export type StaffLink = { label: string; href: string; roles?: Role[] };
+// roles: ['owner'] = owners only (no one has an "owner" role, and owners see every link).
+export type StaffLink = { label: string; href: string; roles?: (Role | 'owner')[] };
 
 export const employeeLinks: StaffLink[] = [
   { label: 'Policies & Procedures', href: '/employeeportal/policies' },
@@ -36,6 +37,8 @@ export const managementLinks: StaffLink[] = [
   { label: 'Orientation', href: 'https://academy.tangiblementalhealth.com', roles: ['director'] },
   { label: 'Staff Accounts', href: '/staff-admin', roles: ['director'] },
   { label: 'Bug jar', href: '/employeeportal/bugs', roles: ['director'] },
+  // Owner-only dashboard of company health metrics (/api/health, docs/payroll-hours)
+  { label: 'Tangible Health', href: '/employeeportal/health', roles: ['owner'] },
 ];
 
 // Outside learning sites listed on /digital-products-2.

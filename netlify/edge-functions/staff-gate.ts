@@ -115,5 +115,5 @@ export default async (req: Request, context: Context) => {
 };
 
 export const config: Config = {
-  path: ['/staff-logout', '/orientation', '/orientation/*', '/employeeportal', '/employeeportal/*', '/digital-products-2', '/onboarding', '/files/*', '/reception-portal', '/reception-onboarding', '/reception-onboarding/*', '/scheduling-new-client', '/scheduling-new-client-1', '/crisis-call', '/staff-admin', '/hours', '/api/new-hire-folder', '/api/new-hire-email', '/api/new-hire-contract', '/api/new-hire-welcome', '/api/new-hires', '/api/website-profile', '/api/birthdays', '/api/bugs'],
+  path: ['/staff-logout', '/orientation', '/orientation/*', '/employeeportal', '/employeeportal/*', '/digital-products-2', '/onboarding', '/files/*', '/reception-portal', '/reception-onboarding', '/reception-onboarding/*', '/scheduling-new-client', '/scheduling-new-client-1', '/crisis-call', '/staff-admin', '/hours', '/api/new-hire-folder', '/api/new-hire-email', '/api/new-hire-contract', '/api/new-hire-welcome', '/api/new-hires', '/api/website-profile', '/api/birthdays', '/api/bugs', '/api/health'],
 };

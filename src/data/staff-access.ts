@@ -93,12 +93,14 @@ const RESTRICTED: { paths: string[]; roles: Role[] }[] = [
   },
   { paths: ['/staff-admin', '/employeeportal/bugs'], roles: ['director'] },
   { paths: ['/hours'], roles: ['associate', 'supervisor'] },
+  // Owner only (no role opens it; owners can open everything): Tangible Health dashboard.
+  { paths: ['/employeeportal/health', '/api/health'], roles: [] },
 ];
 
 // Menu/link visibility: a link with roles is shown only to those roles (owners see everything).
 // This is only for tidy menus — the pages themselves are protected by canOpen() in the gate.
-export const canSee = (linkRoles: Role[] | undefined, r: StaffRecord | null) =>
-  !linkRoles || !linkRoles.length || (!!r && (isOwner(r.email) || linkRoles.some((x) => r.roles.includes(x))));
+export const canSee = (linkRoles: (Role | 'owner')[] | undefined, r: StaffRecord | null) =>
+  !linkRoles || !linkRoles.length || (!!r && (isOwner(r.email) || linkRoles.some((x) => (r.roles as string[]).includes(x))));
 
 const matches = (path: string, p: string) => path === p || path === p + '.html' || path.startsWith(p + '/');
 
